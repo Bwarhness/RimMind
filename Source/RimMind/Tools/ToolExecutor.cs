@@ -60,6 +60,19 @@ namespace RimMind.Tools
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
             { "remove_plans", args => PlanTools.RemovePlans(args) },
+            { "get_plans", args => PlanTools.GetPlans() },
+
+            // Zone
+            { "list_zones", args => ZoneTools.ListZones() },
+            { "create_zone", args => ZoneTools.CreateZone(args) },
+            { "delete_zone", args => ZoneTools.DeleteZone(args) },
+
+            // Building
+            { "list_buildable", args => BuildingTools.ListBuildable(args) },
+            { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
+            { "place_building", args => BuildingTools.PlaceBuilding(args) },
+            { "remove_building", args => BuildingTools.RemoveBuilding(args) },
+            { "approve_buildings", args => BuildingTools.ApproveBuildings(args) },
         };
 
         public static string Execute(string toolName, string argumentsJson)

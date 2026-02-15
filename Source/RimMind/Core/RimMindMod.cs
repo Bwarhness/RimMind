@@ -11,6 +11,7 @@ namespace RimMind.Core
         {
             Settings = GetSettings<RimMindSettings>();
             Log.Message("[RimMind] Mod loaded successfully.");
+            DebugLogger.Init();
         }
 
         public override string SettingsCategory() => "RimMind AI";

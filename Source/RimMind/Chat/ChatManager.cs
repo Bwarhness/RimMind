@@ -9,8 +9,8 @@ namespace RimMind.Chat
 {
     public class ChatManager
     {
-        private const int MAX_TOOL_LOOPS = 5;
-        private const int MAX_HISTORY_MESSAGES = 40;
+        private const int MAX_TOOL_LOOPS = 15;
+        private const int MAX_HISTORY_MESSAGES = 500;
 
         private readonly List<ChatMessage> conversationHistory = new List<ChatMessage>();
         private bool isProcessing;
@@ -27,6 +27,7 @@ namespace RimMind.Chat
             if (isProcessing || string.IsNullOrWhiteSpace(userMessage)) return;
 
             conversationHistory.Add(ChatMessage.User(userMessage));
+            DebugLogger.LogUserMessage(userMessage);
             isProcessing = true;
             StatusMessage = "Thinking...";
             OnMessageUpdated?.Invoke();
@@ -38,19 +39,23 @@ namespace RimMind.Chat
         {
             if (toolLoopCount >= MAX_TOOL_LOOPS)
             {
-                conversationHistory.Add(ChatMessage.Assistant("[RimMind hit the maximum tool call limit. Please try a simpler question.]"));
+                conversationHistory.Add(ChatMessage.Assistant("[RimMind hit the maximum tool call limit (" + MAX_TOOL_LOOPS + " rounds). Try asking a more focused question, or break it into smaller parts.]"));
                 isProcessing = false;
                 StatusMessage = "";
                 OnMessageUpdated?.Invoke();
                 return;
             }
 
+            DebugLogger.LogToolLoop(toolLoopCount, MAX_TOOL_LOOPS);
+
             var request = BuildRequest();
+            DebugLogger.LogAPIRequest(request.messages.Count, request.tools?.Count ?? 0, request.model);
 
             OpenRouterClient.SendAsync(request, response =>
             {
                 if (!response.success)
                 {
+                    DebugLogger.LogAPIError(response.error ?? "Unknown error");
                     conversationHistory.Add(ChatMessage.Assistant("[Error: " + response.error + "]"));
                     isProcessing = false;
                     StatusMessage = "";
@@ -60,16 +65,23 @@ namespace RimMind.Chat
 
                 if (response.HasToolCalls)
                 {
+                    DebugLogger.LogAPIResponse(response.HasToolCalls, response.message.tool_calls?.Count ?? 0, response.message.content);
+
                     // Add assistant message with tool_calls to history
                     conversationHistory.Add(response.message);
 
                     // Execute each tool call and add results
-                    foreach (var toolCall in response.message.tool_calls)
+                    for (int i = 0; i < response.message.tool_calls.Count; i++)
                     {
+                        var toolCall = response.message.tool_calls[i];
                         StatusMessage = "Querying: " + FormatToolName(toolCall.function.name) + "...";
                         OnMessageUpdated?.Invoke();
 
+                        DebugLogger.LogToolCall(toolLoopCount, i, toolCall.function.name, toolCall.function.arguments);
+                        var sw = System.Diagnostics.Stopwatch.StartNew();
                         string result = ToolExecutor.Execute(toolCall.function.name, toolCall.function.arguments);
+                        sw.Stop();
+                        DebugLogger.LogToolResult(toolCall.function.name, result, sw.ElapsedMilliseconds);
                         conversationHistory.Add(ChatMessage.ToolResult(toolCall.id, result));
                     }
 
@@ -80,9 +92,12 @@ namespace RimMind.Chat
                 }
                 else
                 {
+                    DebugLogger.LogAPIResponse(false, 0, response.message?.content);
+
                     // Final text response
                     if (response.message != null && !string.IsNullOrEmpty(response.message.content))
                     {
+                        DebugLogger.LogFinalResponse(response.message.content);
                         conversationHistory.Add(ChatMessage.Assistant(response.message.content));
                     }
                     else

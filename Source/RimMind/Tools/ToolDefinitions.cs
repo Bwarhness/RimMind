@@ -78,13 +78,60 @@ namespace RimMind.Tools
                 MakeParam("z", "integer", "Z coordinate (or start Z for shapes)"),
                 MakeOptionalParam("x2", "integer", "End X coordinate (required for rect, filled_rect, line)"),
                 MakeOptionalParam("z2", "integer", "End Z coordinate (required for rect, filled_rect, line)"),
-                MakeOptionalParam("shape", "string", "Shape to place: 'single' (default), 'rect' (outline only), 'filled_rect' (solid), 'line'")));
-            tools.Add(MakeTool("remove_plans", "Remove plan designations from the map. Can remove from a single cell, a rectangular area, or all plans on the map.",
+                MakeOptionalParam("shape", "string", "Shape to place: 'single' (default), 'rect' (outline only), 'filled_rect' (solid), 'line'"),
+                MakeOptionalParam("name", "string", "Optional name/label for the plan group")));
+            tools.Add(MakeTool("get_plans", "Get all plan designations currently on the map, including ones placed manually by the player. Returns total count, bounding box, and individual cell coordinates (if under 200 plans). Plans are visual markers showing where the player intends to build — use this to understand the player's building intentions."));
+            tools.Add(MakeTool("remove_plans", "Remove plans from the map. Can remove by label (name), from a single cell, a rectangular area, or all plans on the map. Plans are the colored overlay markers players use to plan construction.",
+                MakeOptionalParam("label", "string", "Remove a specific plan by its name/label"),
                 MakeOptionalParam("x", "integer", "X coordinate (or start X for area removal)"),
                 MakeOptionalParam("z", "integer", "Z coordinate (or start Z for area removal)"),
                 MakeOptionalParam("x2", "integer", "End X coordinate for area removal"),
                 MakeOptionalParam("z2", "integer", "End Z coordinate for area removal"),
-                MakeOptionalParam("all", "boolean", "Set to true to remove ALL plan designations on the map")));
+                MakeOptionalParam("all", "boolean", "Set to true to remove ALL plans on the map")));
+
+            // Zone Tools
+            tools.Add(MakeTool("list_zones", "List all zones on the map: native RimWorld zones (growing, stockpile) with type, label, bounds, and cell count, plus custom AI-created planning zones with label, purpose, and bounds. Use this to understand the current zone layout before creating new planning zones."));
+            tools.Add(MakeTool("create_zone", "Create a zone on the map. Supports three types: 'stockpile' (real RimWorld storage zone), 'growing' (real RimWorld farming zone with optional crop), or 'planning' (labeled area for AI planning purposes, drawn with plan designations). Stockpile and growing zones are real game zones that colonists will use. Use get_map_region first to choose coordinates. Use list_zones to see existing zones and avoid overlap.",
+                MakeParam("type", "string", "Zone type: 'stockpile', 'growing', or 'planning'"),
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate"),
+                MakeOptionalParam("name", "string", "Custom name for the zone"),
+                MakeOptionalParam("priority", "string", "Stockpile priority: 'Critical', 'Important', 'Normal', 'Low', 'Preferred' (stockpile only)"),
+                MakeOptionalParam("crop", "string", "Crop to grow: 'rice', 'corn', 'potatoes', 'healroot', 'cotton', etc. (growing only)"),
+                MakeOptionalParam("purpose", "string", "What the zone is for: housing, defense, prison, etc. (planning only)"),
+                MakeOptionalParam("mark_on_map", "boolean", "Place plan designations on border (planning only, default: true)")));
+            tools.Add(MakeTool("delete_zone", "Delete a zone by its label. Works on both real RimWorld zones (stockpile, growing) and custom planning zones. For native zones, frees the cells. Use list_zones to find zone names.",
+                MakeParam("label", "string", "The label/name of the zone to delete"),
+                MakeOptionalParam("remove_plans", "boolean", "Also remove plan designations in the area (planning zones only, default: false)")));
+
+            // Building Tools
+            tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
+                MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
+            tools.Add(MakeTool("get_building_info", "Get detailed information about a specific building type: description, size, material requirements, available materials, costs, stats, research prerequisites, and passability.",
+                MakeParam("defName", "string", "The building's defName (from list_buildable)")));
+            tools.Add(MakeTool("place_building", "Place building blueprints (construction ghosts) on the map. Blueprints are placed as FORBIDDEN so colonists won't build until approved. Supports single placement or batch with 'placements' array (max 50). Returns proposal IDs for later approve/remove. Use list_buildable and get_map_region first.",
+                MakeOptionalParam("defName", "string", "Building defName for single placement"),
+                MakeOptionalParam("x", "integer", "X coordinate for single placement"),
+                MakeOptionalParam("z", "integer", "Z coordinate for single placement"),
+                MakeOptionalParam("stuff", "string", "Material defName if building requires stuff (e.g., 'WoodLog', 'BlocksGranite', 'Steel')"),
+                MakeOptionalParam("rotation", "integer", "Rotation: 0=North (default), 1=East, 2=South, 3=West"),
+                MakePlacementsArrayParam()));
+            tools.Add(MakeTool("remove_building", "Remove AI-proposed building blueprints from the map. Can target specific proposals by ID, an area, or all proposals at once.",
+                MakeStringArrayParam("proposal_ids", "Array of proposal IDs to remove (e.g., ['rm_1', 'rm_2'])", false),
+                MakeOptionalParam("x", "integer", "Start X for area removal"),
+                MakeOptionalParam("z", "integer", "Start Z for area removal"),
+                MakeOptionalParam("x2", "integer", "End X for area removal"),
+                MakeOptionalParam("z2", "integer", "End Z for area removal"),
+                MakeOptionalParam("all", "boolean", "Set true to remove ALL AI-proposed blueprints")));
+            tools.Add(MakeTool("approve_buildings", "Approve AI-proposed building blueprints by unforbidding them so colonists will start construction. Can approve specific proposals by ID, an area, or all.",
+                MakeStringArrayParam("proposal_ids", "Array of proposal IDs to approve (e.g., ['rm_1', 'rm_2'])", false),
+                MakeOptionalParam("x", "integer", "Start X for area approval"),
+                MakeOptionalParam("z", "integer", "Start Z for area approval"),
+                MakeOptionalParam("x2", "integer", "End X for area approval"),
+                MakeOptionalParam("z2", "integer", "End Z for area approval"),
+                MakeOptionalParam("all", "boolean", "Set true to approve ALL AI-proposed blueprints")));
 
             return tools;
         }
@@ -110,6 +157,8 @@ namespace RimMind.Tools
                 var prop = new JSONObject();
                 prop["type"] = p["param_type"].Value;
                 prop["description"] = p["description"].Value;
+                if (p["items"] != null)
+                    prop["items"] = p["items"];
                 properties[paramName] = prop;
 
                 if (p["required"].AsBool)
@@ -142,6 +191,66 @@ namespace RimMind.Tools
             p["param_type"] = type;
             p["description"] = description;
             p["required"] = false;
+            return p;
+        }
+
+        private static JSONObject MakeArrayParam(string name, string description, bool required)
+        {
+            var p = new JSONObject();
+            p["name"] = name;
+            p["param_type"] = "array";
+            p["description"] = description;
+            p["required"] = required;
+
+            var itemSchema = new JSONObject();
+            itemSchema["type"] = "object";
+            var itemProps = new JSONObject();
+            var xProp = new JSONObject(); xProp["type"] = "integer"; itemProps["x"] = xProp;
+            var zProp = new JSONObject(); zProp["type"] = "integer"; itemProps["z"] = zProp;
+            itemSchema["properties"] = itemProps;
+            var itemRequired = new JSONArray(); itemRequired.Add("x"); itemRequired.Add("z");
+            itemSchema["required"] = itemRequired;
+            p["items"] = itemSchema;
+
+            return p;
+        }
+
+        private static JSONObject MakePlacementsArrayParam()
+        {
+            var p = new JSONObject();
+            p["name"] = "placements";
+            p["param_type"] = "array";
+            p["description"] = "Array of building placements for batch mode (max 50). Each element: {defName, x, z, stuff?, rotation?}";
+            p["required"] = false;
+
+            var itemSchema = new JSONObject();
+            itemSchema["type"] = "object";
+            var itemProps = new JSONObject();
+            var defProp = new JSONObject(); defProp["type"] = "string"; defProp["description"] = "Building defName"; itemProps["defName"] = defProp;
+            var xProp = new JSONObject(); xProp["type"] = "integer"; itemProps["x"] = xProp;
+            var zProp = new JSONObject(); zProp["type"] = "integer"; itemProps["z"] = zProp;
+            var stuffProp = new JSONObject(); stuffProp["type"] = "string"; stuffProp["description"] = "Material defName"; itemProps["stuff"] = stuffProp;
+            var rotProp = new JSONObject(); rotProp["type"] = "integer"; rotProp["description"] = "0=North, 1=East, 2=South, 3=West"; itemProps["rotation"] = rotProp;
+            itemSchema["properties"] = itemProps;
+            var itemRequired = new JSONArray(); itemRequired.Add("defName"); itemRequired.Add("x"); itemRequired.Add("z");
+            itemSchema["required"] = itemRequired;
+            p["items"] = itemSchema;
+
+            return p;
+        }
+
+        private static JSONObject MakeStringArrayParam(string name, string description, bool required)
+        {
+            var p = new JSONObject();
+            p["name"] = name;
+            p["param_type"] = "array";
+            p["description"] = description;
+            p["required"] = required;
+
+            var itemSchema = new JSONObject();
+            itemSchema["type"] = "string";
+            p["items"] = itemSchema;
+
             return p;
         }
     }

@@ -1,7 +1,7 @@
 # RimMind - RimWorld AI Mod
 
 ## Project Overview
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 28 different colony data tools via function calling.
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 37 different colony data tools via function calling.
 
 ## Build & Development
 
@@ -71,6 +71,7 @@ Output DLL goes to `Assemblies/RimMind.dll`
 | `Map.resourceCounter` | Resource totals | `Find.CurrentMap.resourceCounter` |
 | `Map.weatherManager` | Current weather | `Find.CurrentMap.weatherManager` |
 | `Map.powerNetManager` | Power grids | `Find.CurrentMap.powerNetManager` |
+| `Map.planManager` | Plan overlays (1.6+) | `Find.CurrentMap.planManager` |
 
 ### Pawn System
 ```
@@ -225,11 +226,11 @@ RimMind/
     ├── RimMind.csproj
     ├── Core/          (RimMindMod, Settings, MainThreadDispatcher)
     ├── API/           (OpenRouterClient, DTOs, SimpleJSON, PromptBuilder)
-    ├── Tools/         (26 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical)
+    ├── Tools/         (37 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (28 tools)
+## Current Tool Catalog (37 tools)
 - **Colonist**: list_colonists, get_colonist_details, get_colonist_health
 - **Social**: get_relationships, get_faction_relations
 - **Work**: get_work_priorities, get_bills, get_schedules
@@ -240,6 +241,9 @@ RimMind/
 - **Animals**: list_animals, get_animal_details
 - **Events**: get_recent_events, get_active_alerts
 - **Medical**: get_medical_overview
+- **Plan**: get_plans, place_plans, remove_plans
+- **Zone**: list_zones, create_zone, delete_zone (supports real RimWorld stockpile/growing zones, areas, and custom planning zones)
+- **Building**: list_buildable, get_building_info, place_building, remove_building, approve_buildings
 
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
@@ -249,6 +253,15 @@ RimMind/
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.
 - **2026-02-15**: Fixed Enter key in chat window — overrode `OnAcceptKeyPressed()` and set `forceCatchAcceptAndCancelEventEvenIfUnfocused = true`. RimWorld's `WindowStack.Notify_PressedAccept` skips windows where both `closeOnAccept` and `forceCatch` are false. The keybinding system consumes Return before `DoWindowContents` runs, so KeyDown handlers there never see it.
 - **2026-02-15**: Fixed chat scroll-to-bottom on reopen — added `PostOpen()` override that sets `scrollToBottom = true`.
+- **2026-02-15**: Added `place_plans` and `remove_plans` tools — first write-action tools. Place plan designations with shape support (single, rect, filled_rect, line via Bresenham) and remove by cell, area, or all. Plan designations now visible in map grid as 'p' character and in cell details as designations array.
+- **2026-02-15**: Added zone tools (`list_zones`, `create_zone`, `delete_zone`) — AI can now view all native zones (growing/stockpile) with bounds, and create/delete labeled planning zones for housing, defense, prison, etc. Planning zones persist with save files via ZoneTracker GameComponent. Zones optionally draw plan designation outlines on map. Custom zones show as 'z' in map grid.
+- **2026-02-15**: Added building placement system — 5 new tools (list_buildable, get_building_info, place_building, remove_building, approve_buildings). AI places forbidden blueprints that colonists won't build until player approves. Added BuildingForbiddablePatcher to ensure all building/blueprint defs support forbid toggle. Added ProposalTracker GameComponent for save-persistent tracking of AI-placed blueprints.
+- **2026-02-15**: Added `get_plans` tool — AI can now see all plan designations on the map (including manually placed by player). Returns total count, bounding box, and cell coordinates.
+- **2026-02-15**: Reworked zone tools to integrate with real RimWorld zone system — `create_zone` now creates actual stockpile and growing zones (not just custom labels). `list_zones` now shows Areas (Home, Allowed, Snow Clear, Roof). `delete_zone` can remove real game zones.
+- **2026-02-15**: Added DebugLogger — writes timestamped logs to `RimMind/Logs/debug.log`, covering all API requests/responses, tool calls with args/results/timing, and chat messages. Clears on each startup.
+- **2026-02-15**: Increased tool call loop limit from 5 to 15 and history trim from 40 to 500 messages.
+- **2026-02-15**: Rewrote plan tools to use RimWorld 1.6's native `Plan` API (`Map.planManager`, `Verse.Plan`) instead of old `DesignationDefOf.Plan` designations. Plans placed by AI are now fully interactable — player can click, rename, recolor, copy/paste, and remove them using the in-game planning tools. `get_plans` reads from `planManager.AllPlans`. `remove_plans` now supports removal by label. Map grid uses `planManager.PlanAt()` for 'p' character.
+- **2026-02-15**: Increased default max_tokens from 1024 to 4096 to support large building operations. Added BUILDING GUIDELINES to system prompt instructing AI to batch placements (20-30 per call) and build room-by-room. Added full communication logging — raw JSON request/response bodies now logged to debug.log without truncation. Increased tool arg/result truncation limits (500→2000 / 1000→5000).
 
 ## Future Plans (Deferred)
 - Phase 3: LLM-powered colonist dialogue (Harmony patch on social interactions)

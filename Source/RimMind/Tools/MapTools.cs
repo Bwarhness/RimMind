@@ -285,14 +285,18 @@ namespace RimMind.Tools
             if (hasItem) return 'i';
 
             // Priority 4: Plans
-            if (map.designationManager.DesignationAt(cell, DesignationDefOf.Plan) != null) return 'p';
+            if (map.planManager.PlanAt(cell) != null) return 'p';
 
             // Priority 5: Zones
             var zone = map.zoneManager.ZoneAt(cell);
             if (zone is Zone_Growing) return 'g';
             if (zone is Zone_Stockpile) return 's';
 
-            // Priority 5b: Constructed floor
+            // Priority 5b: Custom labeled zones
+            var tracker = RimMind.Core.ZoneTracker.Instance;
+            if (tracker != null && tracker.GetZoneAt(cell.x, cell.z) != null) return 'z';
+
+            // Priority 5c: Constructed floor
             var terrain = map.terrainGrid.TerrainAt(cell);
             if (terrain.layerable) return 'f';
 
@@ -458,6 +462,7 @@ namespace RimMind.Tools
                 case 'p': return "plan designation";
                 case 'g': return "growing zone";
                 case 's': return "stockpile zone";
+                case 'z': return "planning zone (AI-created)";
                 case 'f': return "constructed floor";
                 case '.': return "soil";
                 case ',': return "gravel";
@@ -513,6 +518,16 @@ namespace RimMind.Tools
             var zone = map.zoneManager.ZoneAt(cell);
             if (zone != null)
                 obj["zone"] = zone.label;
+
+            // Designations
+            var designations = map.designationManager.AllDesignationsAt(cell);
+            if (designations != null && designations.Count > 0)
+            {
+                var desArr = new JSONArray();
+                foreach (var des in designations)
+                    desArr.Add(des.def.defName);
+                obj["designations"] = desArr;
+            }
 
             var things = cell.GetThingList(map);
             if (things.Count > 0)

@@ -29,6 +29,7 @@ namespace RimMind.API
             }
 
             string jsonBody = request.ToJSON().ToString();
+            DebugLogger.LogRawRequest(jsonBody);
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
@@ -55,6 +56,7 @@ namespace RimMind.API
                     using (var reader = new StreamReader(httpResponse.GetResponseStream(), Encoding.UTF8))
                     {
                         string responseJson = reader.ReadToEnd();
+                        DebugLogger.LogRawResponse(responseJson);
                         var response = ChatResponse.FromJSON(responseJson);
 
                         MainThreadDispatcher.Enqueue(() => callback(response));
@@ -62,20 +64,31 @@ namespace RimMind.API
                 }
                 catch (WebException webEx)
                 {
+                    DebugLogger.LogAPIError("WebException: " + webEx.Message);
                     string errorMsg = "Network error: " + webEx.Message;
+                    int statusCode = 0;
+
                     if (webEx.Response is HttpWebResponse errResponse)
                     {
+                        statusCode = (int)errResponse.StatusCode;
                         try
                         {
                             using (var reader = new StreamReader(errResponse.GetResponseStream(), Encoding.UTF8))
                             {
                                 string errBody = reader.ReadToEnd();
+                                DebugLogger.LogRawResponse("HTTP " + statusCode + " ERROR:\n" + errBody);
+                                Log.Warning("[RimMind] API error (HTTP " + statusCode + "): " + errBody);
+
                                 var parsed = ChatResponse.FromJSON(errBody);
                                 if (!string.IsNullOrEmpty(parsed.error))
                                     errorMsg = parsed.error;
                             }
                         }
                         catch { }
+                    }
+                    else
+                    {
+                        Log.Warning("[RimMind] API network error: " + webEx.Message);
                     }
 
                     MainThreadDispatcher.Enqueue(() =>
@@ -85,6 +98,7 @@ namespace RimMind.API
                 }
                 catch (Exception ex)
                 {
+                    DebugLogger.LogAPIError("Exception: " + ex.Message);
                     Log.Warning("[RimMind] API call failed: " + ex.Message);
                     MainThreadDispatcher.Enqueue(() =>
                     {

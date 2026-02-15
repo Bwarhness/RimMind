@@ -7,7 +7,7 @@ namespace RimMind.Core
         public string apiKey = "";
         public string modelId = "anthropic/claude-sonnet-4-5";
         public float temperature = 0.7f;
-        public int maxTokens = 1024;
+        public int maxTokens = 4096;
         public bool enableChatCompanion = true;
 
         public override void ExposeData()
@@ -15,7 +15,7 @@ namespace RimMind.Core
             Scribe_Values.Look(ref apiKey, "apiKey", "");
             Scribe_Values.Look(ref modelId, "modelId", "anthropic/claude-sonnet-4-5");
             Scribe_Values.Look(ref temperature, "temperature", 0.7f);
-            Scribe_Values.Look(ref maxTokens, "maxTokens", 1024);
+            Scribe_Values.Look(ref maxTokens, "maxTokens", 4096);
             Scribe_Values.Look(ref enableChatCompanion, "enableChatCompanion", true);
             base.ExposeData();
         }

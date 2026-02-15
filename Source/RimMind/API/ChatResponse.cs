@@ -22,7 +22,25 @@ namespace RimMind.API
                 if (root["error"] != null && !root["error"].IsNull)
                 {
                     var errorNode = root["error"];
-                    string errorMsg = errorNode.IsString ? errorNode.Value : errorNode["message"]?.Value ?? "Unknown error";
+                    string errorMsg;
+
+                    if (errorNode.IsString)
+                    {
+                        errorMsg = errorNode.Value;
+                    }
+                    else
+                    {
+                        string message = errorNode["message"]?.Value ?? "Unknown error";
+                        string code = errorNode["code"]?.Value;
+                        string provider = errorNode["metadata"]?["provider_name"]?.Value;
+
+                        errorMsg = message;
+                        if (!string.IsNullOrEmpty(code))
+                            errorMsg += " (code: " + code + ")";
+                        if (!string.IsNullOrEmpty(provider))
+                            errorMsg += " [" + provider + "]";
+                    }
+
                     return new ChatResponse
                     {
                         success = false,

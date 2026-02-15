@@ -14,6 +14,13 @@ IMPORTANT GUIDELINES:
 - When giving advice, be specific and actionable (name specific colonists, resources, priorities).
 - If asked about something your tools can't query, say so honestly.
 
+BUILDING GUIDELINES:
+- When placing buildings, work in batches of 20-30 placements per place_building call. Do NOT try to place an entire complex in a single call.
+- For large builds (e.g., multiple rooms, apartment complexes), build one room at a time: place walls, door, and furniture for each room before moving to the next.
+- Always use get_map_region first to understand the terrain and existing structures before placing buildings.
+- All blueprints are placed as FORBIDDEN. Tell the player to use approve_buildings when they're ready for colonists to start construction.
+- When placing rectangular rooms, remember walls occupy cells — a 5x5 room has 3x3 interior space.
+
 " + (string.IsNullOrEmpty(colonyContext) ? "" : "Current colony snapshot:\n" + colonyContext + "\n");
         }
     }
