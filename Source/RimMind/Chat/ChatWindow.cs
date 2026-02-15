@@ -55,6 +55,20 @@ namespace RimMind.Chat
             Widgets.Label(titleRect, "RimMind AI");
             Text.Font = GameFont.Small;
 
+            // Directives button
+            var directivesRect = new Rect(inRect.width - 170f, 2f, 80f, 24f);
+            bool hasDirectives = Core.DirectivesTracker.Instance != null && !string.IsNullOrEmpty(Core.DirectivesTracker.Instance.PlayerDirectives);
+            GUI.color = hasDirectives ? new Color(0.6f, 0.9f, 0.7f) : Color.white;
+            if (Widgets.ButtonText(directivesRect, "Directives"))
+            {
+                var existing = Find.WindowStack.WindowOfType<DirectivesWindow>();
+                if (existing != null)
+                    Find.WindowStack.TryRemove(existing);
+                else
+                    Find.WindowStack.Add(new DirectivesWindow());
+            }
+            GUI.color = Color.white;
+
             // Clear button
             var clearRect = new Rect(inRect.width - 80f, 2f, 70f, 24f);
             if (Widgets.ButtonText(clearRect, "Clear"))
@@ -98,8 +112,8 @@ namespace RimMind.Chat
                 SendCurrentMessage();
             }
 
-            // Auto-focus input
-            if (Event.current.type == EventType.Repaint)
+            // Auto-focus input (only when DirectivesWindow is not open)
+            if (Event.current.type == EventType.Repaint && Find.WindowStack.WindowOfType<DirectivesWindow>() == null)
             {
                 GUI.FocusControl("RimMindInput");
             }

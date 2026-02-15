@@ -111,13 +111,25 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
             tools.Add(MakeTool("get_building_info", "Get detailed information about a specific building type: description, size, material requirements, available materials, costs, stats, research prerequisites, and passability.",
                 MakeParam("defName", "string", "The building's defName (from list_buildable)")));
-            tools.Add(MakeTool("place_building", "Place building blueprints (construction ghosts) on the map. Blueprints are placed as FORBIDDEN so colonists won't build until approved. Supports single placement or batch with 'placements' array (max 50). Returns proposal IDs for later approve/remove. Use list_buildable and get_map_region first.",
+            tools.Add(MakeTool("place_building", "Place building blueprints on the map. Use for individual buildings and furniture. For rooms/walls, prefer place_structure instead.\n\nSINGLE: {defName, x, z, stuff?, rotation?, auto_approve?}\nBATCH: {placements: [{defName, x, z, stuff?, rotation?}, ...], auto_approve?} (max 100)\n\nRotation: 0=North, 1=East, 2=South, 3=West. Stuff examples: WoodLog, BlocksGranite, Steel.\nIf auto_approve is true, colonists start building immediately.",
                 MakeOptionalParam("defName", "string", "Building defName for single placement"),
                 MakeOptionalParam("x", "integer", "X coordinate for single placement"),
                 MakeOptionalParam("z", "integer", "Z coordinate for single placement"),
                 MakeOptionalParam("stuff", "string", "Material defName if building requires stuff (e.g., 'WoodLog', 'BlocksGranite', 'Steel')"),
                 MakeOptionalParam("rotation", "integer", "Rotation: 0=North (default), 1=East, 2=South, 3=West"),
+                MakeOptionalParam("auto_approve", "boolean", "If true, blueprints are unforbidden immediately so colonists start building. Default: false (forbidden until approved)."),
                 MakePlacementsArrayParam()));
+            tools.Add(MakeTool("place_structure", "Build structures efficiently with one call. Use this instead of placing individual walls.\n\nShapes:\n- 'room': Walls + door. Builds a complete rectangular room.\n- 'wall_rect': Wall outline (no door).\n- 'wall_line': Line of walls between two points.\n\nExample room: {shape:'room', x1:10, z1:10, x2:16, z2:16, stuff:'BlocksGranite', door_side:'south'}\nA room (10,10)-(16,16) = 7x7 exterior, 5x5 interior.\n\ndoor_side: which wall gets the door (default: south).\ndoor_offset: 0-based position from left/bottom of wall, default: center.",
+                MakeParam("shape", "string", "Shape: 'room', 'wall_rect', or 'wall_line'"),
+                MakeParam("x1", "integer", "Start/corner X coordinate"),
+                MakeParam("z1", "integer", "Start/corner Z coordinate"),
+                MakeParam("x2", "integer", "End/corner X coordinate"),
+                MakeParam("z2", "integer", "End/corner Z coordinate"),
+                MakeParam("stuff", "string", "Material defName (e.g., 'WoodLog', 'BlocksGranite', 'Steel')"),
+                MakeOptionalParam("door_side", "string", "Which wall for the door: 'north', 'south', 'east', 'west' (room only, default: 'south')"),
+                MakeOptionalParam("door_offset", "integer", "Door position along wall, 0=leftmost/bottommost inner cell, default=center (room only)"),
+                MakeOptionalParam("door_stuff", "string", "Material for the door, defaults to 'stuff' value (room only)"),
+                MakeOptionalParam("auto_approve", "boolean", "If true, colonists start building immediately. Default: false")));
             tools.Add(MakeTool("remove_building", "Remove AI-proposed building blueprints from the map. Can target specific proposals by ID, an area, or all proposals at once.",
                 MakeStringArrayParam("proposal_ids", "Array of proposal IDs to remove (e.g., ['rm_1', 'rm_2'])", false),
                 MakeOptionalParam("x", "integer", "Start X for area removal"),
@@ -132,6 +144,13 @@ namespace RimMind.Tools
                 MakeOptionalParam("x2", "integer", "End X for area approval"),
                 MakeOptionalParam("z2", "integer", "End Z for area approval"),
                 MakeOptionalParam("all", "boolean", "Set true to approve ALL AI-proposed blueprints")));
+
+            // Directive Tools
+            tools.Add(MakeTool("get_directives", "Get the current player-defined colony directives. These are standing rules, preferences, and playstyle instructions set by the player. Check this before adding new directives to avoid duplicates."));
+            tools.Add(MakeTool("add_directive", "Add a new colony directive. Use this when the player confirms they want to save a preference or rule. Write concise, clear directive text.",
+                MakeParam("text", "string", "The directive text to add (e.g., 'Melee weapons only - no ranged weapons or turrets')")));
+            tools.Add(MakeTool("remove_directive", "Remove a colony directive by searching for matching text. Use when the player wants to remove or change a standing rule.",
+                MakeParam("search", "string", "Text to search for in existing directives. The first directive line containing this text (case-insensitive) will be removed.")));
 
             return tools;
         }
@@ -220,7 +239,7 @@ namespace RimMind.Tools
             var p = new JSONObject();
             p["name"] = "placements";
             p["param_type"] = "array";
-            p["description"] = "Array of building placements for batch mode (max 50). Each element: {defName, x, z, stuff?, rotation?}";
+            p["description"] = "Array of building placements for batch mode (max 100). Each element: {defName, x, z, stuff?, rotation?}";
             p["required"] = false;
 
             var itemSchema = new JSONObject();

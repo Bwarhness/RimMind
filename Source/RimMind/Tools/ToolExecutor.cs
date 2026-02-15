@@ -71,8 +71,14 @@ namespace RimMind.Tools
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
             { "place_building", args => BuildingTools.PlaceBuilding(args) },
+            { "place_structure", args => BuildingTools.PlaceStructure(args) },
             { "remove_building", args => BuildingTools.RemoveBuilding(args) },
             { "approve_buildings", args => BuildingTools.ApproveBuildings(args) },
+
+            // Directives
+            { "get_directives", args => DirectiveTools.GetDirectives() },
+            { "add_directive", args => DirectiveTools.AddDirective(args?["text"]?.Value) },
+            { "remove_directive", args => DirectiveTools.RemoveDirective(args?["search"]?.Value) },
         };
 
         public static string Execute(string toolName, string argumentsJson)

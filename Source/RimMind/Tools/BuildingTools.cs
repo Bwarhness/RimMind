@@ -10,6 +10,14 @@ namespace RimMind.Tools
 {
     public static class BuildingTools
     {
+        private struct PlacementResult
+        {
+            public bool success;
+            public string proposalId;
+            public string error;
+            public Thing blueprint;
+        }
+
         public static string ListBuildable(JSONNode args)
         {
             var map = Find.CurrentMap;
@@ -60,7 +68,13 @@ namespace RimMind.Tools
                     entry["category"] = def.designationCategory.defName;
                 string size = def.size.x + "x" + def.size.z;
                 if (size != "1x1") entry["size"] = size;
-                if (def.MadeFromStuff) entry["stuff"] = true;
+                if (def.MadeFromStuff)
+                {
+                    entry["stuff"] = true;
+                    string hint = GetStuffHint(def);
+                    if (hint != null)
+                        entry["stuffHint"] = hint;
+                }
                 if (def.researchPrerequisites != null && def.researchPrerequisites.Count > 0)
                 {
                     var missing = def.researchPrerequisites.Where(r => !r.IsFinished).ToList();
@@ -85,7 +99,13 @@ namespace RimMind.Tools
 
             var def = ResolveBuildingDef(args["defName"].Value);
             if (def == null)
-                return ToolExecutor.JsonError("Building not found: " + args["defName"].Value);
+            {
+                string suggestions = FindSimilarBuildings(args["defName"].Value);
+                string msg = "Building not found: " + args["defName"].Value;
+                if (suggestions != null)
+                    msg += ". Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
+            }
 
             var result = new JSONObject();
             result["defName"] = def.defName;
@@ -175,6 +195,7 @@ namespace RimMind.Tools
             var faction = Faction.OfPlayer;
 
             var placementsNode = args?["placements"];
+            placementsNode = UnwrapStringArray(placementsNode);
             var placements = new List<JSONNode>();
 
             if (placementsNode != null && placementsNode.IsArray)
@@ -191,31 +212,66 @@ namespace RimMind.Tools
                 return ToolExecutor.JsonError("Provide 'defName' + x/z for single placement, or 'placements' array for batch.");
             }
 
-            if (placements.Count > 50)
-                return ToolExecutor.JsonError("Maximum 50 placements per call. Got " + placements.Count + ".");
+            if (placements.Count > 100)
+                return ToolExecutor.JsonError("Maximum 100 placements per call. Got " + placements.Count + ".");
 
-            var results = new JSONArray();
+            bool globalAutoApprove = args?["auto_approve"]?.AsBool == true;
+
+            // Compute bounding box for before/after grid
+            int bbMinX = int.MaxValue, bbMinZ = int.MaxValue;
+            int bbMaxX = int.MinValue, bbMaxZ = int.MinValue;
+            foreach (var p in placements)
+            {
+                var pxNode = p["x"];
+                var pzNode = p["z"];
+                if (pxNode == null || pzNode == null) continue;
+                int px = pxNode.AsInt;
+                int pz = pzNode.AsInt;
+                if (px < bbMinX) bbMinX = px;
+                if (px > bbMaxX) bbMaxX = px;
+                if (pz < bbMinZ) bbMinZ = pz;
+                if (pz > bbMaxZ) bbMaxZ = pz;
+            }
+            JSONArray existingInArea = null;
+            if (bbMinX != int.MaxValue)
+            {
+                int padMinX = System.Math.Max(0, bbMinX - 1);
+                int padMinZ = System.Math.Max(0, bbMinZ - 1);
+                int padMaxX = System.Math.Min(map.Size.x - 1, bbMaxX + 1);
+                int padMaxZ = System.Math.Min(map.Size.z - 1, bbMaxZ + 1);
+                if ((padMaxX - padMinX + 1) <= 30 && (padMaxZ - padMinZ + 1) <= 30)
+                    existingInArea = ScanBuildingsInArea(map, padMinX, padMinZ, padMaxX, padMaxZ);
+            }
+
+            var successEntries = new JSONArray();
+            var failures = new JSONArray();
             int placed = 0;
             int failed = 0;
 
             foreach (var p in placements)
             {
-                var entry = new JSONObject();
                 string defName = p["defName"]?.Value;
                 if (string.IsNullOrEmpty(defName))
                 {
+                    var entry = new JSONObject();
                     entry["error"] = "Missing defName";
                     failed++;
-                    results.Add(entry);
+                    failures.Add(entry);
                     continue;
                 }
 
                 var def = ResolveBuildingDef(defName);
                 if (def == null)
                 {
-                    entry["error"] = "Unknown building: " + defName;
+                    var entry = new JSONObject();
+                    string suggestions = FindSimilarBuildings(defName);
+                    string msg = "Unknown building: " + defName;
+                    if (suggestions != null)
+                        msg += ". Did you mean: " + suggestions + "?";
+                    entry["error"] = msg;
+                    entry["defName"] = defName;
                     failed++;
-                    results.Add(entry);
+                    failures.Add(entry);
                     continue;
                 }
 
@@ -224,18 +280,22 @@ namespace RimMind.Tools
                     var missing = def.researchPrerequisites.Where(r => !r.IsFinished).ToList();
                     if (missing.Count > 0)
                     {
+                        var entry = new JSONObject();
                         entry["error"] = "Research required: " + string.Join(", ", missing.Select(r => r.label));
+                        entry["defName"] = def.defName;
                         failed++;
-                        results.Add(entry);
+                        failures.Add(entry);
                         continue;
                     }
                 }
 
                 if (string.IsNullOrEmpty(p["x"]?.Value) || string.IsNullOrEmpty(p["z"]?.Value))
                 {
+                    var entry = new JSONObject();
                     entry["error"] = "Missing x/z coordinates";
+                    entry["defName"] = def.defName;
                     failed++;
-                    results.Add(entry);
+                    failures.Add(entry);
                     continue;
                 }
 
@@ -247,71 +307,500 @@ namespace RimMind.Tools
                 if (def.MadeFromStuff)
                 {
                     string stuffName = p["stuff"]?.Value;
+                    if (stuffName == "null") stuffName = null;
                     if (string.IsNullOrEmpty(stuffName))
                     {
+                        var entry = new JSONObject();
                         entry["error"] = "Building '" + def.label + "' requires a material. Specify 'stuff' (e.g., 'WoodLog', 'BlocksGranite', 'Steel').";
+                        entry["defName"] = def.defName;
+                        entry["x"] = x;
+                        entry["z"] = z;
                         failed++;
-                        results.Add(entry);
+                        failures.Add(entry);
                         continue;
                     }
                     stuff = ResolveStuffDef(stuffName, def);
                     if (stuff == null)
                     {
-                        entry["error"] = "Invalid stuff '" + stuffName + "' for " + def.label + ". Use get_building_info to see available materials.";
+                        var entry = new JSONObject();
+                        string stuffSuggestions = FindSimilarStuffs(stuffName, def);
+                        string msg = "Invalid stuff '" + stuffName + "' for " + def.label;
+                        if (stuffSuggestions != null)
+                            msg += ". Did you mean: " + stuffSuggestions + "?";
+                        else
+                            msg += ". Use get_building_info to see available materials.";
+                        entry["error"] = msg;
+                        entry["defName"] = def.defName;
+                        entry["x"] = x;
+                        entry["z"] = z;
                         failed++;
-                        results.Add(entry);
+                        failures.Add(entry);
                         continue;
                     }
                 }
 
                 Rot4 rot = ParseRotation(p["rotation"]);
+                bool autoApprove = globalAutoApprove || (p["auto_approve"]?.AsBool == true);
 
-                var report = GenConstruct.CanPlaceBlueprintAt(def, pos, rot, map, false, null, null, stuff);
-                if (!report.Accepted)
+                var pr = PlaceOneBlueprint(map, faction, def, pos, stuff, rot, autoApprove);
+                if (pr.success)
                 {
-                    entry["error"] = "Cannot place at (" + x + "," + z + "): " + (report.Reason ?? "blocked");
-                    entry["defName"] = def.defName;
-                    failed++;
-                    results.Add(entry);
-                    continue;
-                }
-
-                var blueprint = GenConstruct.PlaceBlueprintForBuild(def, pos, map, rot, faction, stuff);
-                if (blueprint == null)
-                {
-                    entry["error"] = "Failed to place blueprint for " + def.label;
-                    failed++;
-                    results.Add(entry);
-                    continue;
-                }
-
-                var forbidComp = blueprint.GetComp<CompForbiddable>();
-                if (forbidComp != null)
-                {
-                    blueprint.SetForbidden(true, false);
+                    placed++;
+                    var successEntry = new JSONObject();
+                    if (!autoApprove && pr.proposalId != null)
+                        successEntry["id"] = pr.proposalId;
+                    successEntry["def"] = def.defName;
+                    successEntry["x"] = x;
+                    successEntry["z"] = z;
+                    successEntries.Add(successEntry);
                 }
                 else
                 {
-                    Log.Warning("[RimMind] Blueprint lacks CompForbiddable: " + blueprint.def.defName);
+                    var entry = new JSONObject();
+                    entry["defName"] = def.defName;
+                    entry["x"] = x;
+                    entry["z"] = z;
+                    entry["error"] = pr.error;
+                    failed++;
+                    failures.Add(entry);
                 }
-
-                string proposalId = ProposalTracker.Track(blueprint);
-
-                entry["proposalId"] = proposalId;
-                entry["defName"] = def.defName;
-                entry["label"] = def.label;
-                entry["x"] = pos.x;
-                entry["z"] = pos.z;
-                if (stuff != null) entry["stuff"] = stuff.defName;
-                entry["rotation"] = rot.AsInt;
-                placed++;
-                results.Add(entry);
             }
 
             var result = new JSONObject();
             result["placed"] = placed;
             result["failed"] = failed;
-            result["results"] = results;
+            if (successEntries.Count > 0)
+                result["placements"] = successEntries;
+            if (failures.Count > 0)
+                result["failures"] = failures;
+
+            // Render existing buildings and after area grid so the AI can see what changed
+            if (existingInArea != null)
+                result["existing_in_area"] = existingInArea;
+            if (placed > 0)
+            {
+                int gridMinX = int.MaxValue, gridMinZ = int.MaxValue;
+                int gridMaxX = int.MinValue, gridMaxZ = int.MinValue;
+                foreach (var p in placements)
+                {
+                    int px = p["x"]?.AsInt ?? 0;
+                    int pz = p["z"]?.AsInt ?? 0;
+                    if (px < gridMinX) gridMinX = px;
+                    if (px > gridMaxX) gridMaxX = px;
+                    if (pz < gridMinZ) gridMinZ = pz;
+                    if (pz > gridMaxZ) gridMaxZ = pz;
+                }
+                // Add 1-cell padding
+                gridMinX = System.Math.Max(0, gridMinX - 1);
+                gridMinZ = System.Math.Max(0, gridMinZ - 1);
+                gridMaxX = System.Math.Min(map.Size.x - 1, gridMaxX + 1);
+                gridMaxZ = System.Math.Min(map.Size.z - 1, gridMaxZ + 1);
+                // Cap grid size to avoid huge renders
+                if ((gridMaxX - gridMinX + 1) <= 30 && (gridMaxZ - gridMinZ + 1) <= 30)
+                {
+                    result["area_after"] = MapTools.RenderArea(map, gridMinX, gridMinZ, gridMaxX, gridMaxZ);
+                    result["buildings_in_area"] = ScanBuildingsInArea(map, gridMinX, gridMinZ, gridMaxX, gridMaxZ);
+                }
+            }
+
+            return result.ToString();
+        }
+
+        public static string PlaceStructure(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var faction = Faction.OfPlayer;
+
+            string shape = args?["shape"]?.Value;
+            if (string.IsNullOrEmpty(shape))
+                return ToolExecutor.JsonError("'shape' is required. Valid shapes: room, wall_line, wall_rect.");
+
+            if (string.IsNullOrEmpty(args?["x1"]?.Value) || string.IsNullOrEmpty(args?["z1"]?.Value)
+                || string.IsNullOrEmpty(args?["x2"]?.Value) || string.IsNullOrEmpty(args?["z2"]?.Value))
+                return ToolExecutor.JsonError("x1, z1, x2, z2 coordinates are required.");
+
+            int x1 = args["x1"].AsInt;
+            int z1 = args["z1"].AsInt;
+            int x2 = args["x2"].AsInt;
+            int z2 = args["z2"].AsInt;
+
+            int minX = Math.Min(x1, x2), maxX = Math.Max(x1, x2);
+            int minZ = Math.Min(z1, z2), maxZ = Math.Max(z1, z2);
+
+            string stuffName = args?["stuff"]?.Value;
+            if (stuffName == "null") stuffName = null;
+            bool autoApprove = args?["auto_approve"]?.AsBool == true;
+
+            // Resolve wall def
+            var wallDef = ResolveBuildingDef("Wall");
+            if (wallDef == null)
+                return ToolExecutor.JsonError("Cannot find Wall building def.");
+
+            // Resolve door def
+            var doorDef = ResolveBuildingDef("Door");
+            if (doorDef == null)
+                return ToolExecutor.JsonError("Cannot find Door building def.");
+
+            // Resolve wall stuff
+            ThingDef wallStuff = null;
+            if (wallDef.MadeFromStuff)
+            {
+                if (string.IsNullOrEmpty(stuffName))
+                    return ToolExecutor.JsonError("Wall requires a material. Specify 'stuff' (e.g., 'WoodLog', 'BlocksGranite', 'Steel').");
+
+                wallStuff = ResolveStuffDef(stuffName, wallDef);
+                if (wallStuff == null)
+                {
+                    string suggestions = FindSimilarStuffs(stuffName, wallDef);
+                    string msg = "Invalid stuff '" + stuffName + "' for Wall";
+                    if (suggestions != null)
+                        msg += ". Did you mean: " + suggestions + "?";
+                    return ToolExecutor.JsonError(msg);
+                }
+            }
+
+            switch (shape)
+            {
+                case "room":
+                    return PlaceRoom(map, faction, wallDef, doorDef, wallStuff, minX, minZ, maxX, maxZ, args, autoApprove);
+                case "wall_line":
+                    return PlaceWallLine(map, faction, wallDef, wallStuff, x1, z1, x2, z2, autoApprove);
+                case "wall_rect":
+                    return PlaceWallRect(map, faction, wallDef, wallStuff, minX, minZ, maxX, maxZ, autoApprove);
+                default:
+                    return ToolExecutor.JsonError("Unknown shape: " + shape + ". Valid shapes: room, wall_line, wall_rect.");
+            }
+        }
+
+        private static string PlaceRoom(Map map, Faction faction, ThingDef wallDef, ThingDef doorDef,
+            ThingDef wallStuff, int minX, int minZ, int maxX, int maxZ, JSONNode args, bool autoApprove)
+        {
+            int width = maxX - minX + 1;
+            int height = maxZ - minZ + 1;
+
+            if (width > 25 || height > 25)
+                return ToolExecutor.JsonError("Maximum room size is 25x25. Got " + width + "x" + height + ".");
+
+            if (width < 3 || height < 3)
+                return ToolExecutor.JsonError("Minimum room size is 3x3 (1x1 interior + walls). Got " + width + "x" + height + ".");
+
+            // Resolve door stuff
+            string doorStuffName = args?["door_stuff"]?.Value;
+            if (string.IsNullOrEmpty(doorStuffName) || doorStuffName == "null")
+                doorStuffName = args?["stuff"]?.Value;
+            if (doorStuffName == "null") doorStuffName = null;
+            ThingDef doorStuff = wallStuff; // default to wall stuff
+            if (!string.IsNullOrEmpty(doorStuffName))
+            {
+                doorStuff = ResolveStuffDef(doorStuffName, doorDef);
+                if (doorStuff == null)
+                {
+                    string suggestions = FindSimilarStuffs(doorStuffName, doorDef);
+                    string msg = "Invalid stuff '" + doorStuffName + "' for Door";
+                    if (suggestions != null)
+                        msg += ". Did you mean: " + suggestions + "?";
+                    return ToolExecutor.JsonError(msg);
+                }
+            }
+            else if (doorDef.MadeFromStuff && doorStuff != null)
+            {
+                // Validate that wall stuff works for door too
+                var checkDoorStuff = ResolveStuffDef(doorStuff.defName, doorDef);
+                if (checkDoorStuff == null)
+                {
+                    // Wall stuff doesn't work for door, try WoodLog as fallback
+                    doorStuff = ResolveStuffDef("WoodLog", doorDef);
+                    if (doorStuff == null)
+                        return ToolExecutor.JsonError("Wall stuff '" + wallStuff.defName + "' is not valid for doors. Specify 'door_stuff'.");
+                }
+            }
+
+            // Determine door position
+            string doorSide = args?["door_side"]?.Value ?? "south";
+            doorSide = doorSide.ToLower();
+
+            // Calculate wall cells for the perimeter
+            var wallCells = GetRectOutline(minX, minZ, maxX, maxZ);
+
+            // Determine the door cell
+            IntVec3 doorCell;
+            Rot4 doorRot;
+
+            // Inner wall length (excluding corners)
+            int innerLen;
+            int doorOffset;
+
+            switch (doorSide)
+            {
+                case "south":
+                    innerLen = width - 2;
+                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
+                    doorCell = new IntVec3(minX + 1 + doorOffset, 0, minZ);
+                    doorRot = Rot4.North;
+                    break;
+                case "north":
+                    innerLen = width - 2;
+                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
+                    doorCell = new IntVec3(minX + 1 + doorOffset, 0, maxZ);
+                    doorRot = Rot4.North;
+                    break;
+                case "west":
+                    innerLen = height - 2;
+                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
+                    doorCell = new IntVec3(minX, 0, minZ + 1 + doorOffset);
+                    doorRot = Rot4.East;
+                    break;
+                case "east":
+                    innerLen = height - 2;
+                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
+                    doorCell = new IntVec3(maxX, 0, minZ + 1 + doorOffset);
+                    doorRot = Rot4.East;
+                    break;
+                default:
+                    return ToolExecutor.JsonError("Invalid door_side: " + doorSide + ". Valid: north, south, east, west.");
+            }
+
+            // Remove door cell from wall cells
+            wallCells.RemoveAll(c => c.x == doorCell.x && c.z == doorCell.z);
+
+            // Scan existing buildings before placement
+            int bbX1 = System.Math.Max(0, minX - 1);
+            int bbZ1 = System.Math.Max(0, minZ - 1);
+            int bbX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
+            int bbZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
+            JSONArray existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2);
+
+            // Place wall blueprints
+            var proposalIds = new JSONArray();
+            int placedCount = 0;
+            int failedCount = 0;
+            int sharedCount = 0;
+            var failuresList = new JSONArray();
+
+            foreach (var cell in wallCells)
+            {
+                if (HasExistingWallOrBlueprint(cell, map))
+                {
+                    sharedCount++;
+                    continue;
+                }
+                var pr = PlaceOneBlueprint(map, faction, wallDef, cell, wallStuff, Rot4.North, autoApprove);
+                if (pr.success)
+                {
+                    placedCount++;
+                    if (!autoApprove && pr.proposalId != null)
+                        proposalIds.Add(pr.proposalId);
+                }
+                else
+                {
+                    failedCount++;
+                    var entry = new JSONObject();
+                    entry["defName"] = wallDef.defName;
+                    entry["x"] = cell.x;
+                    entry["z"] = cell.z;
+                    entry["error"] = pr.error;
+                    failuresList.Add(entry);
+                }
+            }
+
+            // Place door blueprint
+            var doorResult = PlaceOneBlueprint(map, faction, doorDef, doorCell, doorStuff, doorRot, autoApprove);
+            if (doorResult.success)
+            {
+                placedCount++;
+                if (!autoApprove && doorResult.proposalId != null)
+                    proposalIds.Add(doorResult.proposalId);
+            }
+            else
+            {
+                failedCount++;
+                var entry = new JSONObject();
+                entry["defName"] = doorDef.defName;
+                entry["x"] = doorCell.x;
+                entry["z"] = doorCell.z;
+                entry["error"] = doorResult.error;
+                failuresList.Add(entry);
+            }
+
+            var result = new JSONObject();
+            result["shape"] = "room";
+            result["bounds"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            result["interior"] = (width - 2) + "x" + (height - 2);
+            result["door_side"] = doorSide;
+            result["door_position"] = doorCell.x + "," + doorCell.z;
+            result["placed"] = placedCount;
+            result["failed"] = failedCount;
+            if (sharedCount > 0)
+                result["shared"] = sharedCount;
+            if (!autoApprove && proposalIds.Count > 0)
+                result["proposal_ids"] = proposalIds;
+            if (failuresList.Count > 0)
+                result["failures"] = failuresList;
+
+            // Render existing buildings and after area grid so the AI can see what changed
+            if (existingInArea != null)
+                result["existing_in_area"] = existingInArea;
+            int gridX1 = System.Math.Max(0, minX - 1);
+            int gridZ1 = System.Math.Max(0, minZ - 1);
+            int gridX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
+            int gridZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
+            result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
+            result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
+
+            return result.ToString();
+        }
+
+        private static string PlaceWallLine(Map map, Faction faction, ThingDef wallDef,
+            ThingDef wallStuff, int x1, int z1, int x2, int z2, bool autoApprove)
+        {
+            var cells = GetLine(x1, z1, x2, z2);
+
+            // Scan existing buildings before placement
+            JSONArray existingInArea;
+            {
+                int wlMinX = System.Math.Min(x1, x2);
+                int wlMinZ = System.Math.Min(z1, z2);
+                int wlMaxX = System.Math.Max(x1, x2);
+                int wlMaxZ = System.Math.Max(z1, z2);
+                int bbX1 = System.Math.Max(0, wlMinX - 1);
+                int bbZ1 = System.Math.Max(0, wlMinZ - 1);
+                int bbX2 = System.Math.Min(map.Size.x - 1, wlMaxX + 1);
+                int bbZ2 = System.Math.Min(map.Size.z - 1, wlMaxZ + 1);
+                existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2);
+            }
+
+            var proposalIds = new JSONArray();
+            int placedCount = 0;
+            int failedCount = 0;
+            int sharedCount = 0;
+            var failuresList = new JSONArray();
+
+            foreach (var cell in cells)
+            {
+                if (HasExistingWallOrBlueprint(cell, map))
+                {
+                    sharedCount++;
+                    continue;
+                }
+                var pr = PlaceOneBlueprint(map, faction, wallDef, cell, wallStuff, Rot4.North, autoApprove);
+                if (pr.success)
+                {
+                    placedCount++;
+                    if (!autoApprove && pr.proposalId != null)
+                        proposalIds.Add(pr.proposalId);
+                }
+                else
+                {
+                    failedCount++;
+                    var entry = new JSONObject();
+                    entry["defName"] = wallDef.defName;
+                    entry["x"] = cell.x;
+                    entry["z"] = cell.z;
+                    entry["error"] = pr.error;
+                    failuresList.Add(entry);
+                }
+            }
+
+            var result = new JSONObject();
+            result["shape"] = "wall_line";
+            result["from"] = x1 + "," + z1;
+            result["to"] = x2 + "," + z2;
+            result["placed"] = placedCount;
+            result["failed"] = failedCount;
+            if (sharedCount > 0)
+                result["shared"] = sharedCount;
+            if (!autoApprove && proposalIds.Count > 0)
+                result["proposal_ids"] = proposalIds;
+            if (failuresList.Count > 0)
+                result["failures"] = failuresList;
+
+            // Render existing buildings and after area grid so the AI can see what changed
+            if (existingInArea != null)
+                result["existing_in_area"] = existingInArea;
+            {
+                int wlMinX = System.Math.Min(x1, x2);
+                int wlMinZ = System.Math.Min(z1, z2);
+                int wlMaxX = System.Math.Max(x1, x2);
+                int wlMaxZ = System.Math.Max(z1, z2);
+                int gridX1 = System.Math.Max(0, wlMinX - 1);
+                int gridZ1 = System.Math.Max(0, wlMinZ - 1);
+                int gridX2 = System.Math.Min(map.Size.x - 1, wlMaxX + 1);
+                int gridZ2 = System.Math.Min(map.Size.z - 1, wlMaxZ + 1);
+                result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
+                result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
+            }
+
+            return result.ToString();
+        }
+
+        private static string PlaceWallRect(Map map, Faction faction, ThingDef wallDef,
+            ThingDef wallStuff, int minX, int minZ, int maxX, int maxZ, bool autoApprove)
+        {
+            var cells = GetRectOutline(minX, minZ, maxX, maxZ);
+
+            // Scan existing buildings before placement
+            int bbX1 = System.Math.Max(0, minX - 1);
+            int bbZ1 = System.Math.Max(0, minZ - 1);
+            int bbX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
+            int bbZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
+            JSONArray existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2);
+
+            var proposalIds = new JSONArray();
+            int placedCount = 0;
+            int failedCount = 0;
+            int sharedCount = 0;
+            var failuresList = new JSONArray();
+
+            foreach (var cell in cells)
+            {
+                if (HasExistingWallOrBlueprint(cell, map))
+                {
+                    sharedCount++;
+                    continue;
+                }
+                var pr = PlaceOneBlueprint(map, faction, wallDef, cell, wallStuff, Rot4.North, autoApprove);
+                if (pr.success)
+                {
+                    placedCount++;
+                    if (!autoApprove && pr.proposalId != null)
+                        proposalIds.Add(pr.proposalId);
+                }
+                else
+                {
+                    failedCount++;
+                    var entry = new JSONObject();
+                    entry["defName"] = wallDef.defName;
+                    entry["x"] = cell.x;
+                    entry["z"] = cell.z;
+                    entry["error"] = pr.error;
+                    failuresList.Add(entry);
+                }
+            }
+
+            var result = new JSONObject();
+            result["shape"] = "wall_rect";
+            result["bounds"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            result["placed"] = placedCount;
+            result["failed"] = failedCount;
+            if (sharedCount > 0)
+                result["shared"] = sharedCount;
+            if (!autoApprove && proposalIds.Count > 0)
+                result["proposal_ids"] = proposalIds;
+            if (failuresList.Count > 0)
+                result["failures"] = failuresList;
+
+            // Render existing buildings and after area grid so the AI can see what changed
+            if (existingInArea != null)
+                result["existing_in_area"] = existingInArea;
+            int gridX1 = System.Math.Max(0, minX - 1);
+            int gridZ1 = System.Math.Max(0, minZ - 1);
+            int gridX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
+            int gridZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
+            result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
+            result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
+
             return result.ToString();
         }
 
@@ -322,6 +811,7 @@ namespace RimMind.Tools
 
             bool removeAll = args?["all"]?.AsBool == true;
             var idsNode = args?["proposal_ids"];
+            idsNode = UnwrapStringArray(idsNode);
             bool hasArea = !string.IsNullOrEmpty(args?["x"]?.Value);
 
             if (!removeAll && (idsNode == null || !idsNode.IsArray) && !hasArea)
@@ -378,6 +868,7 @@ namespace RimMind.Tools
 
             bool approveAll = args?["all"]?.AsBool == true;
             var idsNode = args?["proposal_ids"];
+            idsNode = UnwrapStringArray(idsNode);
             bool hasArea = !string.IsNullOrEmpty(args?["x"]?.Value);
 
             if (!approveAll && (idsNode == null || !idsNode.IsArray) && !hasArea)
@@ -429,26 +920,231 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        // --- Core placement helper ---
+
+        private static PlacementResult PlaceOneBlueprint(Map map, Faction faction, ThingDef def, IntVec3 pos, ThingDef stuff, Rot4 rot, bool autoApprove)
+        {
+            var pr = new PlacementResult();
+
+            var report = GenConstruct.CanPlaceBlueprintAt(def, pos, rot, map, false, null, null, stuff);
+            if (!report.Accepted)
+            {
+                string reason = report.Reason ?? "blocked";
+                pr.error = "Cannot place at (" + pos.x + "," + pos.z + "): " + reason + GetPlacementHint(reason, def, map, pos);
+                return pr;
+            }
+
+            var blueprint = GenConstruct.PlaceBlueprintForBuild(def, pos, map, rot, faction, stuff);
+            if (blueprint == null)
+            {
+                pr.error = "Failed to place blueprint for " + def.label;
+                return pr;
+            }
+
+            if (!autoApprove)
+            {
+                var forbidComp = blueprint.GetComp<CompForbiddable>();
+                if (forbidComp != null)
+                {
+                    blueprint.SetForbidden(true, false);
+                }
+                else
+                {
+                    Log.Warning("[RimMind] Blueprint lacks CompForbiddable: " + blueprint.def.defName);
+                }
+
+                string proposalId = ProposalTracker.Track(blueprint);
+                pr.proposalId = proposalId;
+            }
+
+            pr.success = true;
+            pr.blueprint = blueprint;
+            return pr;
+        }
+
+        // --- Utility helpers ---
+
+        // LLMs sometimes send JSON arrays as double-encoded strings -- unwrap them
+        private static JSONNode UnwrapStringArray(JSONNode node)
+        {
+            if (node != null && node.IsString)
+            {
+                try
+                {
+                    var parsed = JSONNode.Parse(node.Value);
+                    if (parsed != null && parsed.IsArray) return parsed;
+                }
+                catch { }
+            }
+            return node;
+        }
+
         private static ThingDef ResolveBuildingDef(string defName)
         {
             var def = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
-            if (def == null || def.category != ThingCategory.Building) return null;
-            if (typeof(Blueprint).IsAssignableFrom(def.thingClass)) return null;
-            if (typeof(Frame).IsAssignableFrom(def.thingClass)) return null;
-            return def;
+            if (def != null && def.category == ThingCategory.Building
+                && !typeof(Blueprint).IsAssignableFrom(def.thingClass)
+                && !typeof(Frame).IsAssignableFrom(def.thingClass))
+            {
+                return def;
+            }
+
+            // Fuzzy: case-insensitive match across all building defs
+            foreach (var candidate in DefDatabase<ThingDef>.AllDefs)
+            {
+                if (candidate.category != ThingCategory.Building) continue;
+                if (typeof(Blueprint).IsAssignableFrom(candidate.thingClass)) continue;
+                if (typeof(Frame).IsAssignableFrom(candidate.thingClass)) continue;
+                if (string.Equals(candidate.defName, defName, StringComparison.OrdinalIgnoreCase))
+                    return candidate;
+            }
+
+            return null;
         }
 
         private static ThingDef ResolveStuffDef(string stuffName, ThingDef buildingDef)
         {
             var stuff = DefDatabase<ThingDef>.GetNamedSilentFail(stuffName);
-            if (stuff == null || !stuff.IsStuff) return null;
-            if (buildingDef.stuffCategories == null || stuff.stuffProps?.categories == null) return null;
+            if (stuff != null && stuff.IsStuff && IsStuffValidForBuilding(stuff, buildingDef))
+                return stuff;
+
+            // Fuzzy: case-insensitive match
+            foreach (var candidate in DefDatabase<ThingDef>.AllDefs)
+            {
+                if (!candidate.IsStuff) continue;
+                if (!string.Equals(candidate.defName, stuffName, StringComparison.OrdinalIgnoreCase)) continue;
+                if (IsStuffValidForBuilding(candidate, buildingDef))
+                    return candidate;
+            }
+
+            return null;
+        }
+
+        private static bool IsStuffValidForBuilding(ThingDef stuff, ThingDef buildingDef)
+        {
+            if (buildingDef.stuffCategories == null || stuff.stuffProps?.categories == null)
+                return false;
             foreach (var cat in stuff.stuffProps.categories)
             {
                 if (buildingDef.stuffCategories.Contains(cat))
-                    return stuff;
+                    return true;
             }
-            return null;
+            return false;
+        }
+
+        private static string FindSimilarBuildings(string defName)
+        {
+            if (string.IsNullOrEmpty(defName)) return null;
+
+            var matches = new List<string>();
+            string lower = defName.ToLower();
+
+            foreach (var candidate in DefDatabase<ThingDef>.AllDefs)
+            {
+                if (candidate.category != ThingCategory.Building) continue;
+                if (candidate.designationCategory == null) continue;
+                if (typeof(Blueprint).IsAssignableFrom(candidate.thingClass)) continue;
+                if (typeof(Frame).IsAssignableFrom(candidate.thingClass)) continue;
+
+                if (candidate.defName.ToLower().Contains(lower)
+                    || (candidate.label != null && candidate.label.ToLower().Contains(lower)))
+                {
+                    matches.Add(candidate.defName);
+                    if (matches.Count >= 3) break;
+                }
+            }
+
+            return matches.Count > 0 ? string.Join(", ", matches) : null;
+        }
+
+        private static string FindSimilarStuffs(string stuffName, ThingDef buildingDef)
+        {
+            if (string.IsNullOrEmpty(stuffName) || buildingDef == null) return null;
+
+            var matches = new List<string>();
+            string lower = stuffName.ToLower();
+
+            foreach (var candidate in DefDatabase<ThingDef>.AllDefs)
+            {
+                if (!candidate.IsStuff) continue;
+                if (!IsStuffValidForBuilding(candidate, buildingDef)) continue;
+
+                if (candidate.defName.ToLower().Contains(lower)
+                    || (candidate.label != null && candidate.label.ToLower().Contains(lower)))
+                {
+                    matches.Add(candidate.defName);
+                    if (matches.Count >= 3) break;
+                }
+            }
+
+            return matches.Count > 0 ? string.Join(", ", matches) : null;
+        }
+
+        private static string GetStuffHint(ThingDef def)
+        {
+            if (def.stuffCategories == null || def.stuffCategories.Count == 0)
+                return null;
+
+            var hints = new List<string>();
+            foreach (var cat in def.stuffCategories)
+            {
+                string catName = cat.defName;
+                if (catName.Contains("Stony"))
+                    hints.AddRange(new[] { "BlocksGranite", "BlocksSandstone", "BlocksMarble" });
+                else if (catName.Contains("Metallic"))
+                    hints.AddRange(new[] { "Steel", "Plasteel", "Silver" });
+                else if (catName.Contains("Woody"))
+                    hints.Add("WoodLog");
+            }
+
+            if (hints.Count == 0) return null;
+            // Deduplicate and take up to 3
+            var unique = new List<string>();
+            foreach (var h in hints)
+            {
+                if (!unique.Contains(h))
+                    unique.Add(h);
+                if (unique.Count >= 3) break;
+            }
+            return string.Join(", ", unique);
+        }
+
+        private static string GetPlacementHint(string reason, ThingDef def, Map map = null, IntVec3 pos = default)
+        {
+            if (string.IsNullOrEmpty(reason)) return "";
+
+            if (reason.IndexOf("Occupied", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                string occupantInfo = null;
+                if (map != null && pos.InBounds(map))
+                {
+                    var things = pos.GetThingList(map);
+                    foreach (var t in things)
+                    {
+                        if (t.def.category == ThingCategory.Building || t is Blueprint)
+                        {
+                            string size = t.def.size.x + "x" + t.def.size.z;
+                            occupantInfo = t.def.label + (size != "1x1" ? " (" + size + ")" : "");
+                            break;
+                        }
+                    }
+                }
+                if (occupantInfo != null)
+                    return " Occupied by " + occupantInfo + ". Try adjacent cells.";
+                return " Try adjacent cells or remove existing building first.";
+            }
+
+            if (reason.IndexOf("Terrain", StringComparison.OrdinalIgnoreCase) >= 0
+                || reason.IndexOf("afford", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                string needed = def.terrainAffordanceNeeded != null ? def.terrainAffordanceNeeded.defName : "suitable terrain";
+                return " This needs " + needed + ". Try a different location.";
+            }
+
+            if (reason.IndexOf("Would block", StringComparison.OrdinalIgnoreCase) >= 0)
+                return " Would block an adjacent door or passage.";
+
+            return "";
         }
 
         private static Rot4 ParseRotation(JSONNode rotNode)
@@ -462,6 +1158,145 @@ namespace RimMind.Tools
                 case 3: return Rot4.West;
                 default: return Rot4.North;
             }
+        }
+
+        private static int ParseDoorOffset(JSONNode offsetNode, int innerLen)
+        {
+            if (innerLen <= 0) return 0;
+            if (offsetNode == null || string.IsNullOrEmpty(offsetNode.Value))
+                return innerLen / 2; // default: center
+            int offset = offsetNode.AsInt;
+            if (offset < 0) offset = 0;
+            if (offset >= innerLen) offset = innerLen - 1;
+            return offset;
+        }
+
+        private static bool HasExistingWallOrBlueprint(IntVec3 pos, Map map)
+        {
+            var thingList = pos.GetThingList(map);
+            for (int i = 0; i < thingList.Count; i++)
+            {
+                var thing = thingList[i];
+                if (thing.def.category == ThingCategory.Building && thing.def.holdsRoof)
+                    return true;
+                if (thing is Blueprint_Build bp && bp.def.entityDefToBuild is ThingDef td && td.holdsRoof)
+                    return true;
+            }
+            return false;
+        }
+
+        // --- Area scanning helper ---
+
+        private static JSONArray ScanBuildingsInArea(Map map, int minX, int minZ, int maxX, int maxZ)
+        {
+            var seen = new HashSet<Thing>();
+            var wallCounts = new Dictionary<string, int>(); // stuff -> count for walls
+            var entries = new JSONArray();
+
+            for (int z = minZ; z <= maxZ; z++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    if (!cell.InBounds(map)) continue;
+
+                    foreach (var thing in cell.GetThingList(map))
+                    {
+                        if (seen.Contains(thing)) continue;
+
+                        ThingDef buildDef = null;
+                        bool isBlueprint = false;
+
+                        if (thing is Blueprint_Build bpb)
+                        {
+                            buildDef = bpb.def.entityDefToBuild as ThingDef;
+                            isBlueprint = true;
+                        }
+                        else if (thing.def.category == ThingCategory.Building)
+                        {
+                            if (typeof(Blueprint).IsAssignableFrom(thing.def.thingClass)) continue;
+                            if (typeof(Frame).IsAssignableFrom(thing.def.thingClass)) continue;
+                            buildDef = thing.def;
+                        }
+
+                        if (buildDef == null) continue;
+                        seen.Add(thing);
+
+                        // Summarize walls by count instead of listing individually
+                        bool isWall = buildDef.passability == Traversability.Impassable && buildDef.fillPercent >= 0.9f;
+                        if (isWall)
+                        {
+                            string stuffKey = (isBlueprint ? "blueprint:" : "") + (thing.Stuff?.defName ?? "none");
+                            wallCounts[stuffKey] = (wallCounts.ContainsKey(stuffKey) ? wallCounts[stuffKey] : 0) + 1;
+                            continue;
+                        }
+
+                        var entry = new JSONObject();
+                        entry["def"] = buildDef.defName;
+                        entry["label"] = buildDef.label;
+                        if (isBlueprint) entry["blueprint"] = true;
+                        entry["x"] = thing.Position.x;
+                        entry["z"] = thing.Position.z;
+                        string size = buildDef.size.x + "x" + buildDef.size.z;
+                        if (size != "1x1") entry["size"] = size;
+                        if (thing.Stuff != null) entry["stuff"] = thing.Stuff.defName;
+                        entries.Add(entry);
+                    }
+                }
+            }
+
+            // Add wall summaries
+            foreach (var kvp in wallCounts)
+            {
+                var entry = new JSONObject();
+                bool isBp = kvp.Key.StartsWith("blueprint:");
+                string stuff = isBp ? kvp.Key.Substring(10) : kvp.Key;
+                entry["def"] = "Wall";
+                entry["count"] = kvp.Value;
+                if (isBp) entry["blueprint"] = true;
+                if (stuff != "none") entry["stuff"] = stuff;
+                entries.Add(entry);
+            }
+
+            return entries;
+        }
+
+        // --- Shape helpers ---
+
+        private static List<IntVec3> GetRectOutline(int x1, int z1, int x2, int z2)
+        {
+            var cells = new List<IntVec3>();
+            int minX = Math.Min(x1, x2), maxX = Math.Max(x1, x2);
+            int minZ = Math.Min(z1, z2), maxZ = Math.Max(z1, z2);
+            for (int x = minX; x <= maxX; x++)
+            {
+                cells.Add(new IntVec3(x, 0, minZ));
+                if (minZ != maxZ) cells.Add(new IntVec3(x, 0, maxZ));
+            }
+            for (int z = minZ + 1; z < maxZ; z++)
+            {
+                cells.Add(new IntVec3(minX, 0, z));
+                if (minX != maxX) cells.Add(new IntVec3(maxX, 0, z));
+            }
+            return cells;
+        }
+
+        private static List<IntVec3> GetLine(int x1, int z1, int x2, int z2)
+        {
+            var cells = new List<IntVec3>();
+            int dx = Math.Abs(x2 - x1), dz = Math.Abs(z2 - z1);
+            int sx = x1 < x2 ? 1 : -1, sz = z1 < z2 ? 1 : -1;
+            int err = dx - dz;
+            int cx = x1, cz = z1;
+            while (true)
+            {
+                cells.Add(new IntVec3(cx, 0, cz));
+                if (cx == x2 && cz == z2) break;
+                int e2 = 2 * err;
+                if (e2 > -dz) { err -= dz; cx += sx; }
+                if (e2 < dx) { err += dx; cz += sz; }
+            }
+            return cells;
         }
     }
 }

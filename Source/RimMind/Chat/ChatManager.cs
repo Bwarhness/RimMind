@@ -51,7 +51,7 @@ namespace RimMind.Chat
             var request = BuildRequest();
             DebugLogger.LogAPIRequest(request.messages.Count, request.tools?.Count ?? 0, request.model);
 
-            OpenRouterClient.SendAsync(request, response =>
+            Action<ChatResponse> handleResponse = response =>
             {
                 if (!response.success)
                 {
@@ -109,7 +109,14 @@ namespace RimMind.Chat
                     StatusMessage = "";
                     OnMessageUpdated?.Invoke();
                 }
-            });
+            };
+
+            if (RimMindMod.Settings.IsClaudeCode)
+                ClaudeCodeClient.SendAsync(request, handleResponse);
+            else if (RimMindMod.Settings.IsAnthropic)
+                AnthropicClient.SendAsync(request, handleResponse);
+            else
+                OpenRouterClient.SendAsync(request, handleResponse);
         }
 
         private ChatRequest BuildRequest()
@@ -118,7 +125,8 @@ namespace RimMind.Chat
 
             // System prompt
             string context = ColonyContext.GetLightweightContext();
-            messages.Add(ChatMessage.System(PromptBuilder.BuildChatSystemPrompt(context)));
+            string directives = Core.DirectivesTracker.Instance?.PlayerDirectives;
+            messages.Add(ChatMessage.System(PromptBuilder.BuildChatSystemPrompt(context, directives)));
 
             // Conversation history (trimmed)
             int start = Math.Max(0, conversationHistory.Count - MAX_HISTORY_MESSAGES);
@@ -129,7 +137,7 @@ namespace RimMind.Chat
 
             return new ChatRequest
             {
-                model = RimMindMod.Settings.modelId,
+                model = RimMindMod.Settings.ActiveModelId,
                 messages = messages,
                 temperature = RimMindMod.Settings.temperature,
                 max_tokens = RimMindMod.Settings.maxTokens,

@@ -166,6 +166,7 @@ namespace RimMind.Tools
             result["region"] = region;
 
             var usedCodes = new HashSet<char>();
+            var codeDefNames = new Dictionary<char, HashSet<string>>();
             var grid = new JSONArray();
 
             // Iterate high Z to low Z so grid reads north-to-south (top-to-bottom)
@@ -178,6 +179,40 @@ namespace RimMind.Tools
                     char code = ClassifyCell(cell, map);
                     rowChars[col - startX] = code;
                     usedCodes.Add(code);
+
+                    // Track actual defNames for enriched legend
+                    if (char.IsLetter(code))
+                    {
+                        if (!codeDefNames.ContainsKey(code))
+                            codeDefNames[code] = new HashSet<string>();
+
+                        foreach (var thing in cell.GetThingList(map))
+                        {
+                            if (thing is Blueprint_Build bpb)
+                            {
+                                var builtDef = bpb.def.entityDefToBuild as ThingDef;
+                                if (builtDef != null)
+                                {
+                                    codeDefNames[code].Add(builtDef.defName);
+                                    break;
+                                }
+                            }
+                            else if (thing is Blueprint_Install bpi)
+                            {
+                                var builtDef = bpi.def.entityDefToBuild as ThingDef;
+                                if (builtDef != null)
+                                {
+                                    codeDefNames[code].Add(builtDef.defName);
+                                    break;
+                                }
+                            }
+                            else if (thing.def.category == ThingCategory.Building)
+                            {
+                                codeDefNames[code].Add(thing.def.defName);
+                                break;
+                            }
+                        }
+                    }
                 }
                 grid.Add(new string(rowChars));
             }
@@ -189,7 +224,15 @@ namespace RimMind.Tools
             {
                 string desc = GetLegendDescription(code);
                 if (desc != null)
+                {
+                    if (codeDefNames.ContainsKey(code) && codeDefNames[code].Count > 0 && codeDefNames[code].Count <= 5)
+                    {
+                        var sorted = codeDefNames[code].ToList();
+                        sorted.Sort();
+                        desc += " (" + string.Join(", ", sorted) + ")";
+                    }
                     legend[code.ToString()] = desc;
+                }
             }
             result["legend"] = legend;
 
@@ -250,19 +293,63 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
-        private static char ClassifyCell(IntVec3 cell, Map map)
+        /// <summary>
+        /// Render a small character grid of a map area. Used by other tools to show build results.
+        /// </summary>
+        public static string RenderArea(Map map, int x1, int z1, int x2, int z2)
+        {
+            int minX = System.Math.Min(x1, x2);
+            int maxX = System.Math.Max(x1, x2);
+            int minZ = System.Math.Min(z1, z2);
+            int maxZ = System.Math.Max(z1, z2);
+
+            var sb = new System.Text.StringBuilder();
+            // Render top-to-bottom (high Z first)
+            for (int z = maxZ; z >= minZ; z--)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    if (!cell.InBounds(map))
+                        sb.Append(' ');
+                    else
+                        sb.Append(ClassifyCell(cell, map));
+                }
+                if (z > minZ) sb.Append('\n');
+            }
+            return sb.ToString();
+        }
+
+        internal static char ClassifyCell(IntVec3 cell, Map map)
         {
             if (!cell.InBounds(map)) return ' ';
 
             var things = cell.GetThingList(map);
             Building building = null;
+            Thing blueprint = null;
+            ThingDef blueprintDef = null;
             Pawn pawn = null;
             bool hasItem = false;
 
             for (int i = 0; i < things.Count; i++)
             {
                 var thing = things[i];
-                if (thing is Building b && building == null)
+                // Check for blueprints (Blueprint doesn't extend Building!)
+                if (thing is Blueprint bp)
+                {
+                    ThingDef builtDef = null;
+                    if (bp is Blueprint_Build bpb)
+                        builtDef = bpb.def.entityDefToBuild as ThingDef;
+                    else if (bp is Blueprint_Install bpi)
+                        builtDef = bpi.def.entityDefToBuild as ThingDef;
+
+                    if (builtDef != null && blueprint == null)
+                    {
+                        blueprint = bp;
+                        blueprintDef = builtDef;
+                    }
+                }
+                else if (thing is Building b && building == null)
                     building = b;
                 else if (thing is Pawn p && pawn == null)
                     pawn = p;
@@ -275,6 +362,13 @@ namespace RimMind.Tools
             {
                 char bc = GetBuildingCode(building);
                 if (bc != '\0') return bc;
+            }
+
+            // Priority 1b: Blueprints (show as lowercase of what they'll become)
+            if (blueprint != null && blueprintDef != null)
+            {
+                char code = GetBuildingCodeForDef(blueprintDef);
+                return char.ToLower(code);
             }
 
             // Priority 2: Pawns
@@ -393,6 +487,57 @@ namespace RimMind.Tools
             return 'Q';
         }
 
+        internal static char GetBuildingCodeForDef(ThingDef def)
+        {
+            if (def == null) return 'Q';
+
+            // Natural rock
+            if (def.IsNonResourceNaturalRock) return '^';
+            // Door
+            if (typeof(Building_Door).IsAssignableFrom(def.thingClass)) return 'D';
+            // Trap
+            if (typeof(Building_Trap).IsAssignableFrom(def.thingClass)) return 'X';
+            // Turret
+            if (typeof(Building_Turret).IsAssignableFrom(def.thingClass)) return 'U';
+            // Smoothed rock
+            if (def.IsSmoothed) return '#';
+            // Wall (impassable, high fill)
+            if (def.passability == Traversability.Impassable && def.fillPercent >= 0.9f) return 'W';
+            // Beds
+            if (typeof(Building_Bed).IsAssignableFrom(def.thingClass))
+            {
+                if (def.defName.Contains("Medical")) return 'M';
+                return 'B';
+            }
+            // Power conduit
+            if (def.defName.Contains("Conduit")) return 'P';
+            // Barricade/Sandbag
+            if (def.defName.Contains("Sandbag") || def.defName.Contains("Barricade")) return 'F';
+            // Nutrient paste
+            if (def.defName.Contains("NutrientPaste")) return 'N';
+            // Research bench
+            if (def.defName.Contains("ResearchBench")) return 'R';
+            // Work tables
+            if (typeof(Building_WorkTable).IsAssignableFrom(def.thingClass)) return 'H';
+            // Climate control
+            if (def.defName.Contains("Heater") || def.defName.Contains("Cooler") || def.defName.Contains("Vent")) return 'K';
+            // Lamp/Light
+            if (def.defName.Contains("Lamp") || def.defName.Contains("Light") || def.defName.Contains("Torch")) return 'L';
+            // Battery
+            if (def.defName.Contains("Battery")) return 'A';
+            // Power generators
+            if (def.defName.Contains("Generator") || def.defName.Contains("Solar") || def.defName.Contains("Wind") ||
+                def.defName.Contains("Geothermal") || def.defName.Contains("WoodFired") || def.defName.Contains("Chemfuel")) return 'G';
+            // Table (eat surface)
+            if (def.surfaceType == SurfaceType.Eat) return 'T';
+            // Chair
+            if (def.building != null && def.building.isSittable) return 'C';
+            // Shelf/storage
+            if (def.thingClass != null && def.thingClass.Name.Contains("Storage")) return 'S';
+            // Fallback
+            return 'Q';
+        }
+
         private static char GetPawnCode(Pawn p)
         {
             if (p.Faction != null && p.Faction.IsPlayer)
@@ -430,8 +575,15 @@ namespace RimMind.Tools
             return 'o';
         }
 
-        private static string GetLegendDescription(char code)
+        internal static string GetLegendDescription(char code)
         {
+            // Blueprint variants (lowercase building codes, excluding letters already used: g=growing, s=stockpile, f=floor, p=plan)
+            if (char.IsLower(code) && "wdbmtchraulknxq".IndexOf(code) >= 0)
+            {
+                string baseDesc = GetLegendDescription(char.ToUpper(code));
+                return baseDesc != null ? baseDesc + " (blueprint)" : "blueprint";
+            }
+
             switch (code)
             {
                 case 'W': return "wall";
