@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+    <name>RimMind</name>
+    <author>RimMind Team</author>
+    <packageId>rimmind.ai</packageId>
+    <supportedVersions>
+        <li>1.5</li>
+        <li>1.6</li>
+    </supportedVersions>
+    <description>RimMind integrates AI intelligence into your colony via OpenRouter. Features an in-game AI chat companion that can query your colony's state using 26 different tools - colonists, resources, research, defense, and more. The AI advisor knows everything about your colony and can help you make decisions.
+
+Configure your OpenRouter API key in mod settings to get started.</description>
+    <modDependencies>
+        <li>
+            <packageId>brrainz.harmony</packageId>
+            <displayName>Harmony</displayName>
+            <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+        </li>
+    </modDependencies>
+    <loadAfter>
+        <li>brrainz.harmony</li>
+    </loadAfter>
+</ModMetaData>

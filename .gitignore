@@ -1,0 +1,17 @@
+# Build output
+Assemblies/*.dll
+Assemblies/*.pdb
+
+# IDE
+.vs/
+*.user
+*.suo
+bin/
+obj/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json

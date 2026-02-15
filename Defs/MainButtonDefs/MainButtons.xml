@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+    <MainButtonDef>
+        <defName>RimMind</defName>
+        <label>RimMind</label>
+        <description>Open the RimMind AI chat companion. Ask questions about your colony, get advice, or chat with your AI advisor.</description>
+        <workerClass>RimMind.Chat.MainButtonWorker_RimMind</workerClass>
+        <order>1200</order>
+        <defaultHotKey>F10</defaultHotKey>
+        <validWithoutMap>false</validWithoutMap>
+    </MainButtonDef>
+</Defs>
