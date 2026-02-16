@@ -125,7 +125,7 @@ namespace RimMind.Tools
             // Find work type by matching defName or label
             string workTypeLower = workType.ToLower();
             var workTypeDef = DefDatabase<WorkTypeDef>.AllDefsListForReading
-                .FirstOrDefault(w => 
+                .FirstOrDefault(w =>
                     w.defName.ToLower() == workTypeLower ||
                     (w.labelShort?.ToLower() == workTypeLower) ||
                     (w.label?.ToLower() == workTypeLower) ||
@@ -152,6 +152,75 @@ namespace RimMind.Tools
             result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
             result["workType"] = workTypeDef.labelShort ?? workTypeDef.defName;
             result["priority"] = priority;
+            return result.ToString();
+        }
+
+        public static string SetSchedule(string colonistName, int hour, string assignment)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(colonistName)) return ToolExecutor.JsonError("colonist parameter required.");
+            if (hour < 0 || hour > 23) return ToolExecutor.JsonError("hour must be 0-23.");
+            if (string.IsNullOrEmpty(assignment)) return ToolExecutor.JsonError("assignment parameter required.");
+
+            var pawn = ColonistTools.FindPawnByName(colonistName);
+            if (pawn == null) return ToolExecutor.JsonError("Colonist '" + colonistName + "' not found.");
+
+            if (pawn.timetable == null) return ToolExecutor.JsonError("Colonist has no schedule.");
+
+            // Find assignment by matching defName or label
+            string assignmentLower = assignment.ToLower();
+            var assignmentDef = DefDatabase<TimeAssignmentDef>.AllDefsListForReading
+                .FirstOrDefault(a =>
+                    a.defName.ToLower() == assignmentLower ||
+                    (a.label?.ToLower() == assignmentLower) ||
+                    (a.labelShort?.ToLower() == assignmentLower));
+
+            if (assignmentDef == null)
+            {
+                return ToolExecutor.JsonError("Assignment '" + assignment + "' not found. Available: " +
+                    string.Join(", ", DefDatabase<TimeAssignmentDef>.AllDefsListForReading.Select(a => a.label ?? a.defName)));
+            }
+
+            pawn.timetable.SetAssignment(hour, assignmentDef);
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["hour"] = hour;
+            result["assignment"] = assignmentDef.label ?? assignmentDef.defName;
+            return result.ToString();
+        }
+
+        public static string CopySchedule(string fromName, string toName)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(fromName)) return ToolExecutor.JsonError("from parameter required.");
+            if (string.IsNullOrEmpty(toName)) return ToolExecutor.JsonError("to parameter required.");
+
+            var fromPawn = ColonistTools.FindPawnByName(fromName);
+            if (fromPawn == null) return ToolExecutor.JsonError("Source colonist '" + fromName + "' not found.");
+
+            var toPawn = ColonistTools.FindPawnByName(toName);
+            if (toPawn == null) return ToolExecutor.JsonError("Target colonist '" + toName + "' not found.");
+
+            if (fromPawn.timetable == null) return ToolExecutor.JsonError("Source colonist has no schedule.");
+            if (toPawn.timetable == null) return ToolExecutor.JsonError("Target colonist has no schedule.");
+
+            for (int hour = 0; hour < 24; hour++)
+            {
+                var assignment = fromPawn.timetable.GetAssignment(hour);
+                toPawn.timetable.SetAssignment(hour, assignment);
+            }
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["from"] = fromPawn.Name?.ToStringShort ?? "Unknown";
+            result["to"] = toPawn.Name?.ToStringShort ?? "Unknown";
+            result["message"] = "Schedule copied successfully";
             return result.ToString();
         }
     }
