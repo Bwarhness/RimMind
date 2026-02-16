@@ -67,6 +67,12 @@ namespace RimMind.Tools
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
 
+            // Area Restrictions
+            { "list_areas", args => AreaTools.ListAreas() },
+            { "get_area_restrictions", args => AreaTools.GetAreaRestrictions() },
+            { "restrict_to_area", args => AreaTools.RestrictToArea(args?["colonist"]?.Value, args?["areaName"]?.Value) },
+            { "unrestrict", args => AreaTools.Unrestrict(args?["colonist"]?.Value) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
