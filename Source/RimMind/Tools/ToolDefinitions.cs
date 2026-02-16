@@ -106,6 +106,16 @@ namespace RimMind.Tools
                 MakeParam("label", "string", "The label/name of the zone to delete"),
                 MakeOptionalParam("remove_plans", "boolean", "Also remove plan designations in the area (planning zones only, default: false)")));
 
+            // Bed Assignment Tools
+            tools.Add(MakeTool("list_beds", "List all beds in the colony with owner assignments, locations, and room quality."));
+            tools.Add(MakeTool("get_bed_assignments", "Get current bed assignments for all colonists."));
+            tools.Add(MakeTool("assign_bed", "Assign a colonist to a specific bed. Use list_beds to find bed locations.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "Bed X coordinate"),
+                MakeParam("z", "integer", "Bed Z coordinate")));
+            tools.Add(MakeTool("unassign_bed", "Remove a colonist's bed assignment.",
+                MakeParam("colonist", "string", "The colonist's name")));
+
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));

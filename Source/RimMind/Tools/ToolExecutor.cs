@@ -67,6 +67,12 @@ namespace RimMind.Tools
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
 
+            // Bed Assignments
+            { "list_beds", args => BedTools.ListBeds() },
+            { "get_bed_assignments", args => BedTools.GetBedAssignments() },
+            { "assign_bed", args => BedTools.AssignBed(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "unassign_bed", args => BedTools.UnassignBed(args?["colonist"]?.Value) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
