@@ -15,6 +15,12 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name (first name or nickname)")));
             tools.Add(MakeTool("get_colonist_health", "Get health details for a specific colonist: injuries, diseases, immunity progress, bionics/implants, pain level, and consciousness.",
                 MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("draft_colonist", "Draft a colonist for combat. Drafted colonists will follow orders instead of performing normal work tasks.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("undraft_colonist", "Undraft a colonist, returning them to normal work tasks.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
+            tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));
 
             // Social Tools
             tools.Add(MakeTool("get_relationships", "Get a colonist's social relationships: opinions of and from other colonists, relationship types (lover, spouse, rival, friend, etc).",

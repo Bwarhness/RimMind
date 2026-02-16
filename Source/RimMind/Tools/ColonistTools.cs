@@ -164,6 +164,97 @@ namespace RimMind.Tools
             return obj.ToString();
         }
 
+        public static string DraftColonist(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return ToolExecutor.JsonError("Name parameter required.");
+
+            var pawn = FindPawnByName(name);
+            if (pawn == null) return ToolExecutor.JsonError("Colonist '" + name + "' not found.");
+
+            if (pawn.drafter == null) return ToolExecutor.JsonError("Colonist cannot be drafted.");
+            if (pawn.Downed) return ToolExecutor.JsonError("Colonist is downed and cannot be drafted.");
+
+            pawn.drafter.Drafted = true;
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["status"] = "drafted";
+            return result.ToString();
+        }
+
+        public static string UndraftColonist(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return ToolExecutor.JsonError("Name parameter required.");
+
+            var pawn = FindPawnByName(name);
+            if (pawn == null) return ToolExecutor.JsonError("Colonist '" + name + "' not found.");
+
+            if (pawn.drafter == null) return ToolExecutor.JsonError("Colonist cannot be drafted.");
+
+            pawn.drafter.Drafted = false;
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["status"] = "undrafted";
+            return result.ToString();
+        }
+
+        public static string DraftAll()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var colonists = map.mapPawns.FreeColonists;
+            int drafted = 0;
+            int failed = 0;
+
+            foreach (var pawn in colonists)
+            {
+                if (pawn.drafter != null && !pawn.Downed)
+                {
+                    pawn.drafter.Drafted = true;
+                    drafted++;
+                }
+                else
+                {
+                    failed++;
+                }
+            }
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["drafted"] = drafted;
+            result["failed"] = failed;
+            result["total"] = colonists.Count();
+            return result.ToString();
+        }
+
+        public static string UndraftAll()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var colonists = map.mapPawns.FreeColonists;
+            int undrafted = 0;
+
+            foreach (var pawn in colonists)
+            {
+                if (pawn.drafter != null)
+                {
+                    pawn.drafter.Drafted = false;
+                    undrafted++;
+                }
+            }
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["undrafted"] = undrafted;
+            result["total"] = colonists.Count();
+            return result.ToString();
+        }
+
         public static Pawn FindPawnByName(string name)
         {
             var map = Find.CurrentMap;

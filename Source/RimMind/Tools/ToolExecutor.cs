@@ -13,6 +13,10 @@ namespace RimMind.Tools
             { "list_colonists", args => ColonistTools.ListColonists() },
             { "get_colonist_details", args => ColonistTools.GetColonistDetails(args?["name"]?.Value) },
             { "get_colonist_health", args => ColonistTools.GetColonistHealth(args?["name"]?.Value) },
+            { "draft_colonist", args => ColonistTools.DraftColonist(args?["name"]?.Value) },
+            { "undraft_colonist", args => ColonistTools.UndraftColonist(args?["name"]?.Value) },
+            { "draft_all", args => ColonistTools.DraftAll() },
+            { "undraft_all", args => ColonistTools.UndraftAll() },
 
             // Social
             { "get_relationships", args => SocialTools.GetRelationships(args?["name"]?.Value) },
