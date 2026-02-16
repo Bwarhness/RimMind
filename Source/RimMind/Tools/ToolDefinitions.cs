@@ -106,6 +106,32 @@ namespace RimMind.Tools
                 MakeParam("label", "string", "The label/name of the zone to delete"),
                 MakeOptionalParam("remove_plans", "boolean", "Also remove plan designations in the area (planning zones only, default: false)")));
 
+            // Designation Tools (Hunting/Taming/Resource Gathering)
+            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Use get_map_region to find animals.",
+                MakeParam("x", "integer", "Animal X coordinate"),
+                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Animal must not be too wild.",
+                MakeParam("x", "integer", "Animal X coordinate"),
+                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal.",
+                MakeParam("x", "integer", "Animal X coordinate"),
+                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate")));
+            tools.Add(MakeTool("designate_chop", "Mark trees for chopping in an area.",
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate")));
+            tools.Add(MakeTool("designate_harvest", "Mark plants for harvesting in an area.",
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate")));
+
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
