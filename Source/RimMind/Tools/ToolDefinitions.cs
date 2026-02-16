@@ -105,6 +105,17 @@ namespace RimMind.Tools
             tools.Add(MakeTool("delete_zone", "Delete a zone by its label. Works on both real RimWorld zones (stockpile, growing) and custom planning zones. For native zones, frees the cells. Use list_zones to find zone names.",
                 MakeParam("label", "string", "The label/name of the zone to delete"),
                 MakeOptionalParam("remove_plans", "boolean", "Also remove plan designations in the area (planning zones only, default: false)")));
+            tools.Add(MakeTool("set_stockpile_priority", "Set the storage priority of a stockpile zone. Higher priority stockpiles are filled first.",
+                MakeParam("zoneName", "string", "Stockpile zone name"),
+                MakeParam("priority", "string", "Priority: 'Critical', 'Important', 'Preferred', 'Normal', or 'Low'")));
+            tools.Add(MakeTool("set_stockpile_filter", "Allow or disallow an entire category of items in a stockpile.",
+                MakeParam("zoneName", "string", "Stockpile zone name"),
+                MakeParam("category", "string", "Category name (e.g., 'Foods', 'RawResources', 'Manufactured', 'Weapons', 'Apparel', 'Medicine', 'Drugs')"),
+                MakeParam("allowed", "boolean", "True to allow, false to disallow")));
+            tools.Add(MakeTool("set_stockpile_item", "Allow or disallow a specific item type in a stockpile.",
+                MakeParam("zoneName", "string", "Stockpile zone name"),
+                MakeParam("item", "string", "Item name or defName"),
+                MakeParam("allowed", "boolean", "True to allow, false to disallow")));
 
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",

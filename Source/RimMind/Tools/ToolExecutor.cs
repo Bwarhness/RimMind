@@ -66,6 +66,9 @@ namespace RimMind.Tools
             { "list_zones", args => ZoneTools.ListZones() },
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
+            { "set_stockpile_priority", args => ZoneTools.SetStockpilePriority(args?["zoneName"]?.Value, args?["priority"]?.Value) },
+            { "set_stockpile_filter", args => ZoneTools.SetStockpileFilter(args?["zoneName"]?.Value, args?["category"]?.Value, args?["allowed"]?.AsBool) },
+            { "set_stockpile_item", args => ZoneTools.SetStockpileItem(args?["zoneName"]?.Value, args?["item"]?.Value, args?["allowed"]?.AsBool) },
 
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
