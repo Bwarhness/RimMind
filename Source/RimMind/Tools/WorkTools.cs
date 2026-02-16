@@ -142,7 +142,7 @@ namespace RimMind.Tools
                     ? ToolExecutor.JsonError(colonistName + " cannot do " + workTypeDef.labelShort + " (disabled by traits/backstory).")
                     : ToolExecutor.JsonError(workTypeDef.labelShort + " is already disabled for " + colonistName + " by traits/backstory.");
 
-            if (priority > 0 && !Current.Game.playSettings.useWorkPriorities)
+            if (!Current.Game.playSettings.useWorkPriorities)
                 Current.Game.playSettings.useWorkPriorities = true;
 
             pawn.workSettings.SetPriority(workTypeDef, priority);
