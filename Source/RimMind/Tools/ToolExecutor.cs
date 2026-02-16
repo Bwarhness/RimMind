@@ -21,6 +21,11 @@ namespace RimMind.Tools
             // Work
             { "get_work_priorities", args => WorkTools.GetWorkPriorities() },
             { "get_bills", args => WorkTools.GetBills(args?["workbench"]?.Value) },
+            { "list_recipes", args => WorkTools.ListRecipes(args?["workbench"]?.Value) },
+            { "create_bill", args => WorkTools.CreateBill(args?["workbench"]?.Value, args?["recipe"]?.Value, args?["count"]?.AsInt ?? 1) },
+            { "suspend_bill", args => WorkTools.SuspendBill(args?["workbench"]?.Value, args?["billIndex"]?.AsInt ?? 0) },
+            { "resume_bill", args => WorkTools.ResumeBill(args?["workbench"]?.Value, args?["billIndex"]?.AsInt ?? 0) },
+            { "delete_bill", args => WorkTools.DeleteBill(args?["workbench"]?.Value, args?["billIndex"]?.AsInt ?? 0) },
             { "get_schedules", args => WorkTools.GetSchedules() },
 
             // Colony
