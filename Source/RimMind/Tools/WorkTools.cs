@@ -138,10 +138,9 @@ namespace RimMind.Tools
             }
 
             if (pawn.WorkTypeIsDisabled(workTypeDef))
-            {
-                if (priority > 0)
-                    return ToolExecutor.JsonError("Colonist cannot do " + workTypeDef.labelShort + " (disabled by traits/backstory).");
-            }
+                return priority > 0
+                    ? ToolExecutor.JsonError(colonistName + " cannot do " + workTypeDef.labelShort + " (disabled by traits/backstory).")
+                    : ToolExecutor.JsonError(workTypeDef.labelShort + " is already disabled for " + colonistName + " by traits/backstory.");
 
             pawn.workSettings.SetPriority(workTypeDef, priority);
 

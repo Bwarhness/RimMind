@@ -2,7 +2,7 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 42+ different colony data tools via function calling.
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 46 different colony data tools via function calling.
 
 ## Build & Development
 
@@ -227,14 +227,14 @@ RimMind/
     ├── RimMind.csproj
     ├── Core/          (RimMindMod, Settings, MainThreadDispatcher)
     ├── API/           (OpenRouterClient, DTOs, SimpleJSON, PromptBuilder)
-    ├── Tools/         (44 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
+    ├── Tools/         (46 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (44 tools)
+## Current Tool Catalog (46 tools)
 - **Colonist**: list_colonists, get_colonist_details, get_colonist_health
 - **Social**: get_relationships, get_faction_relations
-- **Work**: get_work_priorities, get_bills, get_schedules
+- **Work**: get_work_priorities, set_work_priority, get_bills, get_schedules
 - **Colony**: get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research**: get_research_status, get_available_research, get_completed_research
 - **Military**: get_threats, get_defenses, get_combat_readiness
@@ -244,8 +244,9 @@ RimMind/
 - **Medical**: get_medical_overview
 - **Directives**: get_directives, add_directive, remove_directive
 - **Plan**: get_plans, place_plans, remove_plans
-- **Zone**: list_zones, create_zone, delete_zone (supports real RimWorld stockpile/growing zones, areas, and custom planning zones)
+- **Zone**: list_zones, create_zone, delete_zone
 - **Building**: list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
+- **Area**: list_areas, get_area_restrictions, restrict_to_area, unrestrict
 
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
