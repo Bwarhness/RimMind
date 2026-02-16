@@ -106,6 +106,15 @@ namespace RimMind.Tools
                 MakeParam("label", "string", "The label/name of the zone to delete"),
                 MakeOptionalParam("remove_plans", "boolean", "Also remove plan designations in the area (planning zones only, default: false)")));
 
+            // Area Restriction Tools
+            tools.Add(MakeTool("list_areas", "List all allowed areas that can be assigned to colonists."));
+            tools.Add(MakeTool("get_area_restrictions", "Get current area restrictions for all colonists."));
+            tools.Add(MakeTool("restrict_to_area", "Restrict a colonist to a specific allowed area (e.g., Home area, custom areas).",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("areaName", "string", "Area name to restrict to")));
+            tools.Add(MakeTool("unrestrict", "Remove area restriction from a colonist, allowing them to go anywhere.",
+                MakeParam("colonist", "string", "The colonist's name")));
+
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
