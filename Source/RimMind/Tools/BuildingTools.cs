@@ -16,6 +16,8 @@ namespace RimMind.Tools
             public string proposalId;
             public string error;
             public Thing blueprint;
+            public bool autoRotated;
+            public int finalRotation;
         }
 
         public static string ListBuildable(JSONNode args)
@@ -183,6 +185,12 @@ namespace RimMind.Tools
                 result["terrainNeeded"] = def.terrainAffordanceNeeded.defName;
             if (def.minifiedDef != null)
                 result["canUninstall"] = true;
+
+            if (def.hasInteractionCell)
+            {
+                result["has_interaction_cell"] = true;
+                result["interaction_cell_note"] = "Requires 1 clear cell in front (facing direction) for pawn access. Don't place facing a wall.";
+            }
 
             return result.ToString();
         }
@@ -352,6 +360,11 @@ namespace RimMind.Tools
                     successEntry["def"] = def.defName;
                     successEntry["x"] = x;
                     successEntry["z"] = z;
+                    if (pr.autoRotated)
+                    {
+                        successEntry["auto_rotated"] = true;
+                        successEntry["rotation"] = pr.finalRotation;
+                    }
                     successEntries.Add(successEntry);
                 }
                 else
@@ -605,8 +618,8 @@ namespace RimMind.Tools
                 }
             }
 
-            // Place door blueprint
-            var doorResult = PlaceOneBlueprint(map, faction, doorDef, doorCell, doorStuff, doorRot, autoApprove);
+            // Place door blueprint (no auto-rotate — door rotation must match wall orientation)
+            var doorResult = PlaceOneBlueprint(map, faction, doorDef, doorCell, doorStuff, doorRot, autoApprove, allowAutoRotate: false);
             if (doorResult.success)
             {
                 placedCount++;
@@ -922,19 +935,44 @@ namespace RimMind.Tools
 
         // --- Core placement helper ---
 
-        private static PlacementResult PlaceOneBlueprint(Map map, Faction faction, ThingDef def, IntVec3 pos, ThingDef stuff, Rot4 rot, bool autoApprove)
+        private static PlacementResult PlaceOneBlueprint(Map map, Faction faction, ThingDef def, IntVec3 pos, ThingDef stuff, Rot4 rot, bool autoApprove, bool allowAutoRotate = true)
         {
             var pr = new PlacementResult();
 
             var report = GenConstruct.CanPlaceBlueprintAt(def, pos, rot, map, false, null, null, stuff);
-            if (!report.Accepted)
+            Rot4 finalRot = rot;
+            if (!report.Accepted && allowAutoRotate && !typeof(Building_Door).IsAssignableFrom(def.thingClass))
+            {
+                // Try other rotations before giving up
+                var originalReport = report;
+                Rot4[] rotations = { Rot4.North, Rot4.East, Rot4.South, Rot4.West };
+                foreach (var tryRot in rotations)
+                {
+                    if (tryRot == rot) continue;
+                    var tryReport = GenConstruct.CanPlaceBlueprintAt(def, pos, tryRot, map, false, null, null, stuff);
+                    if (tryReport.Accepted)
+                    {
+                        report = tryReport;
+                        finalRot = tryRot;
+                        break;
+                    }
+                }
+                if (!report.Accepted)
+                {
+                    // All rotations failed — use original error message
+                    string reason = originalReport.Reason ?? "blocked";
+                    pr.error = "Cannot place at (" + pos.x + "," + pos.z + "): " + reason + GetPlacementHint(reason, def, map, pos);
+                    return pr;
+                }
+            }
+            else if (!report.Accepted)
             {
                 string reason = report.Reason ?? "blocked";
                 pr.error = "Cannot place at (" + pos.x + "," + pos.z + "): " + reason + GetPlacementHint(reason, def, map, pos);
                 return pr;
             }
 
-            var blueprint = GenConstruct.PlaceBlueprintForBuild(def, pos, map, rot, faction, stuff);
+            var blueprint = GenConstruct.PlaceBlueprintForBuild(def, pos, map, finalRot, faction, stuff);
             if (blueprint == null)
             {
                 pr.error = "Failed to place blueprint for " + def.label;
@@ -959,6 +997,8 @@ namespace RimMind.Tools
 
             pr.success = true;
             pr.blueprint = blueprint;
+            pr.autoRotated = (finalRot != rot);
+            pr.finalRotation = finalRot.AsInt;
             return pr;
         }
 

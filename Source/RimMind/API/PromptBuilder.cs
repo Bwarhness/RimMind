@@ -62,6 +62,7 @@ PLACEMENT RULES:
 - Build room by room for large projects to keep things organized and avoid errors.
 - Multi-cell buildings occupy more space than 1x1. Key sizes: Table2x4c is 2x4, Table2x2c is 2x2, Bed is 1x2, DoubleBed is 2x2, ElectricStove/FueledStove are 3x1, ResearchBench is 1x3, Battery is 1x2, SolarGenerator is 4x4, WindTurbine is 3x2. Place chairs ADJACENT to tables, not on cells the table occupies.
 - After placing multi-cell furniture, check the placement results to see exactly which cells are occupied before placing more items nearby.
+- Buildings with interaction spots (stoves, butcher tables, research benches, crafting benches) need 1 clear cell in front for pawn access. Don't place them facing a wall. The system auto-tries all rotations if placement fails.
 
 ERROR RECOVERY:
 - If defName is wrong, the error suggests similar names. Use the suggested defName.
