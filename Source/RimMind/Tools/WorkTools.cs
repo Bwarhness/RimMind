@@ -107,5 +107,50 @@ namespace RimMind.Tools
             result["schedules"] = arr;
             return result.ToString();
         }
+
+        public static string SetWorkPriority(string colonistName, string workType, int priority)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(colonistName)) return ToolExecutor.JsonError("colonist parameter required.");
+            if (string.IsNullOrEmpty(workType)) return ToolExecutor.JsonError("workType parameter required.");
+            if (priority < 0 || priority > 4) return ToolExecutor.JsonError("priority must be 0-4 (0=disabled, 1=highest, 4=lowest).");
+
+            var pawn = ColonistTools.FindPawnByName(colonistName);
+            if (pawn == null) return ToolExecutor.JsonError("Colonist '" + colonistName + "' not found.");
+
+            if (pawn.workSettings == null) return ToolExecutor.JsonError("Colonist cannot perform work.");
+
+            // Find work type by matching defName or label
+            string workTypeLower = workType.ToLower();
+            var workTypeDef = DefDatabase<WorkTypeDef>.AllDefsListForReading
+                .FirstOrDefault(w => 
+                    w.defName.ToLower() == workTypeLower ||
+                    (w.labelShort?.ToLower() == workTypeLower) ||
+                    (w.label?.ToLower() == workTypeLower) ||
+                    (w.gerundLabel?.ToLower() == workTypeLower));
+
+            if (workTypeDef == null)
+            {
+                return ToolExecutor.JsonError("Work type '" + workType + "' not found. Available types: " +
+                    string.Join(", ", DefDatabase<WorkTypeDef>.AllDefsListForReading.Select(w => w.labelShort ?? w.defName).Take(10)));
+            }
+
+            if (pawn.WorkTypeIsDisabled(workTypeDef))
+            {
+                if (priority > 0)
+                    return ToolExecutor.JsonError("Colonist cannot do " + workTypeDef.labelShort + " (disabled by traits/backstory).");
+            }
+
+            pawn.workSettings.SetPriority(workTypeDef, priority);
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["workType"] = workTypeDef.labelShort ?? workTypeDef.defName;
+            result["priority"] = priority;
+            return result.ToString();
+        }
     }
 }
