@@ -20,6 +20,7 @@ namespace RimMind.Tools
 
             // Work
             { "get_work_priorities", args => WorkTools.GetWorkPriorities() },
+            { "set_work_priority", args => WorkTools.SetWorkPriority(args?["colonist"]?.Value, args?["workType"]?.Value, args?["priority"]?.AsInt ?? 0) },
             { "get_bills", args => WorkTools.GetBills(args?["workbench"]?.Value) },
             { "get_schedules", args => WorkTools.GetSchedules() },
 

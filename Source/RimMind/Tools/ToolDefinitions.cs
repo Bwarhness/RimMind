@@ -23,6 +23,10 @@ namespace RimMind.Tools
 
             // Work Tools
             tools.Add(MakeTool("get_work_priorities", "Get the work priority grid for all colonists: each work type (Doctor, Cook, Hunt, Construct, Grow, Mine, Research, etc.) and its priority level (1=highest, 4=lowest, 0=disabled)."));
+            tools.Add(MakeTool("set_work_priority", "Set the work priority for a specific colonist and work type. Priority values: 0=disabled, 1=highest, 2=high, 3=normal, 4=low.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("workType", "string", "Work type name (e.g., 'Doctor', 'Cook', 'Construction', 'Growing', 'Mining')"),
+                MakeParam("priority", "integer", "Priority level (0-4, where 0=disabled, 1=highest, 4=lowest)")));
             tools.Add(MakeTool("get_bills", "Get active production bills at workbenches: recipe name, target count, ingredients needed, assigned worker, and whether suspended.",
                 MakeOptionalParam("workbench", "string", "Filter by workbench name. If omitted, returns bills from all workbenches.")));
             tools.Add(MakeTool("get_schedules", "Get daily schedules for all colonists: hour-by-hour assignments (Sleep, Work, Anything, Joy/Recreation)."));
