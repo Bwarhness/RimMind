@@ -22,6 +22,8 @@ namespace RimMind.Tools
             { "get_work_priorities", args => WorkTools.GetWorkPriorities() },
             { "get_bills", args => WorkTools.GetBills(args?["workbench"]?.Value) },
             { "get_schedules", args => WorkTools.GetSchedules() },
+            { "set_schedule", args => WorkTools.SetSchedule(args?["colonist"]?.Value, args?["hour"]?.AsInt ?? 0, args?["assignment"]?.Value) },
+            { "copy_schedule", args => WorkTools.CopySchedule(args?["from"]?.Value, args?["to"]?.Value) },
 
             // Colony
             { "get_colony_overview", args => ColonyTools.GetColonyOverview() },

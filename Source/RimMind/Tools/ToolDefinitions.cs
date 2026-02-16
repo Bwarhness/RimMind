@@ -26,6 +26,13 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_bills", "Get active production bills at workbenches: recipe name, target count, ingredients needed, assigned worker, and whether suspended.",
                 MakeOptionalParam("workbench", "string", "Filter by workbench name. If omitted, returns bills from all workbenches.")));
             tools.Add(MakeTool("get_schedules", "Get daily schedules for all colonists: hour-by-hour assignments (Sleep, Work, Anything, Joy/Recreation)."));
+            tools.Add(MakeTool("set_schedule", "Set the schedule assignment for a specific colonist at a specific hour. Assignments: 'Work', 'Sleep', 'Anything', 'Joy'.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("hour", "integer", "Hour of day (0-23)"),
+                MakeParam("assignment", "string", "Activity assignment ('Work', 'Sleep', 'Anything', or 'Joy')")));
+            tools.Add(MakeTool("copy_schedule", "Copy one colonist's schedule to another colonist.",
+                MakeParam("from", "string", "Source colonist name"),
+                MakeParam("to", "string", "Target colonist name")));
 
             // Colony Tools
             tools.Add(MakeTool("get_colony_overview", "Get a high-level colony overview: colonist count, total wealth, days survived, difficulty setting, storyteller, and map tile info."));
