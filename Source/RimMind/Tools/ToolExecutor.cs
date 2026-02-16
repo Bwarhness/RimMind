@@ -67,6 +67,15 @@ namespace RimMind.Tools
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
 
+            // Equipment & Policies
+            { "list_equipment", args => EquipmentTools.ListEquipment() },
+            { "equip_weapon", args => EquipmentTools.EquipWeapon(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "wear_apparel", args => EquipmentTools.WearApparel(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "drop_equipment", args => EquipmentTools.DropEquipment(args?["colonist"]?.Value) },
+            { "assign_outfit", args => EquipmentTools.AssignOutfit(args?["colonist"]?.Value, args?["outfitName"]?.Value) },
+            { "assign_drug_policy", args => EquipmentTools.AssignDrugPolicy(args?["colonist"]?.Value, args?["policyName"]?.Value) },
+            { "assign_food_restriction", args => EquipmentTools.AssignFoodRestriction(args?["colonist"]?.Value, args?["restrictionName"]?.Value) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
