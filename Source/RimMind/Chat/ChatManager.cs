@@ -9,7 +9,7 @@ namespace RimMind.Chat
 {
     public class ChatManager
     {
-        private const int MAX_TOOL_LOOPS = 15;
+        private const int MAX_TOOL_LOOPS = 50;
         private const int MAX_HISTORY_MESSAGES = 500;
 
         private readonly List<ChatMessage> conversationHistory = new List<ChatMessage>();
@@ -17,6 +17,11 @@ namespace RimMind.Chat
 
         public bool IsProcessing => isProcessing;
         public string StatusMessage { get; private set; } = "";
+
+        // Token usage from last API response
+        public int LastPromptTokens { get; private set; }
+        public int LastCompletionTokens { get; private set; }
+        public int LastTotalTokens { get; private set; }
 
         public event Action OnMessageUpdated;
 
@@ -53,6 +58,14 @@ namespace RimMind.Chat
 
             Action<ChatResponse> handleResponse = response =>
             {
+                // Track token usage from every response
+                if (response.promptTokens > 0)
+                {
+                    LastPromptTokens = response.promptTokens;
+                    LastCompletionTokens = response.completionTokens;
+                    LastTotalTokens = response.totalTokens;
+                }
+
                 if (!response.success)
                 {
                     DebugLogger.LogAPIError(response.error ?? "Unknown error");

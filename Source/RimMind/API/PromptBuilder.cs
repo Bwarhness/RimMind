@@ -20,6 +20,30 @@ IMPORTANT GUIDELINES:
 
 BUILDING GUIDELINES:
 
+MANDATORY BUILD WORKFLOW — follow these steps IN ORDER for every build:
+
+STEP 1 — LOOK: Call get_map_region to see the target area BEFORE placing anything. Understand terrain, existing buildings, and available space. You are BLIND without this step.
+
+STEP 2 — PLACE STRUCTURE: Use place_structure with shape ""room"" (or ""wall_line"", ""wall_rect"") to build the walls and door.
+
+STEP 3 — READ THE GRID: Every placement response includes an ""area_after"" grid. READ IT carefully. The grid uses characters:
+  w/W = wall, d/D = door, . = empty interior cell
+  Lowercase = blueprint, uppercase = built.
+  Find the door character ('d' or 'D') — note its position. The cells directly adjacent to the door INSIDE the room are the door's entry path. NOTHING can go there.
+
+STEP 4 — PLAN FURNITURE: Before placing ANY furniture, mentally sketch on the grid:
+  - Mark the door cell and the 2 interior cells nearest to it as NO-GO (pawns walk through here).
+  - Place furniture in the OPPOSITE half of the room from the door, against the far wall.
+  - Ensure every piece of furniture has at least 1 empty cell adjacent for pawn access.
+  - Verify you can trace a 1-tile-wide path from the door to every piece of furniture.
+
+STEP 5 — PLACE FURNITURE: Use place_building. Read each ""area_after"" response to confirm placement looks correct.
+
+STEP 6 — VERIFY: After all furniture is placed, look at the final ""area_after"" grid. Check:
+  - Is the door cell clear on both sides? (no furniture touching 'd')
+  - Can a pawn walk from the door to every piece of furniture?
+  - If anything blocks the door, use remove_building to fix it.
+
 COMMON BUILDINGS (use these defNames directly, no need to call list_buildable):
   Structures: Wall (stuff), Door (stuff), Autodoor (stuff, needs research), Sandbags
   Furniture: Bed (stuff), DoubleBed (stuff), EndTable (stuff), Dresser (stuff), Table2x2c (stuff), Table2x4c (stuff), DiningChair (stuff), Armchair (stuff)
@@ -33,39 +57,31 @@ COMMON BUILDINGS (use these defNames directly, no need to call list_buildable):
   Misc: NutrientPasteDispenser (needs research), PassiveCooler
   Common stuff: WoodLog, BlocksGranite, BlocksSandstone, BlocksMarble, Steel, Plasteel
 
-EFFICIENT BUILDING:
-- Use place_structure with shape ""room"" to build entire rooms in ONE call instead of placing individual walls. Example: place_structure({shape:""room"", x1:10, z1:10, x2:16, z2:16, stuff:""BlocksGranite"", door_side:""south""})
-- Use place_structure with shape ""wall_line"" for corridors and wall segments.
-- Use place_structure with shape ""wall_rect"" for wall outlines without a door.
-- Use place_building for individual furniture, equipment, and non-wall buildings.
-- For a complete room: 1) place_structure room, 2) place_building for furniture inside.
-- For large builds (e.g., multiple rooms, apartment complexes), build one room at a time: place structure, then furniture, then move to the next room.
-
 COORDINATES & SIZING:
 - x increases East, z increases North. (0,0) is the SW corner.
 - Walls occupy cells. A room from (10,10) to (16,16) is 7x7 exterior with 5x5 interior.
-- Standard bedroom: 5x4 exterior (3x2 interior) fits Bed + EndTable + Dresser.
-- Standard dining room: 7x7 exterior fits Table2x4c + 6-8 DiningChairs.
-- Standard barracks: 11x7 exterior fits 5 Beds with EndTables.
-- Adjacent rooms should SHARE walls by overlapping coordinates. E.g., room1 (10,10)-(16,16) and room2 (16,10)-(22,16) share the wall at x=16. Existing walls are automatically skipped.
+- Room sizes MUST include space for walkways. If furniture doesn't fit with 1-tile walkways, make the room bigger.
+- Standard bedroom (1 colonist): 7x6 exterior (5x4 interior).
+- Small dining room (3-4 colonists): 7x7 exterior (5x5 interior), Table2x2c.
+- Large dining room (5+ colonists): 10x8 exterior (8x6 interior), Table2x4c. Do NOT use Table2x4c in rooms smaller than 8x6 interior.
+- Standard barracks: 11x7 exterior (9x5 interior).
+- Adjacent rooms SHARE walls by overlapping coordinates. E.g., room1 (10,10)-(16,16) and room2 (16,10)-(22,16) share wall at x=16.
+
+BUILDING SIZES (multi-cell — check these before placing):
+  Table2x4c: 2x4, Table2x2c: 2x2, Bed: 1x2, DoubleBed: 2x2
+  ElectricStove/FueledStove: 3x1, HandTailoringBench: 3x1, ElectricSmithy: 3x1
+  SimpleResearchBench/HiTechResearchBench: 1x3, Battery: 1x2
+  SolarGenerator: 4x4, WindTurbine: 3x2
+  Place chairs ADJACENT to tables, not on cells the table occupies.
 
 DOORS & ROTATION:
-- Doors on N/S walls (horizontal): rotation 0 (N/S passage)
-- Doors on E/W walls (vertical): rotation 1 (E/W passage)
-- Cooler: rotation points the COLD side. Place in wall with hot side outside.
-- Beds: rotation = headboard direction. Usually head against wall.
-- Most square 1x1 buildings: rotation doesn't matter.
+- Doors on N/S walls: rotation 0. Doors on E/W walls: rotation 1.
+- Cooler rotation = cold side direction. Beds rotation = headboard direction.
+- Workbenches (stoves, benches) need 1 clear cell in front for pawn access. Auto-rotation is tried if placement fails.
 
-PLACEMENT RULES:
-- Always use get_map_region first to understand the terrain and existing structures before placing buildings.
-- All blueprints are placed as FORBIDDEN by default. Tell the player to use approve_buildings when they're ready for colonists to start construction (or set auto_approve to true if they want immediate construction).
-- Build room by room for large projects to keep things organized and avoid errors.
-- Multi-cell buildings occupy more space than 1x1. Key sizes: Table2x4c is 2x4, Table2x2c is 2x2, Bed is 1x2, DoubleBed is 2x2, ElectricStove/FueledStove are 3x1, ResearchBench is 1x3, Battery is 1x2, SolarGenerator is 4x4, WindTurbine is 3x2. Place chairs ADJACENT to tables, not on cells the table occupies.
-- After placing multi-cell furniture, check the placement results to see exactly which cells are occupied before placing more items nearby.
-- Buildings with interaction spots (stoves, butcher tables, research benches, crafting benches) need 1 clear cell in front for pawn access. Don't place them facing a wall. The system auto-tries all rotations if placement fails.
-
-ERROR RECOVERY:
-- If defName is wrong, the error suggests similar names. Use the suggested defName.
+OTHER RULES:
+- All blueprints are FORBIDDEN by default. Tell the player to say ""approve_buildings"" when ready (or set auto_approve to true).
+- If defName is wrong, the error suggests similar names — use the suggestion.
 - If placement fails with ""Occupied"", try adjacent cells.
 - If stuff is missing, the error tells you which materials work.
 

@@ -662,6 +662,10 @@ namespace RimMind.Tools
             result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
             result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
 
+            var adjacentHints = DetectAdjacentWalls(map, minX, minZ, maxX, maxZ);
+            if (adjacentHints != null)
+                result["adjacent_walls"] = adjacentHints;
+
             return result.ToString();
         }
 
@@ -743,6 +747,10 @@ namespace RimMind.Tools
                 int gridZ2 = System.Math.Min(map.Size.z - 1, wlMaxZ + 1);
                 result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
                 result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
+
+                var adjacentHints = DetectAdjacentWalls(map, wlMinX, wlMinZ, wlMaxX, wlMaxZ);
+                if (adjacentHints != null)
+                    result["adjacent_walls"] = adjacentHints;
             }
 
             return result.ToString();
@@ -813,6 +821,10 @@ namespace RimMind.Tools
             int gridZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
             result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
             result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
+
+            var adjacentHints = DetectAdjacentWalls(map, minX, minZ, maxX, maxZ);
+            if (adjacentHints != null)
+                result["adjacent_walls"] = adjacentHints;
 
             return result.ToString();
         }
@@ -1223,6 +1235,57 @@ namespace RimMind.Tools
                     return true;
             }
             return false;
+        }
+
+        // --- Adjacent wall detection ---
+
+        private static JSONArray DetectAdjacentWalls(Map map, int minX, int minZ, int maxX, int maxZ)
+        {
+            var hints = new JSONArray();
+
+            // Check 1 cell west of west wall (x = minX - 1)
+            if (minX > 0 && HasWallLine(map, minX - 1, minZ, minX - 1, maxZ))
+                hints.Add("Existing wall 1 cell west at x=" + (minX - 1) + ". Use x1=" + (minX - 1) + " to share walls.");
+
+            // Check 1 cell east of east wall (x = maxX + 1)
+            if (maxX < map.Size.x - 1 && HasWallLine(map, maxX + 1, minZ, maxX + 1, maxZ))
+                hints.Add("Existing wall 1 cell east at x=" + (maxX + 1) + ". Use x2=" + (maxX + 1) + " to share walls.");
+
+            // Check 1 cell south of south wall (z = minZ - 1)
+            if (minZ > 0 && HasWallLine(map, minX, minZ - 1, maxX, minZ - 1))
+                hints.Add("Existing wall 1 cell south at z=" + (minZ - 1) + ". Use z1=" + (minZ - 1) + " to share walls.");
+
+            // Check 1 cell north of north wall (z = maxZ + 1)
+            if (maxZ < map.Size.z - 1 && HasWallLine(map, minX, maxZ + 1, maxX, maxZ + 1))
+                hints.Add("Existing wall 1 cell north at z=" + (maxZ + 1) + ". Use z2=" + (maxZ + 1) + " to share walls.");
+
+            return hints.Count > 0 ? hints : null;
+        }
+
+        private static bool HasWallLine(Map map, int x1, int z1, int x2, int z2)
+        {
+            // Check if at least 3 cells along this line have walls or wall blueprints
+            // (avoids false positives from single random walls)
+            int wallCount = 0;
+            int totalCells = 0;
+
+            int lineMinX = Math.Min(x1, x2), lineMaxX = Math.Max(x1, x2);
+            int lineMinZ = Math.Min(z1, z2), lineMaxZ = Math.Max(z1, z2);
+
+            for (int z = lineMinZ; z <= lineMaxZ; z++)
+            {
+                for (int x = lineMinX; x <= lineMaxX; x++)
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    if (!cell.InBounds(map)) continue;
+                    totalCells++;
+                    if (HasExistingWallOrBlueprint(cell, map))
+                        wallCount++;
+                }
+            }
+
+            // Require at least 3 walls or 50% of the line to count as a wall line
+            return wallCount >= 3 || (totalCells > 0 && wallCount >= totalCells * 0.5);
         }
 
         // --- Area scanning helper ---

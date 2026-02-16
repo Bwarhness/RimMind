@@ -11,6 +11,22 @@ namespace RimMind.Chat
         private string inputText = "";
         private Vector2 scrollPosition;
         private bool scrollToBottom;
+        private bool showPrompts;
+        private Vector2 promptScrollPos;
+
+        private static readonly string[][] quickPrompts = new string[][]
+        {
+            new[] { "Bedroom", "Build me a standard wooden bedroom near the center of the map with a bed, end table, and dresser" },
+            new[] { "Dining+Kitchen", "Build a stone dining room and kitchen sharing a wall. Dining room should have a table and chairs, kitchen should have a stove" },
+            new[] { "Barracks", "Build a 5-bed granite barracks with end tables for each bed" },
+            new[] { "Power Setup", "Set up a power grid: 2 solar generators, a wind turbine, and 4 batteries connected with conduits" },
+            new[] { "Workshop", "Build a workshop room with an electric smithy, a hand tailoring bench, and a research bench" },
+            new[] { "Hospital", "Build a hospital room with 3 medical beds, a lamp, and good flooring" },
+            new[] { "Killbox", "Design a killbox entrance with sandbags and turrets for raid defense" },
+            new[] { "Base Layout", "Plan a compact base layout with bedroom, dining room, kitchen, workshop, and hospital - all sharing walls" },
+            new[] { "Colony Status", "Give me a full colony status report - colonists, resources, threats, and priorities" },
+            new[] { "Map Scout", "Scout the map around our base and tell me what you see - terrain, resources, threats" },
+        };
 
         public override Vector2 InitialSize => new Vector2(500f, 600f);
 
@@ -55,8 +71,19 @@ namespace RimMind.Chat
             Widgets.Label(titleRect, "RimMind AI");
             Text.Font = GameFont.Small;
 
+            // Context button
+            var contextRect = new Rect(inRect.width - 350f, 2f, 70f, 24f);
+            if (Widgets.ButtonText(contextRect, "Context"))
+            {
+                var existing = Find.WindowStack.WindowOfType<ContextViewWindow>();
+                if (existing != null)
+                    Find.WindowStack.TryRemove(existing);
+                else
+                    Find.WindowStack.Add(new ContextViewWindow(chatManager));
+            }
+
             // Directives button
-            var directivesRect = new Rect(inRect.width - 170f, 2f, 80f, 24f);
+            var directivesRect = new Rect(inRect.width - 270f, 2f, 80f, 24f);
             bool hasDirectives = Core.DirectivesTracker.Instance != null && !string.IsNullOrEmpty(Core.DirectivesTracker.Instance.PlayerDirectives);
             GUI.color = hasDirectives ? new Color(0.6f, 0.9f, 0.7f) : Color.white;
             if (Widgets.ButtonText(directivesRect, "Directives"))
@@ -69,17 +96,41 @@ namespace RimMind.Chat
             }
             GUI.color = Color.white;
 
+            // Prompts toggle button
+            var promptsToggleRect = new Rect(inRect.width - 180f, 2f, 80f, 24f);
+            GUI.color = showPrompts ? new Color(0.9f, 0.8f, 0.5f) : Color.white;
+            if (Widgets.ButtonText(promptsToggleRect, "Prompts"))
+            {
+                showPrompts = !showPrompts;
+            }
+            GUI.color = Color.white;
+
             // Clear button
-            var clearRect = new Rect(inRect.width - 80f, 2f, 70f, 24f);
+            var clearRect = new Rect(inRect.width - 90f, 2f, 70f, 24f);
             if (Widgets.ButtonText(clearRect, "Clear"))
             {
                 chatManager.ClearHistory();
             }
 
+            // Token usage display
             float topOffset = 34f;
+            if (chatManager.LastTotalTokens > 0)
+            {
+                var tokenRect = new Rect(0f, topOffset, inRect.width, 16f);
+                Text.Font = GameFont.Tiny;
+                GUI.color = new Color(0.55f, 0.55f, 0.55f);
+                string tokenText = "  Tokens: " + FormatTokenCount(chatManager.LastPromptTokens) + " in / "
+                    + FormatTokenCount(chatManager.LastCompletionTokens) + " out ("
+                    + FormatTokenCount(chatManager.LastTotalTokens) + " total)";
+                Widgets.Label(tokenRect, tokenText);
+                Text.Font = GameFont.Small;
+                GUI.color = Color.white;
+                topOffset += 16f;
+            }
             float inputAreaHeight = 35f;
             float statusHeight = chatManager.IsProcessing ? 22f : 0f;
-            float chatHeight = inRect.height - topOffset - inputAreaHeight - statusHeight - 8f;
+            float promptPanelHeight = showPrompts ? 90f : 0f;
+            float chatHeight = inRect.height - topOffset - inputAreaHeight - statusHeight - promptPanelHeight - 8f;
 
             // Chat messages area
             var chatOuterRect = new Rect(0f, topOffset, inRect.width, chatHeight);
@@ -94,6 +145,13 @@ namespace RimMind.Chat
                 Widgets.Label(statusRect, "  " + chatManager.StatusMessage);
                 Text.Font = GameFont.Small;
                 GUI.color = Color.white;
+            }
+
+            // Quick prompt panel
+            if (showPrompts)
+            {
+                float promptY = topOffset + chatHeight + statusHeight + (statusHeight > 0 ? 2f : 0f);
+                DrawQuickPrompts(new Rect(0f, promptY, inRect.width, promptPanelHeight));
             }
 
             // Input area
@@ -112,8 +170,10 @@ namespace RimMind.Chat
                 SendCurrentMessage();
             }
 
-            // Auto-focus input (only when DirectivesWindow is not open)
-            if (Event.current.type == EventType.Repaint && Find.WindowStack.WindowOfType<DirectivesWindow>() == null)
+            // Auto-focus input (only when sub-windows are not open)
+            if (Event.current.type == EventType.Repaint
+                && Find.WindowStack.WindowOfType<DirectivesWindow>() == null
+                && Find.WindowStack.WindowOfType<ContextViewWindow>() == null)
             {
                 GUI.FocusControl("RimMindInput");
             }
@@ -180,6 +240,94 @@ namespace RimMind.Chat
             }
 
             Widgets.EndScrollView();
+        }
+
+        private void DrawQuickPrompts(Rect outerRect)
+        {
+            Widgets.DrawBoxSolid(outerRect, new Color(0.15f, 0.15f, 0.18f, 0.9f));
+
+            // Label
+            Text.Font = GameFont.Tiny;
+            GUI.color = new Color(0.7f, 0.7f, 0.7f);
+            Widgets.Label(new Rect(outerRect.x + 6f, outerRect.y + 2f, outerRect.width, 16f), "Quick prompts (click to insert):");
+            GUI.color = Color.white;
+            Text.Font = GameFont.Small;
+
+            // Scrollable button area
+            float btnY = outerRect.y + 18f;
+            float btnAreaHeight = outerRect.height - 20f;
+            var scrollOuterRect = new Rect(outerRect.x, btnY, outerRect.width, btnAreaHeight);
+
+            // Calculate content width for horizontal scroll
+            float btnPadding = 4f;
+            float btnHeight = 28f;
+            float x = 4f;
+            float rowY = 0f;
+            float maxRowWidth = outerRect.width - 16f;
+
+            // Lay out as wrapping flow
+            float contentHeight = btnHeight;
+            foreach (var prompt in quickPrompts)
+            {
+                float btnWidth = Text.CalcSize(prompt[0]).x + 16f;
+                if (x + btnWidth > maxRowWidth && x > 4f)
+                {
+                    x = 4f;
+                    contentHeight += btnHeight + btnPadding;
+                }
+                x += btnWidth + btnPadding;
+            }
+            contentHeight += 4f;
+
+            var viewRect = new Rect(0f, 0f, maxRowWidth, Math.Max(contentHeight, btnAreaHeight));
+            Widgets.BeginScrollView(scrollOuterRect, ref promptScrollPos, viewRect);
+
+            x = 4f;
+            rowY = 0f;
+            foreach (var prompt in quickPrompts)
+            {
+                float btnWidth = Text.CalcSize(prompt[0]).x + 16f;
+                if (x + btnWidth > maxRowWidth && x > 4f)
+                {
+                    x = 4f;
+                    rowY += btnHeight + btnPadding;
+                }
+
+                var btnRect = new Rect(x, rowY, btnWidth, btnHeight);
+
+                // Draw button background
+                Widgets.DrawBoxSolid(btnRect, new Color(0.25f, 0.28f, 0.35f, 0.9f));
+                if (Mouse.IsOver(btnRect))
+                {
+                    Widgets.DrawHighlight(btnRect);
+                    TooltipHandler.TipRegion(btnRect, prompt[1]);
+                }
+
+                // Button text
+                Text.Anchor = TextAnchor.MiddleCenter;
+                GUI.color = new Color(0.85f, 0.9f, 1f);
+                Widgets.Label(btnRect, prompt[0]);
+                GUI.color = Color.white;
+                Text.Anchor = TextAnchor.UpperLeft;
+
+                if (Widgets.ButtonInvisible(btnRect))
+                {
+                    inputText = prompt[1];
+                }
+
+                x += btnWidth + btnPadding;
+            }
+
+            Widgets.EndScrollView();
+        }
+
+        private static string FormatTokenCount(int tokens)
+        {
+            if (tokens >= 1000000)
+                return (tokens / 1000000f).ToString("0.#") + "M";
+            if (tokens >= 1000)
+                return (tokens / 1000f).ToString("0.#") + "k";
+            return tokens.ToString();
         }
 
         private float CalculateContentHeight(float width)

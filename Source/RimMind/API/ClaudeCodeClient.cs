@@ -287,6 +287,9 @@ namespace RimMind.API
                     message = new ChatMessage { role = "assistant" }
                 };
 
+                // Parse usage (Anthropic format)
+                ChatResponse.ParseUsageAnthropic(response, root);
+
                 var content = root["content"];
                 if (content != null && content.IsArray)
                 {
