@@ -27,6 +27,27 @@ namespace RimMind.Tools
                 MakeOptionalParam("workbench", "string", "Filter by workbench name. If omitted, returns bills from all workbenches.")));
             tools.Add(MakeTool("get_schedules", "Get daily schedules for all colonists: hour-by-hour assignments (Sleep, Work, Anything, Joy/Recreation)."));
 
+            // Job Prioritization Tools
+            tools.Add(MakeTool("prioritize_rescue", "Force a colonist to immediately rescue a downed pawn.",
+                MakeParam("colonist", "string", "The rescuer's name"),
+                MakeParam("target", "string", "The downed pawn's name")));
+            tools.Add(MakeTool("prioritize_tend", "Force a doctor to immediately tend to a patient.",
+                MakeParam("doctor", "string", "The doctor's name"),
+                MakeParam("patient", "string", "The patient's name")));
+            tools.Add(MakeTool("prioritize_haul", "Force a colonist to haul a specific item at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "X coordinate of the item"),
+                MakeParam("z", "integer", "Z coordinate of the item")));
+            tools.Add(MakeTool("prioritize_repair", "Force a colonist to repair a damaged building at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "X coordinate of the building"),
+                MakeParam("z", "integer", "Z coordinate of the building")));
+            tools.Add(MakeTool("prioritize_clean", "Force a colonist to clean filth in an area.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "X coordinate of the center"),
+                MakeParam("z", "integer", "Z coordinate of the center"),
+                MakeParam("radius", "integer", "Radius to search for filth (1-20)")));
+
             // Colony Tools
             tools.Add(MakeTool("get_colony_overview", "Get a high-level colony overview: colonist count, total wealth, days survived, difficulty setting, storyteller, and map tile info."));
             tools.Add(MakeTool("get_resources", "Get resource counts in the colony's stockpiles.",

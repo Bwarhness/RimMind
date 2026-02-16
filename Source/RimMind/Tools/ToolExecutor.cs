@@ -23,6 +23,13 @@ namespace RimMind.Tools
             { "get_bills", args => WorkTools.GetBills(args?["workbench"]?.Value) },
             { "get_schedules", args => WorkTools.GetSchedules() },
 
+            // Job Prioritization
+            { "prioritize_rescue", args => JobTools.PrioritizeRescue(args?["colonist"]?.Value, args?["target"]?.Value) },
+            { "prioritize_tend", args => JobTools.PrioritizeTend(args?["doctor"]?.Value, args?["patient"]?.Value) },
+            { "prioritize_haul", args => JobTools.PrioritizeHaul(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "prioritize_repair", args => JobTools.PrioritizeRepair(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "prioritize_clean", args => JobTools.PrioritizeClean(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0, args?["radius"]?.AsInt ?? 5) },
+
             // Colony
             { "get_colony_overview", args => ColonyTools.GetColonyOverview() },
             { "get_resources", args => ColonyTools.GetResources(args?["category"]?.Value) },
