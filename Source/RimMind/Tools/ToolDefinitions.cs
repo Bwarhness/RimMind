@@ -58,6 +58,13 @@ namespace RimMind.Tools
                 MakeParam("z", "integer", "Z coordinate (or start Z for range)"),
                 MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 = 225 cells)"),
                 MakeOptionalParam("z2", "integer", "End Z coordinate for range query (max 15x15 = 225 cells)")));
+            tools.Add(MakeTool("search_map", "Search the map for specific entities and get their exact coordinates. Much faster than scanning get_map_region grids. Use this to find colonists, items, ore deposits, plants, buildings, or enemies by type and optional name/defName filter. Returns coordinates you can use directly for building or navigation.",
+                MakeParam("type", "string", "What to search for: 'colonists' (player pawns), 'hostiles' (enemies), 'animals' (all animals), 'items' (haul-able items), 'buildings' (player-built structures), 'minerals' (ore deposits), 'plants' (crops and wild plants)"),
+                MakeOptionalParam("filter", "string", "Optional text filter: matches against defName or label. Examples: 'silver', 'steel', 'rice', 'wall'. Case-insensitive."),
+                MakeOptionalParam("x1", "integer", "Start X of search bounds (default: whole map)"),
+                MakeOptionalParam("z1", "integer", "Start Z of search bounds"),
+                MakeOptionalParam("x2", "integer", "End X of search bounds"),
+                MakeOptionalParam("z2", "integer", "End Z of search bounds")));
 
             // Animal Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, and training completion status."));

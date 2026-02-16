@@ -219,6 +219,26 @@ namespace RimMind.Tools
 
             result["grid"] = grid;
 
+            // Include pawns in region so AI doesn't need to hunt for '@' in the grid
+            var pawnsInRegion = new JSONArray();
+            foreach (var pawn in map.mapPawns.AllPawnsSpawned)
+            {
+                var pos = pawn.Position;
+                if (pos.x >= startX && pos.x < startX + w && pos.z >= startZ && pos.z < startZ + h)
+                {
+                    var po = new JSONObject();
+                    po["name"] = pawn.LabelShort;
+                    po["x"] = pos.x;
+                    po["z"] = pos.z;
+                    po["type"] = pawn.Faction != null && pawn.Faction.IsPlayer
+                        ? (pawn.RaceProps.Animal ? "colony_animal" : "colonist")
+                        : (pawn.RaceProps.Animal ? "wild_animal" : "other");
+                    pawnsInRegion.Add(po);
+                }
+            }
+            if (pawnsInRegion.Count > 0)
+                result["pawns"] = pawnsInRegion;
+
             var legend = new JSONObject();
             foreach (var code in usedCodes)
             {
@@ -712,6 +732,191 @@ namespace RimMind.Tools
             }
 
             return obj;
+        }
+
+        public static string SearchMap(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            string type = args?["type"]?.Value?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(type))
+                return ToolExecutor.JsonError("'type' is required. Options: colonists, hostiles, animals, items, buildings, minerals, plants");
+
+            string filterRaw = args?["filter"]?.Value;
+            string filter = (string.IsNullOrEmpty(filterRaw) || filterRaw == "null") ? null : filterRaw.ToLowerInvariant();
+
+            bool hasBounds = args?["x1"] != null && args?["z1"] != null && args?["x2"] != null && args?["z2"] != null;
+            int bx1 = hasBounds ? args["x1"].AsInt : 0;
+            int bz1 = hasBounds ? args["z1"].AsInt : 0;
+            int bx2 = hasBounds ? args["x2"].AsInt : map.Size.x - 1;
+            int bz2 = hasBounds ? args["z2"].AsInt : map.Size.z - 1;
+
+            var result = new JSONObject();
+            var matches = new JSONArray();
+            int totalFound = 0;
+            const int MaxResults = 100;
+
+            bool InBounds(IntVec3 pos) => !hasBounds || (pos.x >= bx1 && pos.x <= bx2 && pos.z >= bz1 && pos.z <= bz2);
+            bool MatchesFilter(string defName, string label) => filter == null
+                || defName.ToLowerInvariant().Contains(filter)
+                || label.ToLowerInvariant().Contains(filter);
+            bool MatchesFilterDef(ThingDef def) => MatchesFilter(def.defName, def.LabelCap.ToString())
+                || (def.thingCategories != null && def.thingCategories.Any(c =>
+                    c.defName.ToLowerInvariant().Contains(filter)
+                    || c.LabelCap.ToString().ToLowerInvariant().Contains(filter)));
+
+            if (type == "colonists" || type == "hostiles" || type == "animals")
+            {
+                foreach (var pawn in map.mapPawns.AllPawnsSpawned)
+                {
+                    bool typeMatch = false;
+                    if (type == "colonists") typeMatch = pawn.Faction?.IsPlayer == true && !pawn.RaceProps.Animal;
+                    else if (type == "animals") typeMatch = pawn.RaceProps.Animal;
+                    else if (type == "hostiles") { try { typeMatch = pawn.HostileTo(Faction.OfPlayer); } catch { } }
+
+                    if (!typeMatch) continue;
+                    if (!InBounds(pawn.Position)) continue;
+                    if (!MatchesFilter(pawn.def.defName, pawn.def.LabelCap.ToString())
+                        && (filter == null || !pawn.LabelShort.ToLowerInvariant().Contains(filter))) continue;
+
+                    totalFound++;
+                    if (matches.Count < MaxResults)
+                    {
+                        var m = new JSONObject();
+                        m["name"] = pawn.LabelShort;
+                        m["x"] = pawn.Position.x;
+                        m["z"] = pawn.Position.z;
+                        if (type == "animals") m["faction"] = pawn.Faction?.IsPlayer == true ? "colony" : "wild";
+                        if (pawn.CurJobDef != null) m["job"] = pawn.CurJobDef.reportString;
+                        matches.Add(m);
+                    }
+                }
+            }
+            else if (type == "items")
+            {
+                // Group by defName: list up to 50 distinct items, each with up to 10 locations
+                var grouped = new Dictionary<string, JSONObject>();
+                foreach (var thing in map.listerThings.ThingsInGroup(ThingRequestGroup.HaulableEver))
+                {
+                    if (!thing.Spawned) continue;
+                    if (!InBounds(thing.Position)) continue;
+                    if (filter != null && !MatchesFilterDef(thing.def)) continue;
+
+                    string defName = thing.def.defName;
+                    totalFound += thing.stackCount;
+
+                    if (!grouped.ContainsKey(defName) && grouped.Count < 50)
+                    {
+                        var g = new JSONObject();
+                        g["defName"] = defName;
+                        g["label"] = thing.def.LabelCap.ToString();
+                        g["totalCount"] = 0;
+                        g["locations"] = new JSONArray();
+                        grouped[defName] = g;
+                    }
+
+                    if (grouped.ContainsKey(defName))
+                    {
+                        grouped[defName]["totalCount"] = grouped[defName]["totalCount"].AsInt + thing.stackCount;
+                        var locs = grouped[defName]["locations"].AsArray;
+                        if (locs.Count < 10)
+                        {
+                            var loc = new JSONObject();
+                            loc["x"] = thing.Position.x;
+                            loc["z"] = thing.Position.z;
+                            if (thing.stackCount > 1) loc["count"] = thing.stackCount;
+                            locs.Add(loc);
+                        }
+                    }
+                }
+                foreach (var g in grouped.Values) matches.Add(g);
+                totalFound = matches.Count > 0 ? totalFound : 0;
+            }
+            else if (type == "buildings")
+            {
+                foreach (var building in map.listerBuildings.allBuildingsColonist)
+                {
+                    if (!building.Spawned) continue;
+                    if (!InBounds(building.Position)) continue;
+                    if (filter != null && !MatchesFilterDef(building.def)) continue;
+
+                    totalFound++;
+                    if (matches.Count < MaxResults)
+                    {
+                        var m = new JSONObject();
+                        m["defName"] = building.def.defName;
+                        m["label"] = building.def.LabelCap.ToString();
+                        m["x"] = building.Position.x;
+                        m["z"] = building.Position.z;
+                        if (building.def.size.x > 1 || building.def.size.z > 1)
+                            m["size"] = building.def.size.x + "x" + building.def.size.z;
+                        matches.Add(m);
+                    }
+                }
+            }
+            else if (type == "minerals")
+            {
+                foreach (var thing in map.listerThings.AllThings)
+                {
+                    if (!(thing is Building)) continue;
+                    if (!thing.Spawned) continue;
+                    var bDef = ((Building)thing).def.building;
+                    if (bDef == null || bDef.mineableThing == null) continue;
+                    if (!InBounds(thing.Position)) continue;
+
+                    string yieldLabel = bDef.mineableThing.LabelCap.ToString();
+                    if (filter != null && !MatchesFilterDef(thing.def)
+                        && !yieldLabel.ToLowerInvariant().Contains(filter)) continue;
+
+                    totalFound++;
+                    if (matches.Count < MaxResults)
+                    {
+                        var m = new JSONObject();
+                        m["defName"] = thing.def.defName;
+                        m["label"] = thing.def.LabelCap.ToString();
+                        m["yields"] = yieldLabel;
+                        m["x"] = thing.Position.x;
+                        m["z"] = thing.Position.z;
+                        matches.Add(m);
+                    }
+                }
+            }
+            else if (type == "plants")
+            {
+                foreach (var thing in map.listerThings.AllThings)
+                {
+                    if (!(thing is Plant plant)) continue;
+                    if (!thing.Spawned) continue;
+                    if (!InBounds(thing.Position)) continue;
+                    if (filter != null && !MatchesFilterDef(thing.def)) continue;
+
+                    totalFound++;
+                    if (matches.Count < MaxResults)
+                    {
+                        var m = new JSONObject();
+                        m["defName"] = thing.def.defName;
+                        m["label"] = thing.def.LabelCap.ToString();
+                        m["x"] = thing.Position.x;
+                        m["z"] = thing.Position.z;
+                        m["growth"] = (plant.Growth * 100f).ToString("F0") + "%";
+                        matches.Add(m);
+                    }
+                }
+            }
+            else
+            {
+                return ToolExecutor.JsonError("Unknown type '" + type + "'. Options: colonists, hostiles, animals, items, buildings, minerals, plants");
+            }
+
+            result["type"] = type;
+            if (filter != null) result["filter"] = filter;
+            result["total"] = totalFound;
+            result["returned"] = matches.Count;
+            if (totalFound > matches.Count)
+                result["note"] = "Results capped at " + MaxResults + ". Use bounds (x1,z1,x2,z2) or a more specific filter to narrow results.";
+            result["matches"] = matches;
+            return result.ToString();
         }
     }
 }

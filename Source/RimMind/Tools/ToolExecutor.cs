@@ -45,6 +45,7 @@ namespace RimMind.Tools
             { "get_power_status", args => MapTools.GetPowerStatus() },
             { "get_map_region", args => MapTools.GetMapRegion(args) },
             { "get_cell_details", args => MapTools.GetCellDetails(args) },
+            { "search_map", args => MapTools.SearchMap(args) },
 
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },

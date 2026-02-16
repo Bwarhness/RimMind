@@ -227,18 +227,18 @@ RimMind/
     ├── RimMind.csproj
     ├── Core/          (RimMindMod, Settings, MainThreadDispatcher)
     ├── API/           (OpenRouterClient, DTOs, SimpleJSON, PromptBuilder)
-    ├── Tools/         (42 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
+    ├── Tools/         (44 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (42 tools)
+## Current Tool Catalog (44 tools)
 - **Colonist**: list_colonists, get_colonist_details, get_colonist_health
 - **Social**: get_relationships, get_faction_relations
 - **Work**: get_work_priorities, get_bills, get_schedules
 - **Colony**: get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research**: get_research_status, get_available_research, get_completed_research
 - **Military**: get_threats, get_defenses, get_combat_readiness
-- **Map**: get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details
+- **Map**: get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, search_map
 - **Animals**: list_animals, get_animal_details
 - **Events**: get_recent_events, get_active_alerts
 - **Medical**: get_medical_overview
@@ -270,6 +270,7 @@ RimMind/
 - **2026-02-16**: Added Context Inspector window — tabbed view (System/Tools/Chat) showing the full context sent to the LLM. System tab shows system prompt with building guidelines, colony context, directives. Tools tab shows all tool definitions with parameters. Chat tab shows conversation history with tool calls. Uses Consolas monospace font for grid/JSON readability. Content split into 2k-char chunks for reliable scrolling. Opened via "Context" button in chat header.
 - **2026-02-16**: Rewrote building system prompt from rules-based to workflow-based — replaced 50+ specific rules with a mandatory 6-step LOOK-PLAN-BUILD-VERIFY workflow. AI must: (1) call get_map_region before building, (2) read area_after grid after placing structure to find door position, (3) plan furniture using the grid data ensuring door clearance, (4) verify final layout. Door clearance derived from reading 'd' characters in the grid rather than memorized coordinate rules.
 - **2026-02-16**: Added quick prompt buttons to ChatWindow — 10 test prompts (Bedroom, Dining+Kitchen, Barracks, Power Setup, Workshop, Hospital, Killbox, Base Layout, Colony Status, Map Scout) shown in a toggleable scrollable panel. Click to insert prompt text.
+- **2026-02-16**: Added `search_map` tool — search the map for entities by type (colonists, hostiles, animals, items, buildings, minerals, plants) with optional text filter and bounds. Returns exact coordinates instead of requiring grid scanning. Items are grouped by defName with aggregate counts. Minerals filter to ore deposits (mineableThing != null). Also added `pawns` field to `get_map_region` response listing all pawns in the region with name/position/type, so the AI doesn't need to hunt for '@' characters.
 
 ## Future Plans (Deferred)
 - Phase 3: LLM-powered colonist dialogue (Harmony patch on social interactions)
