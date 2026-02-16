@@ -106,6 +106,16 @@ namespace RimMind.Tools
                 MakeParam("label", "string", "The label/name of the zone to delete"),
                 MakeOptionalParam("remove_plans", "boolean", "Also remove plan designations in the area (planning zones only, default: false)")));
 
+            // World & Diplomacy Tools
+            tools.Add(MakeTool("list_world_destinations", "List all world settlements that can be visited by caravan, with distances and faction relations."));
+            tools.Add(MakeTool("get_caravan_info", "Get info about available colonists and animals for caravan formation. Note: Actual caravan formation requires manual player action."));
+            tools.Add(MakeTool("get_trade_status", "Check if a trade session is currently active with a visiting trader."));
+            tools.Add(MakeTool("list_trader_inventory", "List items available from current visiting trader. Requires active trade session."));
+            tools.Add(MakeTool("list_factions", "List all known factions with their relation status and goodwill."));
+            tools.Add(MakeTool("get_diplomatic_summary", "Get a summary count of allies, neutral factions, and hostile factions."));
+            tools.Add(MakeTool("get_diplomacy_options", "Get available diplomatic actions with a specific faction.",
+                MakeParam("factionName", "string", "Faction name")));
+
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));

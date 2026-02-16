@@ -67,6 +67,15 @@ namespace RimMind.Tools
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
 
+            // World & Diplomacy
+            { "list_world_destinations", args => WorldTools.ListWorldDestinations() },
+            { "get_caravan_info", args => WorldTools.GetCaravanInfo() },
+            { "get_trade_status", args => WorldTools.GetTradeStatus() },
+            { "list_trader_inventory", args => WorldTools.ListTraderInventory() },
+            { "list_factions", args => WorldTools.ListFactions() },
+            { "get_diplomatic_summary", args => WorldTools.GetDiplomaticSummary() },
+            { "get_diplomacy_options", args => WorldTools.GetDiplomacyOptions(args?["factionName"]?.Value) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
