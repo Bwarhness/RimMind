@@ -392,5 +392,106 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        public static string SetCrop(string zoneName, string plantType)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (string.IsNullOrEmpty(plantType)) return ToolExecutor.JsonError("plantType parameter required.");
+
+            string nameLower = zoneName.ToLower();
+            var growingZone = map.zoneManager.AllZones.OfType<Zone_Growing>()
+                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+
+            if (growingZone == null)
+                return ToolExecutor.JsonError("Growing zone '" + zoneName + "' not found.");
+
+            // Find matching plant
+            string plantLower = plantType.ToLower();
+            var plantDef = DefDatabase<ThingDef>.AllDefsListForReading
+                .Where(t => t.plant != null && t.plant.Sowable)
+                .FirstOrDefault(t => 
+                    t.defName.ToLower() == plantLower ||
+                    (t.label != null && t.label.ToLower().Contains(plantLower)));
+
+            if (plantDef == null)
+            {
+                var commonCrops = DefDatabase<ThingDef>.AllDefsListForReading
+                    .Where(t => t.plant != null && t.plant.Sowable)
+                    .Select(t => t.label ?? t.defName)
+                    .Take(10);
+                return ToolExecutor.JsonError("Plant type '" + plantType + "' not found. Examples: " + string.Join(", ", commonCrops));
+            }
+
+            growingZone.SetPlantDefToGrow(plantDef);
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["zone"] = growingZone.label;
+            result["crop"] = plantDef.LabelCap.ToString();
+            result["cellCount"] = growingZone.CellCount;
+            return result.ToString();
+        }
+
+        public static string GetRecommendedCrops()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var season = GenLocalDate.Season(map);
+            var arr = new JSONArray();
+
+            // Get all sowable plants
+            var plants = DefDatabase<ThingDef>.AllDefsListForReading
+                .Where(t => t.plant != null && t.plant.Sowable)
+                .OrderByDescending(t => t.plant.harvestYield);
+
+            foreach (var plant in plants.Take(20))
+            {
+                var obj = new JSONObject();
+                obj["name"] = plant.LabelCap.ToString();
+                obj["defName"] = plant.defName;
+                obj["growDays"] = plant.plant.growDays.ToString("F1");
+                obj["harvestYield"] = plant.plant.harvestYield;
+                obj["minFertility"] = plant.plant.fertilityMin.ToString("F2");
+
+                // Check if it can grow in current season
+                if (plant.plant.growMinGlow > 0)
+                    obj["requiresLight"] = true;
+
+                if (plant.plant.sowMinSkill > 0)
+                    obj["minSkill"] = plant.plant.sowMinSkill;
+
+                // Season suitability
+                bool canGrowNow = true;
+                if (season == Season.Winter && plant.plant.dieIfLeafless)
+                {
+                    canGrowNow = false;
+                    obj["winterSurvival"] = "Dies in winter";
+                }
+
+                obj["canGrowNow"] = canGrowNow;
+
+                // Categorize by use
+                if (plant.plant.purpose == PlantPurpose.Food)
+                    obj["purpose"] = "Food";
+                else if (plant.plant.purpose == PlantPurpose.Health)
+                    obj["purpose"] = "Medicine";
+                else if (plant.plant.purpose == PlantPurpose.Beauty)
+                    obj["purpose"] = "Beauty";
+                else
+                    obj["purpose"] = "Resource";
+
+                arr.Add(obj);
+            }
+
+            var result = new JSONObject();
+            result["season"] = season.ToString();
+            result["crops"] = arr;
+            result["count"] = arr.Count;
+            return result.ToString();
+        }
+
     }
 }

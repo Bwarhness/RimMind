@@ -66,6 +66,8 @@ namespace RimMind.Tools
             { "list_zones", args => ZoneTools.ListZones() },
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
+            { "set_crop", args => ZoneTools.SetCrop(args?["zoneName"]?.Value, args?["plantType"]?.Value) },
+            { "get_recommended_crops", args => ZoneTools.GetRecommendedCrops() },
 
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
