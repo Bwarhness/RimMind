@@ -2,7 +2,7 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 41+ different colony data tools via function calling.
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 42+ different colony data tools via function calling.
 
 ## Build & Development
 
@@ -227,11 +227,11 @@ RimMind/
     ├── RimMind.csproj
     ├── Core/          (RimMindMod, Settings, MainThreadDispatcher)
     ├── API/           (OpenRouterClient, DTOs, SimpleJSON, PromptBuilder)
-    ├── Tools/         (41 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
+    ├── Tools/         (42 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (41 tools)
+## Current Tool Catalog (42 tools)
 - **Colonist**: list_colonists, get_colonist_details, get_colonist_health
 - **Social**: get_relationships, get_faction_relations
 - **Work**: get_work_priorities, get_bills, get_schedules
@@ -265,8 +265,7 @@ RimMind/
 - **2026-02-15**: Rewrote plan tools to use RimWorld 1.6's native `Plan` API (`Map.planManager`, `Verse.Plan`) instead of old `DesignationDefOf.Plan` designations. Plans placed by AI are now fully interactable — player can click, rename, recolor, copy/paste, and remove them using the in-game planning tools. `get_plans` reads from `planManager.AllPlans`. `remove_plans` now supports removal by label. Map grid uses `planManager.PlanAt()` for 'p' character.
 - **2026-02-15**: Increased default max_tokens from 1024 to 4096 to support large building operations. Added BUILDING GUIDELINES to system prompt instructing AI to batch placements (20-30 per call) and build room-by-room. Added full communication logging — raw JSON request/response bodies now logged to debug.log without truncation. Increased tool arg/result truncation limits (500→2000 / 1000→5000).
 - **2026-02-15**: Added player directives system — per-save "colony personality" that persists with save files. Players define playstyle rules and preferences (e.g., "melee only", "no pyromaniacs") that get injected into every AI system prompt. 3 new tools (get_directives, add_directive, remove_directive) let the AI manage directives during conversation. Auto-detection (togglable in settings) prompts the AI to offer saving preferences it notices in chat. DirectivesWindow provides manual viewing/editing with a button in the chat header (turns green when directives are active).
-- **2026-02-15**: Major building system overhaul — Added `place_structure` tool with shape primitives (`room`, `wall_line`, `wall_rect`) that builds entire rooms in one call instead of 24+ individual wall placements. Added fuzzy defName/stuff matching with suggestions ("Did you mean: Wall?"). Enriched `list_buildable` with `stuffHint` for materials. Compact batch results (successes summarized, failures detailed). Actionable error messages for placement failures. Added `auto_approve` parameter to skip forbidden state. Increased batch limit from 50 to 100. Expanded system prompt with common buildings reference, coordinate system docs, and room sizing templates. Fixed double-encoded JSON array bug in batch placement/remove/approve.
-- **2026-02-15**: Building system intelligence overhaul — `place_structure` tool with room/wall_line/wall_rect shapes (one call builds entire rooms). Fuzzy defName/stuff matching with suggestions. Shared wall detection (overlapping rooms auto-skip existing walls). Blueprints now visible in map grid as lowercase characters (w=wall blueprint, d=door blueprint). Enriched map legend shows actual defNames (e.g., "H: Workbench (ElectricStove)"). Build results include `existing_in_area` scan (pre-placement), `area_after` grid, and `buildings_in_area` structured list. Richer error messages ("Occupied by table (2x4)"). `auto_approve` parameter. `stuffHint` in list_buildable. Expanded system prompt with common buildings, coordinate system, room templates, and multi-cell footprint guide. Fixed double-encoded JSON arrays in batch operations. Increased batch limit to 100.
+- **2026-02-16**: Building system intelligence overhaul — `place_structure` tool with room/wall_line/wall_rect shapes (one call builds entire rooms). Fuzzy defName/stuff matching with suggestions. Shared wall detection (overlapping rooms auto-skip existing walls). Blueprints now visible in map grid as lowercase characters (w=wall blueprint, d=door blueprint). Enriched map legend shows actual defNames (e.g., "H: Workbench (ElectricStove)"). Build results include `existing_in_area` scan (pre-placement), `area_after` grid, and `buildings_in_area` structured list. Richer error messages ("Occupied by table (2x4)"). `auto_approve` parameter. `stuffHint` in list_buildable. Expanded system prompt with common buildings, coordinate system, room templates, and multi-cell footprint guide. Fixed double-encoded JSON arrays in batch operations. Fixed blueprints invisible in map grid (Blueprint doesn't extend Building). Increased batch limit to 100.
 
 ## Future Plans (Deferred)
 - Phase 3: LLM-powered colonist dialogue (Harmony patch on social interactions)
