@@ -33,6 +33,8 @@ namespace RimMind.Tools
             { "get_schedules", args => WorkTools.GetSchedules() },
             { "set_schedule", args => WorkTools.SetSchedule(args?["colonist"]?.Value, args?["hour"]?.AsInt ?? -1, args?["assignment"]?.Value) },
             { "copy_schedule", args => WorkTools.CopySchedule(args?["from"]?.Value, args?["to"]?.Value) },
+            { "get_work_queue", args => WorkTools.GetWorkQueue() },
+            { "get_construction_status", args => WorkTools.GetConstructionStatus() },
 
             // Job Prioritization
             { "prioritize_rescue", args => JobTools.PrioritizeRescue(args?["colonist"]?.Value, args?["target"]?.Value) },
@@ -83,6 +85,12 @@ namespace RimMind.Tools
             { "get_cell_beauty", args => MapTools.GetCellBeauty(args) },
             { "get_pollution", args => MapTools.GetPollution(args) },
             { "get_roof_status", args => MapTools.GetRoofStatus(args) },
+
+            // Power Management
+            { "analyze_power_grid", args => PowerTools.AnalyzePowerGrid() },
+            { "check_power_connection", args => PowerTools.CheckPowerConnection(args) },
+            { "suggest_power_route", args => PowerTools.SuggestPowerRoute(args) },
+            { "auto_route_power", args => PowerTools.AutoRoutePower(args) },
 
             // Power Management
             { "analyze_power_grid", args => PowerTools.AnalyzePowerGrid() },

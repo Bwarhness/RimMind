@@ -70,6 +70,10 @@ namespace RimMind.Tools
                 MakeParam("from", "string", "Source colonist name"),
                 MakeParam("to", "string", "Target colonist name")));
 
+            // Construction & Workflow Intelligence (Phase 2)
+            tools.Add(MakeTool("get_work_queue", "Get pending work designations grouped by type (hauling, construction, mining, planting, repair). Shows total jobs, in-progress, blocked (unreachable or missing materials), and assigned colonists. Use this to diagnose work bottlenecks and understand why tasks aren't getting done."));
+            tools.Add(MakeTool("get_construction_status", "Get status of all blueprints on the map: completion percentage, materials needed vs available, forbidden status (AI-placed awaiting approval), and current builders. Use this to track construction progress and diagnose why buildings aren't being built (missing materials, forbidden, no builders)."));
+
             // Job Prioritization Tools
             tools.Add(MakeTool("prioritize_rescue", "Force a colonist to immediately rescue a downed pawn.",
                 MakeParam("colonist", "string", "The rescuer's name"),
@@ -180,6 +184,27 @@ namespace RimMind.Tools
                 MakeParam("z2", "integer", "End Z coordinate of region"),
                 MakeOptionalParam("roofType", "string", "Filter by roof type: 'none', 'thin', 'thick', 'constructed' (not yet implemented)"),
                 MakeOptionalParam("detectBreaches", "boolean", "Enable breach detection: find unroofed cells adjacent to thick mountain roof (default: false)")));
+            // Power Management Tools
+            tools.Add(MakeTool("analyze_power_grid", "Comprehensive power network analysis. Returns all power networks with their generators, consumers, batteries, and power balance (surplus/deficit). Also identifies buildings that need power but are not connected. Use this to understand the colony's power infrastructure and identify connectivity issues."));
+            tools.Add(MakeTool("check_power_connection", "Check if a specific building or area is connected to the power grid. Returns power status, which network it's connected to (if any), and nearest conduit location. Use this to diagnose why a specific building is not receiving power.",
+                MakeOptionalParam("x", "integer", "X coordinate for single building check"),
+                MakeOptionalParam("z", "integer", "Z coordinate for single building check"),
+                MakeOptionalParam("x1", "integer", "Start X for area scan (alternative to single x/z)"),
+                MakeOptionalParam("z1", "integer", "Start Z for area scan"),
+                MakeOptionalParam("x2", "integer", "End X for area scan"),
+                MakeOptionalParam("z2", "integer", "End Z for area scan")));
+            tools.Add(MakeTool("suggest_power_route", "Suggest a conduit placement path between two points. Uses pathfinding to find an efficient route that avoids walls (optional) and minimizes cost. Returns list of cells where conduits should be placed and total steel cost estimate. Use this before auto_route_power to preview the path.",
+                MakeParam("x1", "integer", "Start X coordinate (e.g., existing power network)"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate (e.g., unpowered building)"),
+                MakeParam("z2", "integer", "End Z coordinate"),
+                MakeOptionalParam("avoidWalls", "boolean", "Try to route around walls (default: true)"),
+                MakeOptionalParam("minimizeCost", "boolean", "Prefer cheaper terrain (default: true)")));
+            tools.Add(MakeTool("auto_route_power", "Automatically place power conduits to connect a building to the nearest powered conduit. Finds the nearest active power network, calculates optimal path, and places conduit blueprints. Blueprints are placed as forbidden (require approval) unless autoApprove is true. Use this to quickly connect unpowered buildings to the grid.",
+                MakeParam("targetX", "integer", "X coordinate of building to connect"),
+                MakeParam("targetZ", "integer", "Z coordinate of building to connect"),
+                MakeOptionalParam("autoApprove", "boolean", "Immediately approve blueprints for construction (default: false - places as forbidden, requires approval)")));
+
 
             // Animal Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));

@@ -83,22 +83,40 @@ namespace RimMind.Tools
 
                     if (allAlerts != null)
                     {
-                        foreach (var alert in allAlerts)
+                        // Sort by priority (Critical first)
+                        var sortedAlerts = allAlerts
+                            .Where(a => a.Active)
+                            .OrderByDescending(a => a.Priority);
+
+                        foreach (var alert in sortedAlerts)
                         {
-                            if (alert.Active)
+                            var obj = new JSONObject();
+                            obj["label"] = alert.GetLabel().ToString();
+                            obj["priority"] = alert.Priority.ToString(); // Critical, High, Medium, Low
+                            
+                            // Severity number for easy filtering (4=Critical, 3=High, 2=Medium, 1=Low)
+                            obj["severity"] = (int)alert.Priority;
+
+                            TaggedString explanation = alert.GetExplanation();
+                            string explanationStr = explanation.ToString();
+                            if (!string.IsNullOrEmpty(explanationStr) && explanationStr.Length > 300)
+                                explanationStr = explanationStr.Substring(0, 300) + "...";
+                            obj["explanation"] = explanationStr;
+
+                            // Try to extract colonist names from alert text
+                            var colonistNames = ExtractColonistNames(alert.GetLabel().ToString(), explanationStr);
+                            if (colonistNames.Count > 0)
                             {
-                                var obj = new JSONObject();
-                                obj["label"] = alert.GetLabel().ToString();
-                                obj["severity"] = alert.Priority.ToString();
-
-                                TaggedString explanation = alert.GetExplanation();
-                                string explanationStr = explanation.ToString();
-                                if (!string.IsNullOrEmpty(explanationStr) && explanationStr.Length > 200)
-                                    explanationStr = explanationStr.Substring(0, 200) + "...";
-                                obj["explanation"] = explanationStr;
-
-                                arr.Add(obj);
+                                var namesArray = new JSONArray();
+                                foreach (var name in colonistNames)
+                                    namesArray.Add(name);
+                                obj["affected_colonists"] = namesArray;
                             }
+
+                            // Add alert-specific metadata
+                            obj["alert_type"] = alert.GetType().Name;
+
+                            arr.Add(obj);
                         }
                     }
                 }
@@ -113,7 +131,39 @@ namespace RimMind.Tools
             var result = new JSONObject();
             result["activeAlerts"] = arr;
             result["count"] = arr.Count;
+            
+            // Add summary counts by severity
+            var summary = new JSONObject();
+            summary["critical"] = arr.Count(a => a.AsObject["priority"]?.Value == "Critical");
+            summary["high"] = arr.Count(a => a.AsObject["priority"]?.Value == "High");
+            summary["medium"] = arr.Count(a => a.AsObject["priority"]?.Value == "Medium");
+            summary["low"] = arr.Count(a => a.AsObject["priority"]?.Value == "Low");
+            result["summary"] = summary;
+
             return result.ToString();
+        }
+
+        private static System.Collections.Generic.List<string> ExtractColonistNames(string label, string explanation)
+        {
+            var names = new System.Collections.Generic.List<string>();
+            var map = Find.CurrentMap;
+            if (map == null) return names;
+
+            var colonists = map.mapPawns.FreeColonists;
+            foreach (var pawn in colonists)
+            {
+                string shortName = pawn.Name?.ToStringShort;
+                if (!string.IsNullOrEmpty(shortName))
+                {
+                    if (label.Contains(shortName) || explanation.Contains(shortName))
+                    {
+                        if (!names.Contains(shortName))
+                            names.Add(shortName);
+                    }
+                }
+            }
+
+            return names;
         }
     }
 }
