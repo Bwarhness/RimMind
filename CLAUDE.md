@@ -231,14 +231,14 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (51 tools)
+## Current Tool Catalog (52 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (2): get_relationships, get_faction_relations
 - **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
 - **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research** (3): get_research_status, get_available_research, get_completed_research
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
-- **Map** (6): get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, search_map
+- **Map** (7): get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, get_blueprints, search_map
 - **Animals** (2): list_animals, get_animal_details
 - **Events** (2): get_recent_events, get_active_alerts
 - **Medical** (1): get_medical_overview
@@ -252,6 +252,7 @@ RimMind/
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ## Changelog
+- **2026-02-17**: Enhanced blueprint visibility — AI can now clearly distinguish blueprints from built structures. Added `get_blueprints` tool to query all placed blueprints on the map with defName, position, material, size, and rotation. Updated `get_cell_details` to separate blueprints into dedicated array with "unbuilt" status vs built structures with "built" status. Enhanced system prompt to explain uppercase (built) vs lowercase (blueprint) character codes at the top, not just in building section. Map grid legend already showed "(blueprint)" for lowercase codes. This fixes issue where RimMind couldn't see player-placed blueprints even though they were visible as lowercase characters in the grid.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.
 - **2026-02-15**: Fixed Enter key in chat window — overrode `OnAcceptKeyPressed()` and set `forceCatchAcceptAndCancelEventEvenIfUnfocused = true`. RimWorld's `WindowStack.Notify_PressedAccept` skips windows where both `closeOnAccept` and `forceCatch` are false. The keybinding system consumes Return before `DoWindowContents` runs, so KeyDown handlers there never see it.
