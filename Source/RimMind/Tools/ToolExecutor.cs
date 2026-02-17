@@ -33,9 +33,9 @@ namespace RimMind.Tools
             // Job Prioritization
             { "prioritize_rescue", args => JobTools.PrioritizeRescue(args?["colonist"]?.Value, args?["target"]?.Value) },
             { "prioritize_tend", args => JobTools.PrioritizeTend(args?["doctor"]?.Value, args?["patient"]?.Value) },
-            { "prioritize_haul", args => JobTools.PrioritizeHaul(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
-            { "prioritize_repair", args => JobTools.PrioritizeRepair(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
-            { "prioritize_clean", args => JobTools.PrioritizeClean(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0, args?["radius"]?.AsInt ?? 5) },
+            { "prioritize_haul", args => JobTools.PrioritizeHaul(args?["colonist"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
+            { "prioritize_repair", args => JobTools.PrioritizeRepair(args?["colonist"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
+            { "prioritize_clean", args => JobTools.PrioritizeClean(args?["colonist"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1, args?["radius"]?.AsInt ?? 5) },
 
             // Colony
             { "get_colony_overview", args => ColonyTools.GetColonyOverview() },
@@ -81,6 +81,8 @@ namespace RimMind.Tools
             { "list_zones", args => ZoneTools.ListZones() },
             { "create_zone", args => ZoneTools.CreateZone(args) },
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
+            { "set_crop", args => ZoneTools.SetCrop(args?["zoneName"]?.Value, args?["plantType"]?.Value) },
+            { "get_recommended_crops", args => ZoneTools.GetRecommendedCrops() },
             { "set_stockpile_priority", args => ZoneTools.SetStockpilePriority(args?["zoneName"]?.Value, args?["priority"]?.Value) },
             { "set_stockpile_filter", args => ZoneTools.SetStockpileFilter(args?["zoneName"]?.Value, args?["category"]?.Value, args?["allowed"]?.AsBool ?? false) },
             { "set_stockpile_item", args => ZoneTools.SetStockpileItem(args?["zoneName"]?.Value, args?["item"]?.Value, args?["allowed"]?.AsBool ?? false) },

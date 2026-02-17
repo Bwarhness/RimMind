@@ -24,7 +24,9 @@ namespace RimMind.Tools
 
             if (!target.Downed) return ToolExecutor.JsonError("Target is not downed.");
 
-            var job = JobMaker.MakeJob(JobDefOf.Rescue, target, target.CurrentBed());
+            var bed = RestUtility.FindBedFor(target, colonist, false, false);
+            if (bed == null) return ToolExecutor.JsonError("No available bed found for rescue target.");
+            var job = JobMaker.MakeJob(JobDefOf.Rescue, target, bed);
             if (colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc))
             {
                 var result = new JSONObject();
@@ -87,7 +89,7 @@ namespace RimMind.Tools
 
             if (haulable == null) return ToolExecutor.JsonError("No haulable item found at " + x + "," + z);
 
-            var job = HaulAIUtility.HaulToStorageJob(colonist, haulable);
+            var job = HaulAIUtility.HaulToStorageJob(colonist, haulable, false);
             if (job != null && colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc))
             {
                 var result = new JSONObject();
