@@ -105,6 +105,17 @@ namespace RimMind.Core
             listing.CheckboxLabeled("Enable Chat Companion", ref Settings.enableChatCompanion);
             listing.CheckboxLabeled("Auto-detect Directives", ref Settings.autoDetectDirectives, "When enabled, the AI will detect playstyle preferences during conversation and offer to save them as colony directives.");
 
+            listing.GapLine();
+
+            // Event Automation
+            listing.Label("<b>Event Automation</b>");
+            listing.CheckboxLabeled("Enable Event Automation", ref Settings.enableEventAutomation, "When enabled, RimMind can automatically respond to game events with configured prompts.");
+            
+            if (listing.ButtonText("Configure Automation Rules..."))
+            {
+                Find.WindowStack.Add(new RimMind.Automation.AutomationSettingsWindow());
+            }
+
             listing.End();
         }
     }

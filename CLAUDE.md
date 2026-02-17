@@ -248,6 +248,75 @@ RimMind/
 - **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
 
+## Event-Driven Automation System
+
+RimMind includes a user-scriptable event automation system that allows players to configure custom AI responses to specific game events (raids, fires, mental breaks, etc.).
+
+### Architecture
+
+**Components:**
+- `EventAutomationManager` - GameComponent that tracks cooldowns for each event type
+- `AutomationRule` - Data structure for each configured automation (enabled, prompt, cooldown)
+- `LetterAutomationPatch` - Harmony Postfix on `LetterStack.ReceiveLetter` to detect incoming letters
+- `AutomationSettingsWindow` - UI for configuring automation rules
+- `DefaultAutomationPrompts` - Library of default prompt templates for common events
+
+**Flow:**
+1. Letter arrives (raid, fire, trader, etc.)
+2. Harmony patch intercepts `LetterStack.ReceiveLetter`
+3. Checks if automation is enabled globally
+4. Checks if automation rule exists for this letter type
+5. Checks cooldown via `EventAutomationManager`
+6. Sends custom prompt to `ChatManager` with event context
+7. AI executes using existing tools
+
+**Key Files:**
+- `Source/RimMind/Automation/LetterAutomationPatch.cs` - Harmony patch
+- `Source/RimMind/Automation/EventAutomationManager.cs` - Cooldown tracking
+- `Source/RimMind/Automation/AutomationRule.cs` - Settings data structure
+- `Source/RimMind/Automation/AutomationSettingsWindow.cs` - Configuration UI
+- `Source/RimMind/Automation/DefaultAutomationPrompts.cs` - Default templates
+- `Defs/GameComponentDefs/GameComponents.xml` - GameComponent registration
+
+**Settings Storage:**
+- `RimMindSettings.enableEventAutomation` - Master toggle (bool)
+- `RimMindSettings.automationRules` - Dictionary<string, AutomationRule> saved via ExposeData
+- Per-save cooldown tracking via `EventAutomationManager` (GameComponent)
+
+**User Experience:**
+1. Enable "Event Automation" in mod settings
+2. Click "Configure Automation Rules..." button
+3. Browse categorized event types (Combat, Emergencies, Medical, etc.)
+4. Enable/disable specific events
+5. Edit custom prompts (or use defaults)
+6. Set cooldown periods (10-300 seconds)
+7. When event occurs, AI receives context + custom prompt
+
+**Safety Mechanisms:**
+- Master enable/disable toggle
+- Per-event enable/disable
+- Cooldown system prevents spam
+- Try/catch wraps all automation logic
+- Requires ChatWindow to be instantiated
+- Only fires when chat companion is active
+
+**Example Automation:**
+```
+Event: RaidEnemy
+Enabled: Yes
+Prompt: "Draft all combat-capable colonists. Equip best available weapons. Position behind defensive structures. Close all exterior doors."
+Cooldown: 60 seconds
+```
+
+When raid letter arrives → AI receives:
+```
+[EVENT: Raid arriving]
+
+Draft all combat-capable colonists. Equip best available weapons. Position behind defensive structures. Close all exterior doors.
+```
+
+AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute the instructions.
+
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
@@ -274,6 +343,9 @@ RimMind/
 - **2026-02-16**: Added quick prompt buttons to ChatWindow — 10 test prompts (Bedroom, Dining+Kitchen, Barracks, Power Setup, Workshop, Hospital, Killbox, Base Layout, Colony Status, Map Scout) shown in a toggleable scrollable panel. Click to insert prompt text.
 - **2026-02-16**: Added `search_map` tool — search the map for entities by type (colonists, hostiles, animals, items, buildings, minerals, plants) with optional text filter and bounds. Returns exact coordinates instead of requiring grid scanning. Items are grouped by defName with aggregate counts. Minerals filter to ore deposits (mineableThing != null). Also added `pawns` field to `get_map_region` response listing all pawns in the region with name/position/type, so the AI doesn't need to hunt for '@' characters.
 
+- **2026-02-17**: Implemented Event-Driven Automation (Phase 1) — User-scriptable event automation system. When game events occur (raids, fires, mental breaks, etc.), RimMind can automatically send configured prompts to the AI. Features: Harmony Postfix on `LetterStack.ReceiveLetter`, per-event automation rules with custom prompts, cooldown tracking (10-300s) via GameComponent, AutomationSettingsWindow for configuration with categorized event types, 25+ default prompt templates, master enable/disable toggle, per-save persistence via ExposeData. Exposed `ChatWindow.Instance` and `ChatManager` properties for automation system access. Added `Defs/GameComponentDefs/GameComponents.xml` to register EventAutomationManager.
+
 ## Future Plans (Deferred)
+- Phase 2: Enhanced Automation UI (import/export configs, more event types)
 - Phase 3: LLM-powered colonist dialogue (Harmony patch on social interactions)
 - Phase 4: AI storyteller (custom StorytellerComp querying LLM for event decisions)

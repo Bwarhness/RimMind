@@ -8,11 +8,16 @@ namespace RimMind.Chat
     public class ChatWindow : Window
     {
         private static ChatManager chatManager;
+        private static ChatWindow instance;
         private string inputText = "";
         private Vector2 scrollPosition;
         private bool scrollToBottom;
         private bool showPrompts;
         private Vector2 promptScrollPos;
+
+        public static ChatWindow Instance => instance;
+        public ChatManager Manager => chatManager;
+        public ChatManager ChatManager => chatManager;
 
         private static readonly string[][] quickPrompts = new string[][]
         {
@@ -46,12 +51,21 @@ namespace RimMind.Chat
                 chatManager = new ChatManager();
 
             chatManager.OnMessageUpdated += () => scrollToBottom = true;
+            instance = this;
         }
 
         public override void PostOpen()
         {
             base.PostOpen();
             scrollToBottom = true;
+            instance = this;
+        }
+
+        public override void PostClose()
+        {
+            base.PostClose();
+            if (instance == this)
+                instance = null;
         }
 
         public override void OnAcceptKeyPressed()
