@@ -252,6 +252,28 @@ namespace RimMind.Tools
                 MakeParam("x2", "integer", "End X coordinate"),
                 MakeParam("z2", "integer", "End Z coordinate")));
 
+            // Equipment & Policy Tools
+            tools.Add(MakeTool("list_equipment", "List current weapon and apparel for all colonists with armor ratings."));
+            tools.Add(MakeTool("equip_weapon", "Force a colonist to equip a specific weapon at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "Weapon X coordinate"),
+                MakeParam("z", "integer", "Weapon Z coordinate")));
+            tools.Add(MakeTool("wear_apparel", "Force a colonist to wear specific apparel at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "Apparel X coordinate"),
+                MakeParam("z", "integer", "Apparel Z coordinate")));
+            tools.Add(MakeTool("drop_equipment", "Make a colonist drop their current weapon.",
+                MakeParam("colonist", "string", "The colonist's name")));
+            tools.Add(MakeTool("assign_outfit", "Assign a clothing policy/outfit to a colonist.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("outfitName", "string", "Outfit name (e.g., 'Worker', 'Soldier', 'Nudist')")));
+            tools.Add(MakeTool("assign_drug_policy", "Assign a drug policy to a colonist.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("policyName", "string", "Drug policy name")));
+            tools.Add(MakeTool("assign_food_restriction", "Assign a food restriction to a colonist.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("restrictionName", "string", "Food restriction name")));
+
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
