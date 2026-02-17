@@ -392,22 +392,195 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
-        public static string SetStockpilePriority(string zoneName, string priority)
+        private static bool FuzzyMatch(string haystack, string needle)
+        {
+            if (haystack.Contains(needle)) return true;
+            // Handle common plurals: shelves→shelf, dressers→dresser, cabinets→cabinet
+            if (needle.EndsWith("ves"))
+            {
+                string singular = needle.Substring(0, needle.Length - 3) + "f";
+                if (haystack.Contains(singular)) return true;
+            }
+            else if (needle.EndsWith("es"))
+            {
+                if (haystack.Contains(needle.Substring(0, needle.Length - 2))) return true;
+            }
+            else if (needle.EndsWith("s") && needle.Length > 2)
+            {
+                if (haystack.Contains(needle.Substring(0, needle.Length - 1))) return true;
+            }
+            return false;
+        }
+
+        private static bool MatchesStorageName(string nameLower, string label, string defName)
+        {
+            if (!string.IsNullOrEmpty(label) && FuzzyMatch(label.ToLower(), nameLower)) return true;
+            if (!string.IsNullOrEmpty(defName) && FuzzyMatch(defName.ToLower(), nameLower)) return true;
+            return false;
+        }
+
+        private static List<(StorageSettings settings, string label)> FindAllStorage(Map map, string name, string roomFilter = null, int x1 = -1, int z1 = -1, int x2 = -1, int z2 = -1)
+        {
+            var results = new List<(StorageSettings, string)>();
+            string nameLower = name.ToLower();
+            bool hasCoordFilter = x1 >= 0 && z1 >= 0 && x2 >= 0 && z2 >= 0;
+
+            // Search stockpile zones
+            foreach (var stockpile in map.zoneManager.AllZones.OfType<Zone_Stockpile>())
+            {
+                if (!FuzzyMatch(stockpile.label.ToLower(), nameLower)) continue;
+
+                if (hasCoordFilter)
+                {
+                    bool inBounds = stockpile.Cells.Any(c => c.x >= x1 && c.x <= x2 && c.z >= z1 && c.z <= z2);
+                    if (!inBounds) continue;
+                }
+
+                if (!string.IsNullOrEmpty(roomFilter))
+                {
+                    var firstCell = stockpile.Cells.FirstOrDefault();
+                    if (firstCell != default && !RoomMatchesFilter(firstCell.GetRoom(map), roomFilter))
+                        continue;
+                }
+
+                results.Add((stockpile.settings, stockpile.label));
+            }
+
+            // Search all buildings with storage settings (completed, blueprints, and frames)
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                var storageParent = building as IStoreSettingsParent;
+                if (storageParent == null) continue;
+
+                var settings = storageParent.GetStoreSettings();
+                if (settings == null) continue;
+
+                // Determine the underlying def for name matching
+                string matchLabel = null;
+                string matchDefName = null;
+                string displayLabel = null;
+
+                if (building is Building_Storage)
+                {
+                    matchLabel = building.def.label;
+                    matchDefName = building.def.defName;
+                    displayLabel = building.def.label;
+                }
+                else
+                {
+                    // Blueprint or Frame — match against the target building def
+                    var builtDef = building.def.entityDefToBuild as ThingDef;
+                    if (builtDef == null) continue;
+                    matchLabel = builtDef.label;
+                    matchDefName = builtDef.defName;
+                    displayLabel = builtDef.label + " (blueprint)";
+                }
+
+                if (!MatchesStorageName(nameLower, matchLabel, matchDefName)) continue;
+
+                var pos = building.Position;
+
+                if (hasCoordFilter && (pos.x < x1 || pos.x > x2 || pos.z < z1 || pos.z > z2))
+                    continue;
+
+                if (!string.IsNullOrEmpty(roomFilter) && !RoomMatchesFilter(pos.GetRoom(map), roomFilter))
+                    continue;
+
+                results.Add((settings, displayLabel + " at " + pos.x + "," + pos.z));
+            }
+
+            // Search blueprints (not in allBuildingsColonist due to ThingCategory.Ethereal)
+            foreach (var thing in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint))
+            {
+                var storageParent = thing as IStoreSettingsParent;
+                if (storageParent == null) continue;
+
+                var settings = storageParent.GetStoreSettings();
+                if (settings == null) continue;
+
+                var builtDef = thing.def.entityDefToBuild as ThingDef;
+                if (builtDef == null) continue;
+
+                if (!MatchesStorageName(nameLower, builtDef.label, builtDef.defName)) continue;
+
+                var pos = thing.Position;
+                if (hasCoordFilter && (pos.x < x1 || pos.x > x2 || pos.z < z1 || pos.z > z2))
+                    continue;
+                if (!string.IsNullOrEmpty(roomFilter) && !RoomMatchesFilter(pos.GetRoom(map), roomFilter))
+                    continue;
+
+                results.Add((settings, builtDef.label + " (blueprint) at " + pos.x + "," + pos.z));
+            }
+
+            return results;
+        }
+
+        private static bool RoomMatchesFilter(Room room, string filter)
+        {
+            if (room == null || room.Role == null) return false;
+            string filterLower = filter.ToLower();
+            string roleLabel = room.Role.label ?? "";
+            string roleDefName = room.Role.defName ?? "";
+            return roleLabel.ToLower().Contains(filterLower) || roleDefName.ToLower().Contains(filterLower)
+                || filterLower.Contains(roleLabel.ToLower()) || filterLower.Contains(roleDefName.ToLower());
+        }
+
+        private static string SafeVal(JSONNode args, string key)
+        {
+            string val = args?[key]?.Value;
+            return string.IsNullOrEmpty(val) || val == "null" ? null : val;
+        }
+
+        private static string StorageNotFoundError(Map map, string name, string room)
+        {
+            // List available storage to help debug (includes blueprints)
+            var zones = map.zoneManager.AllZones.OfType<Zone_Stockpile>().Select(z => z.label);
+            var storageLabels = new List<string>();
+            foreach (var b in map.listerBuildings.allBuildingsColonist)
+            {
+                if (b is Building_Storage)
+                    storageLabels.Add(b.def.label);
+                else if (b is IStoreSettingsParent)
+                {
+                    var builtDef = b.def.entityDefToBuild as ThingDef;
+                    if (builtDef != null)
+                        storageLabels.Add(builtDef.label + " (blueprint)");
+                }
+            }
+            // Also check blueprints (ThingCategory.Ethereal, not in allBuildingsColonist)
+            foreach (var thing in map.listerThings.ThingsInGroup(ThingRequestGroup.Blueprint))
+            {
+                if (!(thing is IStoreSettingsParent)) continue;
+                var builtDef = thing.def.entityDefToBuild as ThingDef;
+                if (builtDef != null)
+                    storageLabels.Add(builtDef.label + " (blueprint)");
+            }
+            var grouped = storageLabels.GroupBy(l => l).Select(g => g.Key + " x" + g.Count());
+            string available = string.Join(", ", zones.Concat(grouped));
+            return ToolExecutor.JsonError("No storage matching '" + name + "' found."
+                + (room != null ? " Room filter: '" + room + "'." : "")
+                + " Available: " + (available.Length > 0 ? available : "none"));
+        }
+
+        public static string SetStockpilePriority(JSONNode args)
         {
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
+            if (args == null) return ToolExecutor.JsonError("Arguments required.");
 
-            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
-            if (string.IsNullOrEmpty(priority)) return ToolExecutor.JsonError("priority parameter required.");
+            string zoneName = SafeVal(args, "zoneName");
+            string priority = SafeVal(args, "priority");
+            if (zoneName == null) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (priority == null) return ToolExecutor.JsonError("priority parameter required.");
 
-            string nameLower = zoneName.ToLower();
-            var stockpile = map.zoneManager.AllZones.OfType<Zone_Stockpile>()
-                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+            string room = SafeVal(args, "room");
+            int x1 = args["x1"]?.AsInt ?? -1, z1 = args["z1"]?.AsInt ?? -1;
+            int x2 = args["x2"]?.AsInt ?? -1, z2 = args["z2"]?.AsInt ?? -1;
 
-            if (stockpile == null)
-                return ToolExecutor.JsonError("Stockpile '" + zoneName + "' not found.");
+            var storages = FindAllStorage(map, zoneName, room, x1, z1, x2, z2);
+            if (storages.Count == 0)
+                return StorageNotFoundError(map, zoneName, room);
 
-            // Parse priority
             StoragePriority newPriority;
             string priorityLower = priority.ToLower();
             if (priorityLower.Contains("crit")) newPriority = StoragePriority.Critical;
@@ -417,84 +590,130 @@ namespace RimMind.Tools
             else if (priorityLower.Contains("low") || priorityLower.Contains("unstored")) newPriority = StoragePriority.Low;
             else return ToolExecutor.JsonError("Priority must be: Critical, Important, Preferred, Normal, or Low.");
 
-            stockpile.settings.Priority = newPriority;
+            var modified = new JSONArray();
+            foreach (var (settings, label) in storages)
+            {
+                settings.Priority = newPriority;
+                modified.Add(label);
+            }
 
             var result = new JSONObject();
             result["success"] = true;
-            result["stockpile"] = stockpile.label;
             result["priority"] = newPriority.ToString();
+            result["modifiedCount"] = modified.Count;
+            result["modified"] = modified;
             return result.ToString();
         }
 
-        public static string SetStockpileFilter(string zoneName, string category, bool allowed)
+        public static string SetStockpileFilter(JSONNode args)
         {
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
+            if (args == null) return ToolExecutor.JsonError("Arguments required.");
 
-            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
-            if (string.IsNullOrEmpty(category)) return ToolExecutor.JsonError("category parameter required.");
+            string zoneName = SafeVal(args, "zoneName");
+            string category = SafeVal(args, "category");
+            if (zoneName == null) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (category == null) return ToolExecutor.JsonError("category parameter required.");
+            bool allowed = args["allowed"]?.AsBool ?? false;
+            bool exclusive = args["exclusive"]?.AsBool ?? false;
 
-            string nameLower = zoneName.ToLower();
-            var stockpile = map.zoneManager.AllZones.OfType<Zone_Stockpile>()
-                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+            string room = SafeVal(args, "room");
+            int x1 = args["x1"]?.AsInt ?? -1, z1 = args["z1"]?.AsInt ?? -1;
+            int x2 = args["x2"]?.AsInt ?? -1, z2 = args["z2"]?.AsInt ?? -1;
 
-            if (stockpile == null)
-                return ToolExecutor.JsonError("Stockpile '" + zoneName + "' not found.");
+            var storages = FindAllStorage(map, zoneName, room, x1, z1, x2, z2);
+            if (storages.Count == 0)
+                return StorageNotFoundError(map, zoneName, room);
 
-            // Find matching category
+            // Find matching category - search both defName and label bidirectionally
             string catLower = category.ToLower();
             ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.AllDefsListForReading
-                .FirstOrDefault(c => 
+                .FirstOrDefault(c =>
                     c.defName.ToLower() == catLower ||
-                    (c.label != null && c.label.ToLower().Contains(catLower)));
+                    (c.label != null && c.label.ToLower() == catLower) ||
+                    c.defName.ToLower().Contains(catLower) ||
+                    (c.label != null && c.label.ToLower().Contains(catLower)) ||
+                    catLower.Contains(c.defName.ToLower()) ||
+                    (c.label != null && catLower.Contains(c.label.ToLower())));
 
             if (categoryDef == null)
             {
-                return ToolExecutor.JsonError("Category '" + category + "' not found. Examples: Foods, RawResources, Manufactured, Weapons, Apparel, Medicine, Drugs");
+                var topCategories = DefDatabase<ThingCategoryDef>.AllDefsListForReading
+                    .Where(c => c.parent != null && c.parent.defName == "Root")
+                    .Select(c => c.defName + " (" + (c.label ?? "") + ")")
+                    .Take(15);
+                return ToolExecutor.JsonError("Category '" + category + "' not found. Top-level categories: " + string.Join(", ", topCategories));
             }
 
-            stockpile.settings.filter.SetAllow(categoryDef, allowed);
+            var modified = new JSONArray();
+            foreach (var (settings, label) in storages)
+            {
+                if (exclusive)
+                {
+                    // Disallow everything first, then allow only the specified category
+                    settings.filter.SetDisallowAll();
+                    settings.filter.SetAllow(categoryDef, true);
+                }
+                else
+                {
+                    settings.filter.SetAllow(categoryDef, allowed);
+                }
+                modified.Add(label);
+            }
 
             var result = new JSONObject();
             result["success"] = true;
-            result["stockpile"] = stockpile.label;
-            result["category"] = categoryDef.label;
-            result["allowed"] = allowed;
+            result["category"] = categoryDef.label ?? categoryDef.defName;
+            result["allowed"] = exclusive ? true : allowed;
+            if (exclusive) result["exclusive"] = true;
+            result["modifiedCount"] = modified.Count;
+            result["modified"] = modified;
             return result.ToString();
         }
 
-        public static string SetStockpileItem(string zoneName, string itemName, bool allowed)
+        public static string SetStockpileItem(JSONNode args)
         {
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
+            if (args == null) return ToolExecutor.JsonError("Arguments required.");
 
-            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
-            if (string.IsNullOrEmpty(itemName)) return ToolExecutor.JsonError("item parameter required.");
+            string zoneName = SafeVal(args, "zoneName");
+            string itemName = SafeVal(args, "item");
+            if (zoneName == null) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (itemName == null) return ToolExecutor.JsonError("item parameter required.");
+            bool allowed = args["allowed"]?.AsBool ?? false;
 
-            string nameLower = zoneName.ToLower();
-            var stockpile = map.zoneManager.AllZones.OfType<Zone_Stockpile>()
-                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+            string room = SafeVal(args, "room");
+            int x1 = args["x1"]?.AsInt ?? -1, z1 = args["z1"]?.AsInt ?? -1;
+            int x2 = args["x2"]?.AsInt ?? -1, z2 = args["z2"]?.AsInt ?? -1;
 
-            if (stockpile == null)
-                return ToolExecutor.JsonError("Stockpile '" + zoneName + "' not found.");
+            var storages = FindAllStorage(map, zoneName, room, x1, z1, x2, z2);
+            if (storages.Count == 0)
+                return StorageNotFoundError(map, zoneName, room);
 
-            // Find matching thing def
             string itemLower = itemName.ToLower();
             ThingDef thingDef = DefDatabase<ThingDef>.AllDefsListForReading
-                .FirstOrDefault(t => 
+                .FirstOrDefault(t =>
                     t.defName.ToLower() == itemLower ||
                     (t.label != null && t.label.ToLower().Contains(itemLower)));
 
             if (thingDef == null)
                 return ToolExecutor.JsonError("Item '" + itemName + "' not found.");
 
-            stockpile.settings.filter.SetAllow(thingDef, allowed);
+            var modified = new JSONArray();
+            foreach (var (settings, label) in storages)
+            {
+                settings.filter.SetAllow(thingDef, allowed);
+                modified.Add(label);
+            }
 
             var result = new JSONObject();
             result["success"] = true;
-            result["stockpile"] = stockpile.label;
             result["item"] = thingDef.LabelCap.ToString();
             result["allowed"] = allowed;
+            result["modifiedCount"] = modified.Count;
+            result["modified"] = modified;
             return result.ToString();
         }
 

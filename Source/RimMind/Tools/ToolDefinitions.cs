@@ -154,17 +154,33 @@ namespace RimMind.Tools
                 MakeParam("zoneName", "string", "Growing zone name"),
                 MakeParam("plantType", "string", "Crop to plant (e.g., 'rice', 'corn', 'potatoes', 'healroot', 'cotton')")));
             tools.Add(MakeTool("get_recommended_crops", "Get a list of recommended crops based on current season, growth time, yield, and purpose. Shows which crops can grow now and their characteristics."));
-            tools.Add(MakeTool("set_stockpile_priority", "Set the storage priority of a stockpile zone. Higher priority stockpiles are filled first.",
-                MakeParam("zoneName", "string", "Stockpile zone name"),
-                MakeParam("priority", "string", "Priority: 'Critical', 'Important', 'Preferred', 'Normal', or 'Low'")));
-            tools.Add(MakeTool("set_stockpile_filter", "Allow or disallow an entire category of items in a stockpile.",
-                MakeParam("zoneName", "string", "Stockpile zone name"),
-                MakeParam("category", "string", "Category name (e.g., 'Foods', 'RawResources', 'Manufactured', 'Weapons', 'Apparel', 'Medicine', 'Drugs')"),
-                MakeParam("allowed", "boolean", "True to allow, false to disallow")));
-            tools.Add(MakeTool("set_stockpile_item", "Allow or disallow a specific item type in a stockpile.",
-                MakeParam("zoneName", "string", "Stockpile zone name"),
+            tools.Add(MakeTool("set_stockpile_priority", "Set the storage priority of stockpile zones and/or storage buildings (shelves, dressers, tool cabinets). Works on blueprints too — configure storage IMMEDIATELY after placing, no need to wait for construction. Applies to ALL matching storage. Use 'room' to target storage in a specific room (e.g., 'kitchen', 'bedroom'). Use coordinate bounds to target a specific area. Higher priority storage is filled first.",
+                MakeParam("zoneName", "string", "Name to match against stockpile zones and storage buildings (e.g., 'Stockpile', 'Shelf', 'Dresser'). Matches ALL storage containing this name."),
+                MakeParam("priority", "string", "Priority: 'Critical', 'Important', 'Preferred', 'Normal', or 'Low'"),
+                MakeOptionalParam("room", "string", "Filter by room role (e.g., 'kitchen', 'bedroom', 'hospital', 'dining room'). Only affects storage inside rooms with this role."),
+                MakeOptionalParam("x1", "integer", "Start X of area bounds filter"),
+                MakeOptionalParam("z1", "integer", "Start Z of area bounds filter"),
+                MakeOptionalParam("x2", "integer", "End X of area bounds filter"),
+                MakeOptionalParam("z2", "integer", "End Z of area bounds filter")));
+            tools.Add(MakeTool("set_stockpile_filter", "Allow or disallow an entire category of items in stockpile zones and/or storage buildings (shelves, dressers, tool cabinets). Works on blueprints too — configure storage IMMEDIATELY after placing, no need to wait for construction. Use exclusive=true to ONLY allow that category (disallows everything else first). Applies to ALL matching storage. Use 'room' to target storage in a specific room (e.g., 'kitchen'). Use coordinate bounds to target a specific area.",
+                MakeParam("zoneName", "string", "Name to match against stockpile zones and storage buildings (e.g., 'Stockpile', 'Shelf', 'Dresser'). Matches ALL storage containing this name."),
+                MakeParam("category", "string", "Category name (e.g., 'Foods', 'ResourcesRaw', 'Items', 'Manufactured', 'Weapons', 'Apparel', 'Medicine', 'Drugs')"),
+                MakeParam("allowed", "boolean", "True to allow, false to disallow"),
+                MakeOptionalParam("exclusive", "boolean", "If true, disallow ALL categories first then allow ONLY this one. Use for 'only allow food' type requests. Ignores 'allowed' param."),
+                MakeOptionalParam("room", "string", "Filter by room role (e.g., 'kitchen', 'bedroom', 'hospital', 'dining room'). Only affects storage inside rooms with this role."),
+                MakeOptionalParam("x1", "integer", "Start X of area bounds filter"),
+                MakeOptionalParam("z1", "integer", "Start Z of area bounds filter"),
+                MakeOptionalParam("x2", "integer", "End X of area bounds filter"),
+                MakeOptionalParam("z2", "integer", "End Z of area bounds filter")));
+            tools.Add(MakeTool("set_stockpile_item", "Allow or disallow a specific item type in stockpile zones and/or storage buildings (shelves, dressers, tool cabinets). Works on blueprints too — configure storage IMMEDIATELY after placing, no need to wait for construction. Applies to ALL matching storage. Use 'room' to target storage in a specific room. Use coordinate bounds to target a specific area.",
+                MakeParam("zoneName", "string", "Name to match against stockpile zones and storage buildings (e.g., 'Stockpile', 'Shelf', 'Dresser'). Matches ALL storage containing this name."),
                 MakeParam("item", "string", "Item name or defName"),
-                MakeParam("allowed", "boolean", "True to allow, false to disallow")));
+                MakeParam("allowed", "boolean", "True to allow, false to disallow"),
+                MakeOptionalParam("room", "string", "Filter by room role (e.g., 'kitchen', 'bedroom', 'hospital', 'dining room'). Only affects storage inside rooms with this role."),
+                MakeOptionalParam("x1", "integer", "Start X of area bounds filter"),
+                MakeOptionalParam("z1", "integer", "Start Z of area bounds filter"),
+                MakeOptionalParam("x2", "integer", "End X of area bounds filter"),
+                MakeOptionalParam("z2", "integer", "End Z of area bounds filter")));
 
             // Area Restriction Tools
             tools.Add(MakeTool("list_areas", "List all allowed areas that can be assigned to colonists."));

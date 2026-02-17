@@ -83,9 +83,9 @@ namespace RimMind.Tools
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
             { "set_crop", args => ZoneTools.SetCrop(args?["zoneName"]?.Value, args?["plantType"]?.Value) },
             { "get_recommended_crops", args => ZoneTools.GetRecommendedCrops() },
-            { "set_stockpile_priority", args => ZoneTools.SetStockpilePriority(args?["zoneName"]?.Value, args?["priority"]?.Value) },
-            { "set_stockpile_filter", args => ZoneTools.SetStockpileFilter(args?["zoneName"]?.Value, args?["category"]?.Value, args?["allowed"]?.AsBool ?? false) },
-            { "set_stockpile_item", args => ZoneTools.SetStockpileItem(args?["zoneName"]?.Value, args?["item"]?.Value, args?["allowed"]?.AsBool ?? false) },
+            { "set_stockpile_priority", args => ZoneTools.SetStockpilePriority(args) },
+            { "set_stockpile_filter", args => ZoneTools.SetStockpileFilter(args) },
+            { "set_stockpile_item", args => ZoneTools.SetStockpileItem(args) },
 
             // Area Restrictions
             { "list_areas", args => AreaTools.ListAreas() },
