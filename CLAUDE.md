@@ -36,6 +36,14 @@ Output DLL goes to `Assemblies/RimMind.dll`
 
 **Note:** No .NET SDK is installed. We use the Roslyn csc.exe from VS 2019 Build Tools. The built-in `C:/Windows/Microsoft.NET/Framework64/v4.0.30319/csc.exe` only supports C# 5 and won't work.
 
+### Deployment
+- **CI/CD**: GitHub Actions (`.github/workflows/deploy-steam.yml`) auto-deploys to Steam Workshop on push
+- **Dev branch (`dev`)** → Dev Workshop item `3668326181` (packageId: `rimmind.ai.dev`, name: "RimMind (Dev)")
+- **Master branch (`master`)** → Production Workshop item `3666997391` (packageId: `rimmind.ai`)
+- **Workflow**: Always push to `dev` first for testing. Merge to `master` only for production releases.
+- **CI build** uses NuGet packages (`Krafs.Rimworld.Ref`, `Lib.Harmony`). Local build uses Roslyn csc.exe with game DLLs.
+- **Steam auth**: `STEAM_USERNAME` and `STEAM_CONFIG_VDF` (raw SteamCMD config.vdf) stored as GitHub secrets.
+
 ### Key Paths
 - **Mod root**: `C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\RimMind`
 - **Game install**: `C:\Program Files (x86)\Steam\steamapps\common\RimWorld`
