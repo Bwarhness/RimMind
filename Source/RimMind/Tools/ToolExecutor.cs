@@ -65,6 +65,17 @@ namespace RimMind.Tools
             { "get_cell_details", args => MapTools.GetCellDetails(args) },
             { "get_blueprints", args => MapTools.GetBlueprints(args) },
             { "search_map", args => MapTools.SearchMap(args) },
+            { "get_light_levels", args => MapTools.GetLightLevels(args) },
+            { "get_light_sources", args => MapTools.GetLightSources(args) },
+            { "get_cell_beauty", args => MapTools.GetCellBeauty(args) },
+            { "get_pollution", args => MapTools.GetPollution(args) },
+            { "get_roof_status", args => MapTools.GetRoofStatus(args) },
+
+            // Power Management
+            { "analyze_power_grid", args => PowerTools.AnalyzePowerGrid() },
+            { "check_power_connection", args => PowerTools.CheckPowerConnection(args) },
+            { "suggest_power_route", args => PowerTools.SuggestPowerRoute(args) },
+            { "auto_route_power", args => PowerTools.AutoRoutePower(args) },
 
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
