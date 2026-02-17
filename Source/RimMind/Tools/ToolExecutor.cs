@@ -77,6 +77,15 @@ namespace RimMind.Tools
             { "restrict_to_area", args => AreaTools.RestrictToArea(args?["colonist"]?.Value, args?["areaName"]?.Value) },
             { "unrestrict", args => AreaTools.Unrestrict(args?["colonist"]?.Value) },
 
+            // World & Diplomacy
+            { "list_world_destinations", args => WorldTools.ListWorldDestinations() },
+            { "get_caravan_info", args => WorldTools.GetCaravanInfo() },
+            { "get_trade_status", args => WorldTools.GetTradeStatus() },
+            { "list_trader_inventory", args => WorldTools.ListTraderInventory() },
+            { "list_factions", args => WorldTools.ListFactions() },
+            { "get_diplomatic_summary", args => WorldTools.GetDiplomaticSummary() },
+            { "get_diplomacy_options", args => WorldTools.GetDiplomacyOptions(args?["factionName"]?.Value) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
