@@ -1,6 +1,7 @@
 using HarmonyLib;
 using RimMind.Chat;
 using RimMind.Core;
+using RimWorld;
 using System;
 using Verse;
 
@@ -25,7 +26,7 @@ namespace RimMind.Automation
                 string eventType = let.def.defName;
                 if (string.IsNullOrEmpty(eventType)) return;
 
-                DebugLogger.Log($"[Automation] Letter received: {eventType} - {let.Label}");
+                DebugLogger.Log("AUTOMATION", $" Letter received: {eventType} - {let.Label}");
 
                 // Check if automation is configured for this event type
                 if (!RimMindMod.Settings.automationRules.TryGetValue(eventType, out var rule))
@@ -38,28 +39,28 @@ namespace RimMind.Automation
                         cooldownSeconds = 60
                     };
                     RimMindMod.Settings.automationRules[eventType] = rule;
-                    DebugLogger.Log($"[Automation] Auto-registered event type: {eventType}");
+                    DebugLogger.Log("AUTOMATION", $" Auto-registered event type: {eventType}");
                     return;
                 }
 
                 // Check if this specific rule is enabled
                 if (!rule.enabled)
                 {
-                    DebugLogger.Log($"[Automation] Event {eventType} received but automation disabled for this type");
+                    DebugLogger.Log("AUTOMATION", $" Event {eventType} received but automation disabled for this type");
                     return;
                 }
 
                 // Check custom prompt exists
                 if (string.IsNullOrWhiteSpace(rule.customPrompt))
                 {
-                    DebugLogger.Log($"[Automation] Event {eventType} has no custom prompt configured");
+                    DebugLogger.Log("AUTOMATION", $" Event {eventType} has no custom prompt configured");
                     return;
                 }
 
                 // Check cooldown via EventAutomationManager
                 if (!EventAutomationManager.Instance.CanTrigger(eventType, rule.cooldownSeconds))
                 {
-                    DebugLogger.Log($"[Automation] Event {eventType} on cooldown (waiting {rule.cooldownSeconds}s between triggers)");
+                    DebugLogger.Log("AUTOMATION", $" Event {eventType} on cooldown (waiting {rule.cooldownSeconds}s between triggers)");
                     return;
                 }
 
@@ -67,8 +68,8 @@ namespace RimMind.Automation
                 string automationPrompt = BuildAutomationPrompt(eventType, let, rule.customPrompt);
 
                 // Send to AI via ChatManager (must be on main thread)
-                DebugLogger.Log($"[Automation] Triggering automation for event: {eventType}");
-                DebugLogger.Log($"[Automation] Prompt: {automationPrompt}");
+                DebugLogger.Log("AUTOMATION", $" Triggering automation for event: {eventType}");
+                DebugLogger.Log("AUTOMATION", $" Prompt: {automationPrompt}");
 
                 // Enqueue on main thread to ensure thread safety
                 MainThreadDispatcher.Enqueue(() =>
@@ -89,7 +90,7 @@ namespace RimMind.Automation
                         }
                         else
                         {
-                            DebugLogger.Log($"[Automation] ChatWindow not open - automation message queued but not sent");
+                            DebugLogger.Log("AUTOMATION", $" ChatWindow not open - automation message queued but not sent");
                             Messages.Message(
                                 $"RimMind automation triggered but chat window is closed. Open chat to see response.",
                                 MessageTypeDefOf.CautionInput
@@ -114,16 +115,23 @@ namespace RimMind.Automation
         /// </summary>
         private static string BuildAutomationPrompt(string eventType, Letter letter, string customPrompt)
         {
-            string letterLabel = letter.Label ?? "Unknown Event";
+            string letterLabel = letter.Label.ToString();
+            if (string.IsNullOrEmpty(letterLabel)) letterLabel = "Unknown Event";
             string letterText = "";
-            
+
             try
             {
-                letterText = letter.GetMouseoverText() ?? "";
+                // GetMouseoverText() is protected; use ChoiceLetter.Text for detailed letters
+                if (letter is ChoiceLetter choiceLetter)
+                {
+                    string text = choiceLetter.Text.ToString();
+                    if (!string.IsNullOrEmpty(text))
+                        letterText = text;
+                }
             }
             catch
             {
-                // Some letters may not have mouseover text
+                // Some letters may not have text content
             }
 
             // Build structured prompt

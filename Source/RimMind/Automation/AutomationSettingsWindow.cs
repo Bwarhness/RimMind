@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimMind.Core;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -221,7 +222,7 @@ namespace RimMind.Automation
 
             // Prompt text area
             var promptRect = new Rect(0f, curY, innerRect.width, innerRect.height - curY - 80f);
-            editingPrompt = Widgets.TextAreaScrollable(promptRect, editingPrompt, ref scrollPosition);
+            editingPrompt = Widgets.TextArea(promptRect, editingPrompt);
             curY = innerRect.height - 75f;
 
             // Use default button
