@@ -35,6 +35,21 @@ namespace RimMind.Tools
                 MakeParam("priority", "integer", "Priority level (0-4, where 0=disabled, 1=highest, 4=lowest)")));
             tools.Add(MakeTool("get_bills", "Get active production bills at workbenches: recipe name, target count, ingredients needed, assigned worker, and whether suspended.",
                 MakeOptionalParam("workbench", "string", "Filter by workbench name. If omitted, returns bills from all workbenches.")));
+            tools.Add(MakeTool("list_recipes", "List all available recipes at a specific workbench with ingredients and products.",
+                MakeParam("workbench", "string", "Workbench name (e.g., 'stove', 'smithy', 'tailor')")));
+            tools.Add(MakeTool("create_bill", "Create a new production bill at a workbench.",
+                MakeParam("workbench", "string", "Workbench name"),
+                MakeParam("recipe", "string", "Recipe name"),
+                MakeParam("count", "integer", "Number of items to produce")));
+            tools.Add(MakeTool("suspend_bill", "Suspend a production bill (pause it).",
+                MakeParam("workbench", "string", "Workbench name"),
+                MakeParam("billIndex", "integer", "Bill index (0-based, use get_bills to see indices)")));
+            tools.Add(MakeTool("resume_bill", "Resume a suspended production bill.",
+                MakeParam("workbench", "string", "Workbench name"),
+                MakeParam("billIndex", "integer", "Bill index (0-based)")));
+            tools.Add(MakeTool("delete_bill", "Delete a production bill.",
+                MakeParam("workbench", "string", "Workbench name"),
+                MakeParam("billIndex", "integer", "Bill index (0-based)")));
             tools.Add(MakeTool("get_schedules", "Get daily schedules for all colonists: hour-by-hour assignments (Sleep, Work, Anything, Joy/Recreation)."));
             tools.Add(MakeTool("set_schedule", "Set the schedule assignment for a specific colonist at a specific hour. Assignments: 'Work', 'Sleep', 'Anything', 'Joy'.",
                 MakeParam("colonist", "string", "The colonist's name"),
