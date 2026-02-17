@@ -58,7 +58,7 @@ namespace RimMind.Core
 
                 listing.GapLine();
 
-                listing.Label("Model ID (e.g. claude-sonnet-4-5-20250929, claude-opus-4-6):");
+                listing.Label("Model ID (e.g. claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):");
                 Settings.claudeCodeModelId = listing.TextEntry(Settings.claudeCodeModelId);
             }
             else if (Settings.IsAnthropic)
@@ -73,7 +73,7 @@ namespace RimMind.Core
 
                 listing.GapLine();
 
-                listing.Label("Model ID (e.g. claude-sonnet-4-5-20250929, claude-opus-4-6):");
+                listing.Label("Model ID (e.g. claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):");
                 Settings.anthropicModelId = listing.TextEntry(Settings.anthropicModelId);
             }
             else

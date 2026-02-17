@@ -13,10 +13,10 @@ namespace RimMind.Core
 
         // Anthropic Direct API settings
         public string anthropicToken = "";
-        public string anthropicModelId = "claude-sonnet-4-5-20250929";
+        public string anthropicModelId = "claude-haiku-4-5";
 
         // Claude Code subscription settings
-        public string claudeCodeModelId = "claude-sonnet-4-5-20250929";
+        public string claudeCodeModelId = "claude-haiku-4-5";
 
         // Shared settings
         public float temperature = 0.7f;
@@ -43,8 +43,8 @@ namespace RimMind.Core
             Scribe_Values.Look(ref apiKey, "apiKey", "");
             Scribe_Values.Look(ref modelId, "modelId", "anthropic/claude-sonnet-4-5");
             Scribe_Values.Look(ref anthropicToken, "anthropicToken", "");
-            Scribe_Values.Look(ref anthropicModelId, "anthropicModelId", "claude-sonnet-4-5-20250929");
-            Scribe_Values.Look(ref claudeCodeModelId, "claudeCodeModelId", "claude-sonnet-4-5-20250929");
+            Scribe_Values.Look(ref anthropicModelId, "anthropicModelId", "claude-haiku-4-5");
+            Scribe_Values.Look(ref claudeCodeModelId, "claudeCodeModelId", "claude-haiku-4-5");
             Scribe_Values.Look(ref temperature, "temperature", 0.7f);
             Scribe_Values.Look(ref maxTokens, "maxTokens", 4096);
             Scribe_Values.Look(ref enableChatCompanion, "enableChatCompanion", true);
