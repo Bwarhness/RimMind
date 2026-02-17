@@ -1,4 +1,4 @@
-[h1]🤖 RimMind: Your Colony Just Got a Brain[/h1]
+[h1] RimMind: Your Colony Just Got a Brain[/h1]
 
 [b]What if your colony could think?[/b]
 
@@ -8,7 +8,7 @@ Imagine having a tactical advisor who never sleeps. Someone who can instantly te
 
 [hr][/hr]
 
-[h1]⚡ This Isn't a Calculator. It's an Oracle.[/h1]
+[h1] This Isn't a Calculator. It's an Oracle.[/h1]
 
 Stop alt-tabbing to wikis. Stop squinting at stat screens. Stop wondering if you're about to make a catastrophic mistake.
 
@@ -24,9 +24,9 @@ Yeah. [i]That[/i] kind of advisor.
 
 [hr][/hr]
 
-[h1]🎯 What Makes RimMind Terrifying (In a Good Way)[/h1]
+[h1] What Makes RimMind Terrifying (In a Good Way)[/h1]
 
-[h2]🧠 It Sees EVERYTHING[/h2]
+[h2] It Sees EVERYTHING[/h2]
 
 Your colonists? RimMind knows their skills, traits, backstories, relationships, health, mood, and the exact moment they're about to snap.
 
@@ -34,7 +34,7 @@ Your resources? It tracks every meal, every medicine, every steel plate across a
 
 Your threats? Raiders incoming? RimMind analyzes their weapons, armor, and tactics while you're still scrambling to draft colonists.
 
-[h2]⚔️ It Plans Like a Strategist[/h2]
+[h2] It Plans Like a Strategist[/h2]
 
 [quote]
 [b]You:[/b] "My defenses suck."
@@ -43,7 +43,7 @@ Your threats? Raiders incoming? RimMind analyzes their weapons, armor, and tacti
 
 You just got a custom defense audit in 3 seconds.
 
-[h2]🏗️ It Builds. Like, Actually Builds.[/h2]
+[h2] It Builds. Like, Actually Builds.[/h2]
 
 Need a 6x6 granite bedroom at coordinates 45,30? [b]Done.[/b] Walls, door, material, perfect dimensions.
 
@@ -60,7 +60,7 @@ Furniture? Workbenches? Defensive walls? Up to [b]100 blueprints in one command[
 
 You just saved 15 minutes of fiddly blueprint placement.
 
-[h2]🗺️ It "Sees" Your Base With ASCII Vision[/h2]
+[h2] It "Sees" Your Base With ASCII Vision[/h2]
 
 RimMind doesn't just read stats—it can generate an [b]ASCII map of your entire colony[/b]. Walls, doors, furniture, colonists, threats. It looks at your base layout like a general studying a battle map.
 
@@ -69,7 +69,7 @@ RimMind: [i]*generates 50x50 grid*[/i] "Here's your colony. Your prison is isola
 
 Instant tactical overview.
 
-[h2]🎭 It Remembers Your Playstyle[/h2]
+[h2] It Remembers Your Playstyle[/h2]
 
 The [b]Directives System[/b] lets RimMind learn [i]your[/i] colony. Pacifist run? Cannibal raiders? Bionic supremacy? Tell it once, and it remembers forever.
 
@@ -82,7 +82,7 @@ Your AI advisor just learned your philosophy.
 
 [hr][/hr]
 
-[h1]🛠️ The Full Arsenal: 49 Tools[/h1]
+[h1] The Full Arsenal: 49 Tools[/h1]
 
 RimMind isn't a chatbot with Google. It has [b]49 specialized tools[/b] that hook directly into RimWorld's guts:
 
@@ -101,7 +101,7 @@ RimMind isn't a chatbot with Google. It has [b]49 specialized tools[/b] that hoo
 
 [hr][/hr]
 
-[h1]💬 Real Conversations, Real Results[/h1]
+[h1] Real Conversations, Real Results[/h1]
 
 [quote]
 [b]You:[/b] "Why is everyone sad?"
@@ -127,7 +127,7 @@ This is what happens when AI actually [i]understands[/i] RimWorld.
 
 [hr][/hr]
 
-[h1]⚙️ Setup: Stupidly Easy[/h1]
+[h1] Setup: Stupidly Easy[/h1]
 
 [olist]
 [*][b]Subscribe[/b] to this mod (you're here, so you're halfway done)
@@ -143,11 +143,11 @@ Watch RimMind analyze your entire operation in real-time. You'll never play RimW
 
 [hr][/hr]
 
-[h1]🤖 Choose Your Brain[/h1]
+[h1] Choose Your Brain[/h1]
 
 RimMind works with [b]any OpenRouter model[/b]. Pick your poison:
 
-[h3]🔥 Maximum Power[/h3]
+[h3] Maximum Power[/h3]
 [b]Claude Sonnet 4[/b] — The recommended choice. Scary smart.
 [b]GPT-4o[/b] — OpenAI's beast. Fast, capable, excellent at planning.
 [b]Gemini 2.0 Flash[/b] — Google's speed demon. Great balance.
@@ -165,7 +165,7 @@ RimMind works with [b]any OpenRouter model[/b]. Pick your poison:
 
 [hr][/hr]
 
-[h1]🔧 Works With Everything[/h1]
+[h1] Works With Everything[/h1]
 
 [b]RimWorld:[/b] 1.5, 1.6+
 [b]Dependencies:[/b] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077]Harmony[/url] (required)
@@ -177,7 +177,7 @@ RimMind works with [b]any OpenRouter model[/b]. Pick your poison:
 
 [hr][/hr]
 
-[h1]🔒 Your Data, Your Control[/h1]
+[h1] Your Data, Your Control[/h1]
 
 [b]Privacy locked down:[/b]
 - API key stored locally (never leaves your machine except to OpenRouter/Anthropic)
@@ -189,7 +189,7 @@ RimMind doesn't spy. It just works.
 
 [hr][/hr]
 
-[h1]🐛 Common Issues (And Fixes)[/h1]
+[h1] Common Issues (And Fixes)[/h1]
 
 [b]"API Error!"[/b] → Check your key, verify OpenRouter credits, confirm internet connection
 
@@ -201,7 +201,7 @@ RimMind doesn't spy. It just works.
 
 [hr][/hr]
 
-[h1]🔗 Links[/h1]
+[h1] Links[/h1]
 
 [b]GitHub:[/b] [url=https://github.com/Bwarhness/RimMind]https://github.com/Bwarhness/RimMind[/url]
 [b]Bug Reports:[/b] [url=https://github.com/Bwarhness/RimMind/issues]GitHub Issues[/url]
@@ -210,7 +210,7 @@ RimMind doesn't spy. It just works.
 
 [hr][/hr]
 
-[h1]📜 Credits[/h1]
+[h1] Credits[/h1]
 
 [b]Created by:[/b] Bwarhness
 [b]License:[/b] MIT (open source forever)
@@ -219,7 +219,7 @@ RimMind doesn't spy. It just works.
 
 [hr][/hr]
 
-[h1]🚀 Your Colony Is Waiting[/h1]
+[h1] Your Colony Is Waiting[/h1]
 
 You've been playing RimWorld blind. Guessing. Hoping. Reloading saves when things go wrong.
 
@@ -227,7 +227,7 @@ You've been playing RimWorld blind. Guessing. Hoping. Reloading saves when thing
 
 RimMind is the tactical advisor you didn't know you needed. The strategist who sees patterns you miss. The builder who never gets tired. The analyst who knows your colony better than you do.
 
-[b]Give your colony a brain. Subscribe now.[/b] 🧠
+[b]Give your colony a brain. Subscribe now.[/b] 
 
 [hr][/hr]
 
