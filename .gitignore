@@ -13,5 +13,8 @@ obj/
 Thumbs.db
 .DS_Store
 
+# Logs
+Logs/
+
 # Claude Code local settings
 .claude/settings.local.json

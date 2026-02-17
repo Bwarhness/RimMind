@@ -76,7 +76,24 @@ namespace RimMind.Tools
                 }
             }
 
+            // Also list all available workbenches so AI knows what exists
+            var workbenches = new JSONArray();
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                var workTable = building as Building_WorkTable;
+                if (workTable == null) continue;
+                if (filterLower != null && !workTable.LabelCap.ToString().ToLower().Contains(filterLower)) continue;
+
+                var wb = new JSONObject();
+                wb["name"] = workTable.LabelCap.ToString();
+                wb["defName"] = workTable.def.defName;
+                wb["position"] = workTable.Position.x + "," + workTable.Position.z;
+                wb["billCount"] = workTable.BillStack.Bills.Count;
+                workbenches.Add(wb);
+            }
+
             var result = new JSONObject();
+            result["workbenches"] = workbenches;
             result["bills"] = arr;
             result["totalBills"] = arr.Count;
             return result.ToString();
