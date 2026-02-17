@@ -201,20 +201,53 @@ Keep 52 existing tools for detailed queries when needed.
 
 ---
 
+### **Phase 7: Event & Disaster Intelligence** 🌪️ (Week 9)
+**Focus:** Natural events, disasters, duration tracking, mitigation strategies
+
+**Additions:**
+1. NEW: `get_active_events` (all active events with duration remaining, severity, impact, recommendations)
+2. NEW: `get_disaster_risks` (infestation risk from overhead mountain, Zzzt risk from stored power, mitigation strategies)
+3. Enhanced `get_weather_and_season` (integrate active event information)
+
+**Impact:** 🔥🔥🔥🔥 (Event Understanding & Prevention)  
+**Time:** ~4 hours implementation
+
+**Result:** RimMind understands events - "Cold snap for 2.5 more days, temperature dropping to -25°C. Harvest corn immediately. High infestation risk due to 65% overhead mountain - consider open-air construction."
+
+---
+
+### **Phase 8: Animal Intelligence** 🐾 (Week 10)
+**Focus:** Animal stats, wild animal detection, production tracking
+
+**Additions:**
+1. NEW: `get_animal_stats` (carrying capacity, speed, combat stats, abilities like wool/milk/nuzzle, wildness, trainability)
+2. NEW: `get_wild_animals` (tameable/huntable animals on map, taming difficulty, rare animal alerts)
+3. Enhanced `list_animals` (current carrying load for pack animals)
+4. Enhanced `get_animal_details` (production schedules - wool/milk/egg readiness)
+
+**Impact:** 🔥🔥🔥 (Animal Management & Opportunities)  
+**Time:** ~5 hours implementation
+
+**Result:** RimMind manages animals - "Rare Thrumbo at (145,92) - worth attempting tame. Muffalo 'Biscuit' ready for milking. Best pack animals for caravan: 2 Muffalos (73kg capacity each)."
+
+---
+
 ## Total Roadmap Summary
 
-**Timeline:** 8 weeks (Phases 1-6)  
-**New Tools:** 18 tools across all phases
+**Timeline:** 10 weeks (Phases 1-8)  
+**New Tools:** 25 tools across all phases
 - Phase 1: get_colonist_locations, get_resource_trends
 - Phase 2: get_work_queue, get_construction_status
 - Phase 3: get_mood_trends, get_social_risks, suggest_mood_interventions, get_environment_quality
 - Phase 4: get_temperature_risks
-- Phase 5: get_weapon_stats, get_armor_stats, get_enemy_morale, get_friendly_fire_risk, get_cover_analysis
+- Phase 5: get_weapon_stats, get_armor_stats, get_enemy_morale, get_friendly_fire_risk, get_cover_analysis, get_tactical_pathfinding
 - Phase 6: get_psycasts, get_genes, get_mechanitor_info
+- Phase 7: get_active_events, get_disaster_risks
+- Phase 8: get_animal_stats, get_wild_animals
 
-**Enhanced Tools:** 5 (get_active_alerts, place_building, get_power_status, get_threats [2x], get_colony_overview)  
+**Enhanced Tools:** 7 (get_active_alerts, place_building, get_power_status, get_threats [2x], get_colony_overview, get_weather_and_season, list_animals, get_animal_details)  
 **New Components:** 2 (GameStateContext for auto-context, ResourceTracker for burn rates)  
-**Final Tool Count:** 52 → 76 tools
+**Final Tool Count:** 52 → 83 tools (31 new/enhanced)
 
 ---
 

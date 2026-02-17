@@ -665,6 +665,19 @@ Keep existing tools for detailed queries:
 
 **Benefit:** AI understands range advantage/disadvantage
 
+#### 5.8 Tactical Pathfinding Awareness (NEW TOOL: `get_tactical_pathfinding`)
+**Impact:** 🔥🔥🔥🔥🔥 (Killbox Design)  
+**Complexity:** Medium (2 hours)  
+**Implementation:**
+- Provide tactical advice on enemy flow (not full pathfinding algorithm)
+- Identify likely enemy approach vectors
+- Suggest tactical positioning: "Keep east door open to funnel enemies", "Build turrets where drop pods likely land"
+- Analyze base layout for natural chokepoints
+
+**Benefit:** AI gives actionable defensive layout advice without needing complex pathfinding
+
+**Note:** Focus on tactical results per Jacob's request - AI should give advice like "keep doors open to direct enemy flow" rather than computing exact paths.
+
 ---
 
 ### **Phase 6: DLC Combat Intelligence** 🧬 **HIGH IMPACT** (for DLC players)
@@ -777,7 +790,137 @@ Keep existing tools for detailed queries:
 
 ---
 
-### **Phase 7: Advanced Analytics** 📊 **LOW IMPACT** (Nice to Have)
+### **Phase 7: Event & Disaster Intelligence** 🌪️ **MEDIUM-HIGH IMPACT**
+
+**Goal:** Give AI understanding of natural events/disasters with duration tracking and mitigation strategies
+
+#### 7.1 Active Event Tracking (NEW TOOL: `get_active_events`)
+**Impact:** 🔥🔥🔥🔥 Real-Time Event Awareness  
+**Complexity:** Medium (1.5 hours)  
+**Implementation:**
+- Show all currently active weather/disaster events
+- Event duration remaining ("Cold snap: 2.5 days left")
+- Severity and impact (temperature, crop damage, colonist risks)
+- Actionable recommendations per event
+
+**Benefit:** AI provides event-specific advice: "Cold snap for 2 more days - harvest corn now"
+
+**Events covered:**
+- Cold snaps / heat waves (duration, temperature impact, crop survival)
+- Toxic fallout (duration, toxicity rate, safe zones)
+- Solar flares (duration, power grid impact)
+- Nuclear/volcanic winter (duration, crop death, temperature projections)
+- Eclipses (duration, solar panel impact)
+
+#### 7.2 Disaster Risk Assessment (NEW TOOL: `get_disaster_risks`)
+**Impact:** 🔥🔥🔥 Proactive Prevention  
+**Complexity:** Medium (2 hours)  
+**Implementation:**
+- Infestation risk (overhead mountain tiles, spawn locations)
+- Zzzt risk (stored power, battery explosion probability)
+- Mitigation strategies for each risk
+
+**Benefit:** AI explains why disasters happen and how to prevent them
+
+```json
+{
+  "infestation_risk": {
+    "probability": "high",
+    "reason": "65% overhead mountain tiles in base",
+    "spawn_locations": ["Bedroom cluster at (120,85)"],
+    "mitigation": "Reduce overhead mountain, use open-air construction"
+  },
+  "zzzt_risk": {
+    "probability": "medium",
+    "stored_power": "12000 Wd",
+    "mitigation": "Use circuit breakers, separate power grids"
+  }
+}
+```
+
+#### 7.3 Enhanced Weather Tracking (ENHANCE: `get_weather_and_season`)
+**Impact:** 🔥🔥 Integrated Event View  
+**Complexity:** Low (30 minutes)  
+**Implementation:**
+- Add active event information to weather tool
+- Show event durations and impacts in one call
+
+**Benefit:** Consolidated event awareness
+
+---
+
+### **Phase 8: Animal Intelligence** 🐾 **MEDIUM IMPACT**
+
+**Goal:** Complete visibility into animal management (tamed, wild, production)
+
+#### 8.1 Animal Stats & Capabilities (NEW TOOL: `get_animal_stats`)
+**Impact:** 🔥🔥🔥 Complete Animal Data  
+**Complexity:** Medium (2 hours)  
+**Implementation:**
+- Carrying capacity (for pack animals)
+- Movement speed
+- Combat stats (melee damage, armor, DPS)
+- Animal abilities (wool, milk, eggs, nuzzle)
+- Wildness level, trainability intelligence
+- Filth rate, manhunter chance, revenge chance
+
+**Benefit:** AI understands animal capabilities before taming
+
+```json
+{
+  "animal": "Muffalo",
+  "carrying_capacity": 73.5,
+  "movement_speed": 3.5,
+  "combat": {
+    "melee_damage": 8,
+    "armor_natural": 0.35,
+    "dps": 4.2
+  },
+  "abilities": {
+    "wool_type": "muffalo wool",
+    "wool_growth_days": 15,
+    "milkable": true,
+    "nuzzle_interval_hours": 12
+  }
+}
+```
+
+#### 8.2 Wild Animal Visibility (NEW TOOL: `get_wild_animals`)
+**Impact:** 🔥🔥🔥 Taming Opportunities  
+**Complexity:** Medium (1.5 hours)  
+**Implementation:**
+- List tameable/huntable animals currently on map
+- Show taming difficulty and success chance
+- Show hunting value (meat, leather)
+- Flag rare/valuable animals (Thrumbos)
+- Provide recommendations
+
+**Benefit:** AI identifies taming opportunities: "Rare Thrumbo on map - worth attempting tame"
+
+#### 8.3 Production Animal Management (ENHANCE existing tools)
+**Impact:** 🔥🔥 Production Efficiency  
+**Complexity:** Low (1 hour)  
+**Implementation:**
+- Enhance `list_animals` with current carrying load
+- Enhance `get_animal_details` with production schedules
+- Show when animals are ready for shearing/milking
+- Show current pack animal load percentage
+
+**Benefit:** AI reminds about production: "Muffalo ready for milking"
+
+#### 8.4 Pack Animal Optimization
+**Impact:** 🔥 Caravan Planning  
+**Complexity:** Low (30 minutes)  
+**Implementation:**
+- Calculate optimal pack animals for caravans
+- Show total caravan capacity
+- Suggest which animals to bring (capacity vs speed)
+
+**Benefit:** AI advises on best pack animals
+
+---
+
+### **Phase 9: Advanced Analytics** 📊 **LOW IMPACT** (Nice to Have)
 
 #### 7.1 Wealth Breakdown
 - Show wealth by category (buildings, items, pawns)
@@ -1002,7 +1145,7 @@ RimMind should eventually know:
 - Enhanced `get_power_status` (drain rate)
 - `get_temperature_risks`
 
-**Phase 5 (Week 5-6): 7 tools**
+**Phase 5 (Week 5-6): 8 tools**
 - `get_weapon_stats`
 - `get_armor_stats`
 - Enhanced `get_threats` (raid composition + strategy detection)
@@ -1010,13 +1153,25 @@ RimMind should eventually know:
 - `get_friendly_fire_risk`
 - `get_cover_analysis`
 - Optimal engagement ranges (enhancement)
+- `get_tactical_pathfinding` ⭐
 
 **Phase 6 (Week 7-8): 3 tools**
 - `get_psycasts` (Royalty DLC)
 - `get_genes` (Biotech DLC)
 - `get_mechanitor_info` (Biotech DLC)
 
-**Total New/Enhanced Tools:** 24 (52 → 76 tools)
+**Phase 7 (Week 9): 3 tools** ⭐ NEW
+- `get_active_events`
+- `get_disaster_risks`
+- Enhanced `get_weather_and_season` (event tracking)
+
+**Phase 8 (Week 10): 4 tools** ⭐ NEW
+- `get_animal_stats`
+- `get_wild_animals`
+- Enhanced `list_animals` (carrying load)
+- Enhanced `get_animal_details` (production schedules)
+
+**Total New/Enhanced Tools:** 31 (52 → 83 tools)
 
 ---
 
@@ -1030,15 +1185,19 @@ RimMind's visibility improvements follow a clear path:
 4. **Phase 4 (Medium):** Power/temp monitoring → AI prevents infrastructure failures
 5. **Phase 5 (High):** Combat intelligence → AI provides tactical combat advice
 6. **Phase 6 (High):** DLC combat → AI understands psycasts, genes, mechs
-7. **Phase 7 (Low):** Analytics & optimization → AI becomes strategic advisor
+7. **Phase 7 (Medium-High):** Event & disaster intelligence → AI understands natural events
+8. **Phase 8 (Medium):** Animal intelligence → AI manages tamed/wild/production animals
+9. **Phase 9 (Low):** Analytics & optimization → AI becomes strategic advisor
 
-**Implementation Time:** 8 weeks for Phases 1-6 (core + combat improvements)
+**Implementation Time:** 10 weeks for Phases 1-8 (core + combat + events + animals)
 
 **Expected Outcome:** RimMind sees the game world as clearly as a human player, responds to emergencies in real-time, and proactively prevents common colony failures.
 
 ---
 
-**Document Version:** 2.0  
+**Document Version:** 3.0  
 **Date:** 2026-02-17  
-**Updated:** Added Phase 5 (Combat Intelligence) and Phase 6 (DLC Combat) based on combat visibility requirements. Enhanced Phase 3 with actionable mood interventions and environment quality analysis.  
+**Updated:** 
+- v3.0: Added Phase 7 (Event & Disaster Intelligence) and Phase 8 (Animal Intelligence) based on Jacob's visibility questions. Added tactical pathfinding to Phase 5. Total tools: 52 → 83 (31 new/enhanced).
+- v2.0: Added Phase 5 (Combat Intelligence) and Phase 6 (DLC Combat) based on combat visibility requirements. Enhanced Phase 3 with actionable mood interventions and environment quality analysis.
 **Author:** RimMind Development Team
