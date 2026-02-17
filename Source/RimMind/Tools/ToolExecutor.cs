@@ -72,6 +72,10 @@ namespace RimMind.Tools
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
 
+            // Mood
+            { "get_mood_risks", args => MoodTools.GetMoodRisks() },
+            { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
+
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
             { "remove_plans", args => PlanTools.RemovePlans(args) },
@@ -114,6 +118,10 @@ namespace RimMind.Tools
             { "get_directives", args => DirectiveTools.GetDirectives() },
             { "add_directive", args => DirectiveTools.AddDirective(args?["text"]?.Value) },
             { "remove_directive", args => DirectiveTools.RemoveDirective(args?["search"]?.Value) },
+
+            // Trade
+            { "get_active_traders", args => TradeTools.GetActiveTraders() },
+            { "analyze_trade_opportunity", args => TradeTools.AnalyzeTradeOpportunity(args?["traderFilter"]?.Value) },
         };
 
         public static string Execute(string toolName, string argumentsJson)
