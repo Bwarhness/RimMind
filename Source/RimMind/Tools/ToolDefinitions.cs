@@ -35,6 +35,27 @@ namespace RimMind.Tools
                 MakeParam("priority", "integer", "Priority level (0-4, where 0=disabled, 1=highest, 4=lowest)")));
             tools.Add(MakeTool("get_bills", "Get active production bills at workbenches: recipe name, target count, ingredients needed, assigned worker, and whether suspended.",
                 MakeOptionalParam("workbench", "string", "Filter by workbench name. If omitted, returns bills from all workbenches.")));
+            tools.Add(MakeTool("create_bill", "Create a new production bill at a workbench. Supports setting target count, forever mode, ingredient radius, minimum skill, and pause state.",
+                MakeParam("workbench", "string", "Workbench name or defName (e.g., 'Electric stove', 'FueledStove', 'Butcher table')"),
+                MakeParam("recipe", "string", "Recipe name or defName (e.g., 'Cook simple meal', 'Make cloth', 'Smelt weapon')"),
+                MakeOptionalParam("count", "integer", "Target count (default: 1). Ignored if 'forever' is true."),
+                MakeOptionalParam("forever", "boolean", "Set to true for perpetual production (default: false)"),
+                MakeOptionalParam("ingredientRadius", "integer", "Ingredient search radius in cells (default: 999)"),
+                MakeOptionalParam("minSkill", "integer", "Minimum skill level required (0-20, default: 0)"),
+                MakeOptionalParam("paused", "boolean", "Start the bill in suspended/paused state (default: false)")));
+            tools.Add(MakeTool("modify_bill", "Modify an existing production bill. Can change target count, pause/resume, ingredient radius, and skill requirements. Identify bill by recipe name or index.",
+                MakeParam("workbench", "string", "Workbench name or defName"),
+                MakeOptionalParam("recipe", "string", "Recipe name to find the bill (alternative to 'index')"),
+                MakeOptionalParam("index", "integer", "Bill index (0-based) at the workbench (alternative to 'recipe')"),
+                MakeOptionalParam("count", "integer", "New target count"),
+                MakeOptionalParam("forever", "boolean", "Set to true for perpetual production"),
+                MakeOptionalParam("paused", "boolean", "Pause (true) or resume (false) the bill"),
+                MakeOptionalParam("ingredientRadius", "integer", "New ingredient search radius"),
+                MakeOptionalParam("minSkill", "integer", "New minimum skill requirement (0-20)")));
+            tools.Add(MakeTool("delete_bill", "Delete/remove a production bill from a workbench. Identify bill by recipe name or index.",
+                MakeParam("workbench", "string", "Workbench name or defName"),
+                MakeOptionalParam("recipe", "string", "Recipe name to find the bill (alternative to 'index')"),
+                MakeOptionalParam("index", "integer", "Bill index (0-based) at the workbench (alternative to 'recipe')")));
             tools.Add(MakeTool("get_schedules", "Get daily schedules for all colonists: hour-by-hour assignments (Sleep, Work, Anything, Joy/Recreation)."));
             tools.Add(MakeTool("set_schedule", "Set the schedule assignment for a specific colonist at a specific hour. Assignments: 'Work', 'Sleep', 'Anything', 'Joy'.",
                 MakeParam("colonist", "string", "The colonist's name"),

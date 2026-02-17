@@ -2,7 +2,7 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 51 different colony data tools via function calling.
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 54 different colony data tools via function calling.
 
 ## Build & Development
 
@@ -227,14 +227,14 @@ RimMind/
     ├── RimMind.csproj
     ├── Core/          (RimMindMod, Settings, MainThreadDispatcher)
     ├── API/           (OpenRouterClient, DTOs, SimpleJSON, PromptBuilder)
-    ├── Tools/         (46 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
+    ├── Tools/         (54 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (51 tools)
+## Current Tool Catalog (54 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (2): get_relationships, get_faction_relations
-- **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
+- **Work** (9): get_work_priorities, set_work_priority, get_bills, create_bill, modify_bill, delete_bill, get_schedules, set_schedule, copy_schedule
 - **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research** (3): get_research_status, get_available_research, get_completed_research
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
@@ -255,6 +255,7 @@ RimMind/
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ## Changelog
+- **2026-02-17**: Added bill/production management write tools — 3 new tools (`create_bill`, `modify_bill`, `delete_bill`) for complete control over workbench production queues. AI can now create bills with configurable target counts, forever mode, ingredient radius, skill requirements, and pause state. Bills can be modified to adjust target counts, toggle pause/resume, change ingredient search radius, and update skill requirements. Bills can be deleted by recipe name or index. All tools use fuzzy matching for workbench and recipe names with helpful suggestions on errors. Supports all bill types (Bill_Production, Bill_ProductionWithUom). This is the first production write action - players can now have the AI manage their manufacturing, cooking, crafting, and smelting operations.
 - **2026-02-16**: Added trade analysis tools (`get_active_traders`, `analyze_trade_opportunity`) — AI can now discover all available traders (orbital ships, visiting caravans, allied settlements in comms range) with full inventory details, buy/sell prices, and departure times. Trade opportunity analysis compares colony resources against trader inventory to suggest profitable trades: urgent purchases (medicine, components, food when low), profitable sales (surplus materials), and strategic acquisitions (high-value items like plasteel, advanced components). Returns prioritized recommendations with utility scores and reasoning.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.
