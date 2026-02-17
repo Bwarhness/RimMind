@@ -231,9 +231,10 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (54 tools)
+## Current Tool Catalog (55 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
-- **Social** (2): get_relationships, get_faction_relations
+- **Social** (3): get_relationships, get_faction_relations, get_social_risks
+- **Mood** (4): get_mood_risks, suggest_mood_interventions, get_mood_trends, get_environment_quality
 - **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
 - **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research** (3): get_research_status, get_available_research, get_completed_research
@@ -322,6 +323,7 @@ AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute
 
 ## Changelog
 - **2026-02-17**: Phase 8 - Animal Intelligence — Enhanced animal visibility and management. Added `get_animal_stats` tool for comprehensive species data (carrying capacity, movement speed, combat stats, production abilities with intervals, wildness, trainability, filth rate, manhunter chances). Added `get_wild_animals` tool to list all wild animals on map by species with taming difficulty, hunting value, rarity assessment, and recommendations. Enhanced `list_animals` to show current carrying load for pack animals. Enhanced `get_animal_details` to show production schedules (next shearing/milking/egg with ready status). AI can now: identify taming opportunities ("Rare Thrumbo - worth attempting tame"), optimize pack animals for caravans, remind about production readiness ("Muffalo ready for milking"), and advise on hunting targets. Total tools increased from 52 to 54.
+- **2026-02-17**: Added Phase 3 - Social & Mood Intelligence tools. New MoodHistoryTracker GameComponent tracks mood over time with hourly snapshots persisted with save files. New tools: `get_mood_trends` (track mood velocity, predict time-to-break with 3-day history), `get_social_risks` (detect colonist pairs with mutual hostility and volatile traits), `get_environment_quality` (score all rooms for beauty/cleanliness/space/temp/lighting with actionable suggestions). Enhanced `get_colony_overview` with recreation analysis (joy source count, variety, social vs solo, adequacy assessment). Implements all features from issue #56: mood trend analysis with prediction, social conflict detection, actionable interventions (already existed as suggest_mood_interventions), environment quality scoring, and recreation diagnostics.
 - **2026-02-17**: Enhanced blueprint visibility — AI can now clearly distinguish blueprints from built structures. Added `get_blueprints` tool to query all placed blueprints on the map with defName, position, material, size, and rotation. Updated `get_cell_details` to separate blueprints into dedicated array with "unbuilt" status vs built structures with "built" status. Enhanced system prompt to explain uppercase (built) vs lowercase (blueprint) character codes at the top, not just in building section. Map grid legend already showed "(blueprint)" for lowercase codes. This fixes issue where RimMind couldn't see player-placed blueprints even though they were visible as lowercase characters in the grid.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.

@@ -20,6 +20,13 @@ namespace RimMind.Tools
             public int finalRotation;
         }
 
+        private struct MaterialCheckResult
+        {
+            public bool hasMaterials;
+            public string warning;
+            public JSONArray shortages;
+        }
+
         public static string ListBuildable(JSONNode args)
         {
             var map = Find.CurrentMap;
@@ -350,6 +357,9 @@ namespace RimMind.Tools
                 Rot4 rot = ParseRotation(p["rotation"]);
                 bool autoApprove = globalAutoApprove || (p["auto_approve"]?.AsBool == true);
 
+                // Phase 2: Material pre-check
+                var materialCheck = CheckMaterials(map, def, stuff);
+
                 var pr = PlaceOneBlueprint(map, faction, def, pos, stuff, rot, autoApprove);
                 if (pr.success)
                 {
@@ -364,6 +374,13 @@ namespace RimMind.Tools
                     {
                         successEntry["auto_rotated"] = true;
                         successEntry["rotation"] = pr.finalRotation;
+                    }
+                    // Add material warnings if materials are insufficient
+                    if (!materialCheck.hasMaterials)
+                    {
+                        successEntry["material_warning"] = materialCheck.warning;
+                        if (materialCheck.shortages != null)
+                            successEntry["material_shortages"] = materialCheck.shortages;
                     }
                     successEntries.Add(successEntry);
                 }
