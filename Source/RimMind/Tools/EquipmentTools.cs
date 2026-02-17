@@ -112,7 +112,7 @@ namespace RimMind.Tools
                 if (pawn.equipment != null && pawn.equipment.Primary != null)
                 {
                     obj["weapon"] = pawn.equipment.Primary.LabelCap.ToString();
-                    obj["weaponDamage"] = pawn.equipment.Primary.def.Verbs?.FirstOrDefault()?.defaultProjectile?.projectile?.GetDamageAmount(1f).ToString() ?? "0";
+                    obj["weaponDamage"] = pawn.equipment.Primary.def.Verbs?.FirstOrDefault()?.defaultProjectile?.projectile?.GetDamageAmount(pawn.equipment.Primary, null).ToString() ?? "0";
                 }
                 else
                 {
@@ -178,7 +178,7 @@ namespace RimMind.Tools
                 return ToolExecutor.JsonError("Outfit '" + outfitName + "' not found. Available: " + string.Join(", ", available));
             }
 
-            pawn.outfits.CurrentOutfit = outfit;
+            pawn.outfits.CurrentApparelPolicy = outfit;
 
             var result = new JSONObject();
             result["success"] = true;
@@ -246,7 +246,7 @@ namespace RimMind.Tools
                 return ToolExecutor.JsonError("Food restriction '" + restrictionName + "' not found. Available: " + string.Join(", ", available));
             }
 
-            pawn.foodRestriction.CurrentFoodRestriction = restriction;
+            pawn.foodRestriction.CurrentFoodPolicy = restriction;
 
             var result = new JSONObject();
             result["success"] = true;
