@@ -705,8 +705,35 @@ namespace RimMind.Tools
             if (things.Count > 0)
             {
                 var thingsArr = new JSONArray();
+                var blueprintsArr = new JSONArray();
+
                 foreach (var thing in things)
                 {
+                    // Check if this is a blueprint
+                    if (thing is Blueprint bp)
+                    {
+                        var bpObj = new JSONObject();
+                        ThingDef builtDef = null;
+                        if (bp is Blueprint_Build bpb)
+                            builtDef = bpb.def.entityDefToBuild as ThingDef;
+                        else if (bp is Blueprint_Install bpi)
+                            builtDef = bpi.def.entityDefToBuild as ThingDef;
+
+                        if (builtDef != null)
+                        {
+                            bpObj["defName"] = builtDef.defName;
+                            bpObj["label"] = builtDef.LabelCap.ToString();
+                            bpObj["status"] = "unbuilt";
+                            
+                            // Show stuff if applicable
+                            if (bp.Stuff != null)
+                                bpObj["material"] = bp.Stuff.LabelCap.ToString();
+                            
+                            blueprintsArr.Add(bpObj);
+                        }
+                        continue; // Don't add to things array
+                    }
+
                     var thingObj = new JSONObject();
                     thingObj["name"] = thing.LabelCap.ToString();
                     thingObj["type"] = thing.def.category.ToString();
@@ -714,6 +741,7 @@ namespace RimMind.Tools
                     if (thing is Building bld)
                     {
                         thingObj["hitPoints"] = bld.HitPoints + "/" + bld.MaxHitPoints;
+                        thingObj["status"] = "built";
                     }
                     else if (thing is Pawn pawn)
                     {
@@ -728,10 +756,95 @@ namespace RimMind.Tools
 
                     thingsArr.Add(thingObj);
                 }
-                obj["things"] = thingsArr;
+
+                if (blueprintsArr.Count > 0)
+                    obj["blueprints"] = blueprintsArr;
+                if (thingsArr.Count > 0)
+                    obj["things"] = thingsArr;
             }
 
             return obj;
+        }
+
+        public static string GetBlueprints(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            // Optional filter by defName or label
+            string filterRaw = args?["filter"]?.Value;
+            string filter = (string.IsNullOrEmpty(filterRaw) || filterRaw == "null") ? null : filterRaw.ToLowerInvariant();
+
+            // Optional bounds
+            bool hasBounds = args?["x1"] != null && args?["z1"] != null && args?["x2"] != null && args?["z2"] != null;
+            int bx1 = hasBounds ? args["x1"].AsInt : 0;
+            int bz1 = hasBounds ? args["z1"].AsInt : 0;
+            int bx2 = hasBounds ? args["x2"].AsInt : map.Size.x - 1;
+            int bz2 = hasBounds ? args["z2"].AsInt : map.Size.z - 1;
+
+            bool InBounds(IntVec3 pos) => !hasBounds || (pos.x >= bx1 && pos.x <= bx2 && pos.z >= bz1 && pos.z <= bz2);
+
+            var result = new JSONObject();
+            var blueprints = new JSONArray();
+            int totalFound = 0;
+            const int MaxResults = 200;
+
+            // Find all blueprints
+            foreach (var thing in map.listerThings.AllThings)
+            {
+                if (!(thing is Blueprint bp)) continue;
+                if (!thing.Spawned) continue;
+                if (!InBounds(thing.Position)) continue;
+
+                ThingDef builtDef = null;
+                if (bp is Blueprint_Build bpb)
+                    builtDef = bpb.def.entityDefToBuild as ThingDef;
+                else if (bp is Blueprint_Install bpi)
+                    builtDef = bpi.def.entityDefToBuild as ThingDef;
+
+                if (builtDef == null) continue;
+
+                // Apply filter
+                if (filter != null)
+                {
+                    bool matches = builtDef.defName.ToLowerInvariant().Contains(filter)
+                        || builtDef.LabelCap.ToString().ToLowerInvariant().Contains(filter);
+                    if (!matches) continue;
+                }
+
+                totalFound++;
+                if (blueprints.Count < MaxResults)
+                {
+                    var bpObj = new JSONObject();
+                    bpObj["defName"] = builtDef.defName;
+                    bpObj["label"] = builtDef.LabelCap.ToString();
+                    bpObj["x"] = thing.Position.x;
+                    bpObj["z"] = thing.Position.z;
+
+                    if (bp.Stuff != null)
+                        bpObj["material"] = bp.Stuff.LabelCap.ToString();
+
+                    // Add size info for multi-cell buildings
+                    if (builtDef.size.x > 1 || builtDef.size.z > 1)
+                        bpObj["size"] = builtDef.size.x + "x" + builtDef.size.z;
+
+                    // Show rotation for doors, coolers, beds, etc.
+                    bpObj["rotation"] = bp.Rotation.AsInt;
+
+                    blueprints.Add(bpObj);
+                }
+            }
+
+            result["total"] = totalFound;
+            result["returned"] = blueprints.Count;
+            if (totalFound > blueprints.Count)
+                result["note"] = "Results capped at " + MaxResults + ". Use bounds (x1,z1,x2,z2) or filter to narrow results.";
+            result["blueprints"] = blueprints;
+
+            if (totalFound == 0)
+                result["message"] = "No blueprints found on the map" + (filter != null ? " matching filter '" + filter + "'" : "") + ".";
+
+            return result.ToString();
         }
 
         public static string SearchMap(JSONNode args)
