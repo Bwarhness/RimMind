@@ -701,5 +701,181 @@ namespace RimMind.Tools
 
             return matches.Count > 0 ? string.Join(", ", matches) : null;
         }
+
+        // Phase 2: Construction & Workflow Intelligence
+
+        public static string GetWorkQueue()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var categories = new JSONObject();
+
+            // Track designation counts by type
+            var designationCounts = new Dictionary<string, DesignationStats>();
+
+            foreach (var designation in map.designationManager.AllDesignations)
+            {
+                string category = GetDesignationCategory(designation.def);
+                if (category == null) continue;
+
+                if (!designationCounts.ContainsKey(category))
+                    designationCounts[category] = new DesignationStats();
+
+                var stats = designationCounts[category];
+                stats.total++;
+
+                // Check if blocked (unreachable or missing materials)
+                if (designation.target.HasThing)
+                {
+                    var thing = designation.target.Thing;
+                    if (thing != null && !map.reachability.CanReachColony(thing.Position))
+                        stats.blocked++;
+                }
+                else
+                {
+                    if (!map.reachability.CanReachColony(designation.target.Cell))
+                        stats.blocked++;
+                }
+
+                // Check if in progress (has a pawn working on it)
+                bool inProgress = false;
+                foreach (var pawn in map.mapPawns.FreeColonists)
+                {
+                    if (pawn.CurJob != null && pawn.CurJob.targetA == designation.target)
+                    {
+                        inProgress = true;
+                        stats.assignedPawns.Add(pawn.Name?.ToStringShort ?? "Unknown");
+                        break;
+                    }
+                }
+
+                if (inProgress)
+                    stats.inProgress++;
+            }
+
+            // Convert to JSON
+            foreach (var kvp in designationCounts.OrderByDescending(x => x.Value.total))
+            {
+                var catObj = new JSONObject();
+                catObj["total"] = kvp.Value.total;
+                catObj["inProgress"] = kvp.Value.inProgress;
+                catObj["blocked"] = kvp.Value.blocked;
+                catObj["waiting"] = kvp.Value.total - kvp.Value.inProgress - kvp.Value.blocked;
+
+                var pawns = new JSONArray();
+                foreach (var pawn in kvp.Value.assignedPawns.Distinct())
+                    pawns.Add(pawn);
+                catObj["assignedColonists"] = pawns;
+
+                categories[kvp.Key] = catObj;
+            }
+
+            result["workQueue"] = categories;
+            result["totalPendingJobs"] = designationCounts.Values.Sum(s => s.total);
+
+            return result.ToString();
+        }
+
+        public static string GetConstructionStatus()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var blueprints = new JSONArray();
+
+            // Find all blueprint designations
+            foreach (var thing in map.listerThings.AllThings)
+            {
+                var blueprint = thing as Blueprint;
+                if (blueprint == null) continue;
+
+                var obj = new JSONObject();
+                obj["defName"] = blueprint.def.entityDefToBuild?.defName ?? "Unknown";
+                obj["label"] = blueprint.Label ?? "Unknown";
+                obj["position"] = blueprint.Position.x + "," + blueprint.Position.z;
+
+                // Calculate completion percentage
+                float workDone = blueprint.workDone;
+                float workTotal = blueprint.def.entityDefToBuild.GetStatValueAbstract(StatDefOf.WorkToBuild);
+                float percentComplete = workTotal > 0 ? (workDone / workTotal * 100f) : 0f;
+                obj["completionPercent"] = Mathf.RoundToInt(percentComplete);
+
+                // Check if forbidden (AI-placed awaiting approval)
+                obj["forbidden"] = thing.IsForbidden(Faction.OfPlayer);
+
+                // Find current builders
+                var builders = new JSONArray();
+                foreach (var pawn in map.mapPawns.FreeColonists)
+                {
+                    if (pawn.CurJob != null && pawn.CurJob.targetA.Thing == blueprint)
+                        builders.Add(pawn.Name?.ToStringShort ?? "Unknown");
+                }
+                obj["builders"] = builders;
+
+                // Get material requirements
+                var materialsObj = new JSONObject();
+                if (blueprint.def.entityDefToBuild is ThingDef thingDef)
+                {
+                    // Get cost list
+                    var costList = thingDef.CostListAdjusted(blueprint.Stuff);
+                    if (costList != null && costList.Count > 0)
+                    {
+                        foreach (var cost in costList)
+                        {
+                            int needed = cost.count;
+                            int available = map.resourceCounter.GetCount(cost.thingDef);
+                            int shortage = Mathf.Max(0, needed - available);
+
+                            var matObj = new JSONObject();
+                            matObj["needed"] = needed;
+                            matObj["available"] = available;
+                            if (shortage > 0)
+                                matObj["shortage"] = shortage;
+
+                            materialsObj[cost.thingDef.label ?? cost.thingDef.defName] = matObj;
+                        }
+                    }
+                }
+                obj["materials"] = materialsObj;
+
+                blueprints.Add(obj);
+            }
+
+            var result = new JSONObject();
+            result["blueprints"] = blueprints;
+            result["totalBlueprints"] = blueprints.Count;
+
+            return result.ToString();
+        }
+
+        private static string GetDesignationCategory(DesignationDef def)
+        {
+            if (def == null) return null;
+
+            // Map designation defs to work categories
+            if (def == DesignationDefOf.Haul || def == DesignationDefOf.HaulUrgently)
+                return "hauling";
+            if (def == DesignationDefOf.Build || def == DesignationDefOf.Deconstruct || def == DesignationDefOf.Uninstall)
+                return "construction";
+            if (def == DesignationDefOf.Mine)
+                return "mining";
+            if (def == DesignationDefOf.CutPlant || def == DesignationDefOf.HarvestPlant || def == DesignationDefOf.Sow)
+                return "planting";
+            if (def.defName == "FinishOff" || def.defName == "Repair")
+                return "repair";
+
+            // Generic fallback
+            return null;
+        }
+
+        private class DesignationStats
+        {
+            public int total;
+            public int inProgress;
+            public int blocked;
+            public List<string> assignedPawns = new List<string>();
+        }
     }
 }
