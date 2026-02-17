@@ -1031,6 +1031,71 @@ namespace RimMind.Tools
             return pr;
         }
 
+        // Phase 2: Material pre-check
+        private static MaterialCheckResult CheckMaterials(Map map, ThingDef buildingDef, ThingDef stuff)
+        {
+            var result = new MaterialCheckResult();
+            result.hasMaterials = true;
+
+            var shortageList = new List<string>();
+            var shortagesArray = new JSONArray();
+
+            // Calculate total material cost
+            var costList = new Dictionary<ThingDef, int>();
+
+            // Add stuff cost if applicable
+            if (buildingDef.MadeFromStuff && stuff != null)
+            {
+                int stuffCost = buildingDef.costStuffCount;
+                if (stuffCost > 0)
+                    costList[stuff] = stuffCost;
+            }
+
+            // Add other costs
+            if (buildingDef.costList != null)
+            {
+                foreach (var cost in buildingDef.costList)
+                {
+                    if (costList.ContainsKey(cost.thingDef))
+                        costList[cost.thingDef] += cost.count;
+                    else
+                        costList[cost.thingDef] = cost.count;
+                }
+            }
+
+            // Check availability
+            foreach (var kvp in costList)
+            {
+                var material = kvp.Key;
+                int needed = kvp.Value;
+                int available = map.resourceCounter.GetCount(material);
+
+                if (available < needed)
+                {
+                    result.hasMaterials = false;
+                    int shortage = needed - available;
+                    string shortageMsg = material.LabelCap + ": need " + shortage + " more (have " + available + "/" + needed + ")";
+                    shortageList.Add(shortageMsg);
+
+                    var shortageObj = new JSONObject();
+                    shortageObj["material"] = material.defName;
+                    shortageObj["label"] = material.LabelCap.ToString();
+                    shortageObj["needed"] = needed;
+                    shortageObj["available"] = available;
+                    shortageObj["shortage"] = shortage;
+                    shortagesArray.Add(shortageObj);
+                }
+            }
+
+            if (!result.hasMaterials)
+            {
+                result.warning = "Insufficient materials: " + string.Join(", ", shortageList);
+                result.shortages = shortagesArray;
+            }
+
+            return result;
+        }
+
         // --- Utility helpers ---
 
         // LLMs sometimes send JSON arrays as double-encoded strings -- unwrap them

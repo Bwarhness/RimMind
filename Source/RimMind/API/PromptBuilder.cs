@@ -1,3 +1,4 @@
+using RimMind.Chat;
 using RimMind.Core;
 
 namespace RimMind.API
@@ -7,6 +8,12 @@ namespace RimMind.API
         public static string BuildChatSystemPrompt(string colonyContext, string playerDirectives)
         {
             var sb = new System.Text.StringBuilder();
+
+            // Add auto-context at the very top (real-time game state)
+            sb.Append(GameStateContext.GetAutoContext());
+            sb.AppendLine();
+            sb.AppendLine("===========================");
+            sb.AppendLine();
 
             sb.Append(@"You are RimMind, an AI advisor embedded in a RimWorld colony. You have access to tools that let you query detailed information about the colony - colonists, resources, research, defense, medical status, animals, and more.
 
