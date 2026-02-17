@@ -99,6 +99,8 @@ namespace RimMind.Tools
             // Events
             { "get_recent_events", args => EventTools.GetRecentEvents(args?["count"]?.AsInt ?? 5) },
             { "get_active_alerts", args => EventTools.GetActiveAlerts() },
+            { "get_active_events", args => EventTools.GetActiveEvents() },
+            { "get_disaster_risks", args => EventTools.GetDisasterRisks() },
 
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
