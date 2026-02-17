@@ -133,6 +133,36 @@ namespace RimMind.Tools
                 MakeOptionalParam("x2", "integer", "End X of search bounds"),
                 MakeOptionalParam("z2", "integer", "End Z of search bounds")));
 
+            // Environmental Visibility Tools
+            tools.Add(MakeTool("get_light_levels", "Query per-cell light/glow values for illumination analysis. Light levels affect colonist mood and work speed. Returns glow values (0.0-1.0) and descriptions. Single cell or range query (max 15x15). Use to find dark rooms causing mood penalties, verify workspace lighting, or plan lamp placement.",
+                MakeParam("x", "integer", "X coordinate (or start X for range query)"),
+                MakeParam("z", "integer", "Z coordinate (or start Z for range query)"),
+                MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 area = 225 cells)"),
+                MakeOptionalParam("z2", "integer", "End Z coordinate for range query")));
+            tools.Add(MakeTool("get_light_sources", "List all light sources (lamps, torches) on the map with their position, glow radius, color, and powered status. Use to plan lighting coverage, find unpowered lights, or optimize lamp placement for full coverage.",
+                MakeOptionalParam("x1", "integer", "Start X of bounding box filter (optional)"),
+                MakeOptionalParam("z1", "integer", "Start Z of bounding box filter"),
+                MakeOptionalParam("x2", "integer", "End X of bounding box filter"),
+                MakeOptionalParam("z2", "integer", "End Z of bounding box filter"),
+                MakeOptionalParam("filter", "string", "Filter by defName (e.g., 'StandingLamp', 'Torch')")));
+            tools.Add(MakeTool("get_cell_beauty", "Query per-cell beauty values for environment quality analysis. Beauty affects colonist mood (ugly rooms cause debuffs, beautiful rooms boost mood). Returns beauty values and categories (Hideous/VeryUgly/Ugly/Neutral/Pretty/Beautiful/VeryBeautiful). Single cell or range query (max 15x15). Use to identify ugly areas needing art/plants, verify bedroom beauty for mood, or optimize room impressiveness.",
+                MakeParam("x", "integer", "X coordinate (or start X for range query)"),
+                MakeParam("z", "integer", "Z coordinate (or start Z for range query)"),
+                MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 area = 225 cells)"),
+                MakeOptionalParam("z2", "integer", "End Z coordinate for range query")));
+            tools.Add(MakeTool("get_pollution", "Query pollution grid for health and environment tracking. Requires Biotech DLC. Pollution affects colonist health and fertility. Returns per-cell pollution status and nearby pollution percentage within 10-cell radius. Single cell or range query (max 15x15). Use to identify polluted areas affecting colonist health, track pollution spread from wastepack atomizers, or verify clean zones for sensitive colonists.",
+                MakeParam("x", "integer", "X coordinate (or start X for range query)"),
+                MakeParam("z", "integer", "Z coordinate (or start Z for range query)"),
+                MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 area = 225 cells)"),
+                MakeOptionalParam("z2", "integer", "End Z coordinate for range query")));
+            tools.Add(MakeTool("get_roof_status", "Bulk roof analysis for a rectangular region. Returns roof type breakdown (constructed/natural thin/natural thick/none), total roofed vs unroofed cells, and optional breach detection (unroofed cells under overhead mountain). Use to find unroofed areas in bedrooms (temperature control), detect roof breaches in mountain bases (vacuum exposure risk), identify overhead mountain for infestation risk, verify constructed roof coverage, or plan roof construction.",
+                MakeParam("x1", "integer", "Start X coordinate of region"),
+                MakeParam("z1", "integer", "Start Z coordinate of region"),
+                MakeParam("x2", "integer", "End X coordinate of region"),
+                MakeParam("z2", "integer", "End Z coordinate of region"),
+                MakeOptionalParam("roofType", "string", "Filter by roof type: 'none', 'thin', 'thick', 'constructed' (not yet implemented)"),
+                MakeOptionalParam("detectBreaches", "boolean", "Enable breach detection: find unroofed cells adjacent to thick mountain roof (default: false)")));
+
             // Animal Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, and training completion status."));
             tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, and bonded colonist.",
