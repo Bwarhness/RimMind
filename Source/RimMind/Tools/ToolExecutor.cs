@@ -26,6 +26,9 @@ namespace RimMind.Tools
             { "get_work_priorities", args => WorkTools.GetWorkPriorities() },
             { "set_work_priority", args => WorkTools.SetWorkPriority(args?["colonist"]?.Value, args?["workType"]?.Value, args?["priority"]?.AsInt ?? 0) },
             { "get_bills", args => WorkTools.GetBills(args?["workbench"]?.Value) },
+            { "create_bill", args => WorkTools.CreateBill(args) },
+            { "modify_bill", args => WorkTools.ModifyBill(args) },
+            { "delete_bill", args => WorkTools.DeleteBill(args) },
             { "get_schedules", args => WorkTools.GetSchedules() },
             { "set_schedule", args => WorkTools.SetSchedule(args?["colonist"]?.Value, args?["hour"]?.AsInt ?? -1, args?["assignment"]?.Value) },
             { "copy_schedule", args => WorkTools.CopySchedule(args?["from"]?.Value, args?["to"]?.Value) },
@@ -71,6 +74,9 @@ namespace RimMind.Tools
 
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
+
+            // Health Check
+            { "colony_health_check", args => HealthCheckTools.ColonyHealthCheck() },
 
             // Mood
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
