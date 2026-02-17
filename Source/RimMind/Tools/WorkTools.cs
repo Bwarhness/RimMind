@@ -796,11 +796,10 @@ namespace RimMind.Tools
                 obj["label"] = blueprint.Label ?? "Unknown";
                 obj["position"] = blueprint.Position.x + "," + blueprint.Position.z;
 
-                // Calculate completion percentage
-                float workDone = blueprint.workDone;
-                float workTotal = blueprint.def.entityDefToBuild.GetStatValueAbstract(StatDefOf.WorkToBuild);
-                float percentComplete = workTotal > 0 ? (workDone / workTotal * 100f) : 0f;
-                obj["completionPercent"] = Mathf.RoundToInt(percentComplete);
+                // Blueprints are awaiting materials (0% complete)
+                // Work is only tracked on Frame objects, not Blueprint
+                obj["status"] = "awaiting_materials";
+                obj["completionPercent"] = 0;
 
                 // Check if forbidden (AI-placed awaiting approval)
                 obj["forbidden"] = thing.IsForbidden(Faction.OfPlayer);
@@ -855,13 +854,13 @@ namespace RimMind.Tools
             if (def == null) return null;
 
             // Map designation defs to work categories
-            if (def == DesignationDefOf.Haul || def == DesignationDefOf.HaulUrgently)
+            if (def == DesignationDefOf.Haul)
                 return "hauling";
-            if (def == DesignationDefOf.Build || def == DesignationDefOf.Deconstruct || def == DesignationDefOf.Uninstall)
+            if (def == DesignationDefOf.Deconstruct || def == DesignationDefOf.Uninstall)
                 return "construction";
             if (def == DesignationDefOf.Mine)
                 return "mining";
-            if (def == DesignationDefOf.CutPlant || def == DesignationDefOf.HarvestPlant || def == DesignationDefOf.Sow)
+            if (def == DesignationDefOf.CutPlant || def == DesignationDefOf.HarvestPlant)
                 return "planting";
             if (def.defName == "FinishOff" || def.defName == "Repair")
                 return "repair";

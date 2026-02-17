@@ -25,6 +25,36 @@ namespace RimMind.Tools
 
             // Growing season info
             obj["growingSeasonActive"] = map.mapTemperature.OutdoorTemp > 0f;
+            
+            // Active events summary (Phase 7: Event & Disaster Intelligence)
+            var activeEvents = new JSONArray();
+            var gameConditions = map.gameConditionManager?.ActiveConditions;
+            if (gameConditions != null && gameConditions.Count > 0)
+            {
+                foreach (var condition in gameConditions)
+                {
+                    var eventObj = new JSONObject();
+                    eventObj["type"] = condition.def.defName;
+                    eventObj["label"] = condition.LabelCap;
+                    
+                    int ticksRemaining = condition.TicksLeft;
+                    if (ticksRemaining > 0)
+                    {
+                        float daysRemaining = ticksRemaining / 60000f;
+                        eventObj["days_remaining"] = daysRemaining.ToString("F1");
+                    }
+                    
+                    activeEvents.Add(eventObj);
+                }
+                
+                obj["active_events"] = activeEvents;
+                obj["active_event_count"] = activeEvents.Count;
+            }
+            else
+            {
+                obj["active_events"] = activeEvents; // Empty array
+                obj["active_event_count"] = 0;
+            }
 
             return obj.ToString();
         }
