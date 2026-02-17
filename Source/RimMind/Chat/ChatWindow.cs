@@ -19,6 +19,20 @@ namespace RimMind.Chat
         public ChatManager Manager => chatManager;
         public ChatManager ChatManager => chatManager;
 
+        /// <summary>
+        /// Get the shared ChatManager, creating it if needed.
+        /// Works even when the chat window is not open.
+        /// </summary>
+        public static ChatManager SharedManager
+        {
+            get
+            {
+                if (chatManager == null)
+                    chatManager = new ChatManager();
+                return chatManager;
+            }
+        }
+
         private static readonly string[][] quickPrompts = new string[][]
         {
             new[] { "Bedroom", "Build me a standard wooden bedroom near the center of the map with a bed, end table, and dresser" },
@@ -85,22 +99,47 @@ namespace RimMind.Chat
             Widgets.Label(titleRect, "RimMind AI");
             Text.Font = GameFont.Small;
 
-            // Context button
-            var contextRect = new Rect(inRect.width - 350f, 2f, 70f, 24f);
-            if (Widgets.ButtonText(contextRect, "Context"))
+            // Header buttons — right-aligned
+            float btnW = 62f;
+            float btnH = 24f;
+            float btnY = 2f;
+            float btnX = inRect.width - 30f; // start from right, leave room for close X
+
+            // Clear button
+            btnX -= btnW;
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Clear"))
             {
-                var existing = Find.WindowStack.WindowOfType<ContextViewWindow>();
+                chatManager.ClearHistory();
+            }
+
+            // Prompts toggle button
+            btnX -= btnW + 4f;
+            GUI.color = showPrompts ? new Color(0.9f, 0.8f, 0.5f) : Color.white;
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Prompts"))
+            {
+                showPrompts = !showPrompts;
+            }
+            GUI.color = Color.white;
+
+            // Auto button
+            btnX -= btnW + 4f;
+            bool autoEnabled = Core.RimMindMod.Settings.enableEventAutomation;
+            GUI.color = autoEnabled ? new Color(0.9f, 0.7f, 0.4f) : Color.white;
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Auto"))
+            {
+                var existing = Find.WindowStack.WindowOfType<Automation.AutomationSettingsWindow>();
                 if (existing != null)
                     Find.WindowStack.TryRemove(existing);
                 else
-                    Find.WindowStack.Add(new ContextViewWindow(chatManager));
+                    Find.WindowStack.Add(new Automation.AutomationSettingsWindow());
             }
+            GUI.color = Color.white;
 
             // Directives button
-            var directivesRect = new Rect(inRect.width - 270f, 2f, 80f, 24f);
+            btnX -= 72f + 4f;
             bool hasDirectives = Core.DirectivesTracker.Instance != null && !string.IsNullOrEmpty(Core.DirectivesTracker.Instance.PlayerDirectives);
             GUI.color = hasDirectives ? new Color(0.6f, 0.9f, 0.7f) : Color.white;
-            if (Widgets.ButtonText(directivesRect, "Directives"))
+            if (Widgets.ButtonText(new Rect(btnX, btnY, 72f, btnH), "Directives"))
             {
                 var existing = Find.WindowStack.WindowOfType<DirectivesWindow>();
                 if (existing != null)
@@ -110,20 +149,15 @@ namespace RimMind.Chat
             }
             GUI.color = Color.white;
 
-            // Prompts toggle button
-            var promptsToggleRect = new Rect(inRect.width - 180f, 2f, 80f, 24f);
-            GUI.color = showPrompts ? new Color(0.9f, 0.8f, 0.5f) : Color.white;
-            if (Widgets.ButtonText(promptsToggleRect, "Prompts"))
+            // Context button
+            btnX -= btnW + 4f;
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Context"))
             {
-                showPrompts = !showPrompts;
-            }
-            GUI.color = Color.white;
-
-            // Clear button
-            var clearRect = new Rect(inRect.width - 90f, 2f, 70f, 24f);
-            if (Widgets.ButtonText(clearRect, "Clear"))
-            {
-                chatManager.ClearHistory();
+                var existing = Find.WindowStack.WindowOfType<ContextViewWindow>();
+                if (existing != null)
+                    Find.WindowStack.TryRemove(existing);
+                else
+                    Find.WindowStack.Add(new ContextViewWindow(chatManager));
             }
 
             // Token usage display
@@ -184,10 +218,8 @@ namespace RimMind.Chat
                 SendCurrentMessage();
             }
 
-            // Auto-focus input (only when sub-windows are not open)
-            if (Event.current.type == EventType.Repaint
-                && Find.WindowStack.WindowOfType<DirectivesWindow>() == null
-                && Find.WindowStack.WindowOfType<ContextViewWindow>() == null)
+            // Focus input only when user clicks inside our window (not every frame)
+            if (Event.current.type == EventType.MouseDown && Mouse.IsOver(inRect))
             {
                 GUI.FocusControl("RimMindInput");
             }

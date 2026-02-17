@@ -3,6 +3,7 @@ using RimMind.Chat;
 using RimMind.Core;
 using RimWorld;
 using System;
+using System.Reflection;
 using Verse;
 
 namespace RimMind.Automation
@@ -10,11 +11,69 @@ namespace RimMind.Automation
     /// <summary>
     /// Harmony patch for LetterStack.ReceiveLetter to detect incoming letters
     /// and trigger event automation when configured.
+    /// Patched manually in RimMindMod constructor due to multiple overloads.
     /// </summary>
-    [HarmonyPatch(typeof(LetterStack), nameof(LetterStack.ReceiveLetter))]
     public static class LetterAutomationPatch
     {
-        static void Postfix(Letter let)
+        /// <summary>
+        /// Manually apply the patch. Called from RimMindMod constructor.
+        /// We target ReceiveLetter(Letter, string) specifically since LetterStack
+        /// has 3 overloads and attribute-based patching causes AmbiguousMatchException.
+        /// </summary>
+        public static void Apply(Harmony harmony)
+        {
+            // Find the smallest ReceiveLetter overload — in RimWorld 1.6, there are 3 overloads
+            // with 4, 6, and 10 params. The 4-param version (Letter, string, int, bool) is the
+            // one all others funnel through.
+            MethodInfo target = null;
+            var allMethods = typeof(LetterStack).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var m in allMethods)
+            {
+                if (m.Name != "ReceiveLetter") continue;
+                try
+                {
+                    var parms = m.GetParameters();
+                    if (target == null || parms.Length < target.GetParameters().Length)
+                        target = m;
+                }
+                catch { }
+            }
+
+            if (target == null)
+            {
+                Log.Error("[RimMind] Could not find ReceiveLetter to patch!");
+                return;
+            }
+
+            var postfix = typeof(LetterAutomationPatch).GetMethod("PostfixGeneric",
+                BindingFlags.Static | BindingFlags.Public);
+
+            harmony.Patch(target, postfix: new HarmonyMethod(postfix));
+            Log.Message($"[RimMind] Patched LetterStack.ReceiveLetter ({target.GetParameters().Length} params)");
+        }
+
+        /// <summary>
+        /// Generic postfix that works with any ReceiveLetter overload.
+        /// Grabs the most recently added letter from the LetterStack instance.
+        /// Harmony injects __instance automatically for instance methods.
+        /// </summary>
+        public static void PostfixGeneric(LetterStack __instance)
+        {
+            try
+            {
+                // Get the last letter that was just added
+                var letters = __instance.LettersListForReading;
+                if (letters == null || letters.Count == 0) return;
+                var let = letters[letters.Count - 1];
+                Postfix(let);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[RimMind] PostfixGeneric failed: {ex}");
+            }
+        }
+
+        public static void Postfix(Letter let)
         {
             try
             {
@@ -64,8 +123,8 @@ namespace RimMind.Automation
                     return;
                 }
 
-                // Build context-enriched prompt
-                string automationPrompt = BuildAutomationPrompt(eventType, let, rule.customPrompt);
+                // Use the custom prompt directly
+                string automationPrompt = rule.customPrompt;
 
                 // Send to AI via ChatManager (must be on main thread)
                 DebugLogger.Log("AUTOMATION", $" Triggering automation for event: {eventType}");
@@ -76,26 +135,14 @@ namespace RimMind.Automation
                 {
                     try
                     {
-                        // Get ChatManager from ChatWindow if it exists
-                        var chatManager = ChatWindow.Instance?.Manager;
-                        if (chatManager != null)
-                        {
-                            chatManager.SendMessage(automationPrompt);
+                        // Get ChatManager — works even when chat window is closed
+                        var chatManager = ChatWindow.SharedManager;
+                        chatManager.SendMessage(automationPrompt);
 
-                            // Show notification
-                            Messages.Message(
-                                $"RimMind automation: {let.Label}",
-                                MessageTypeDefOf.NeutralEvent
-                            );
-                        }
-                        else
-                        {
-                            DebugLogger.Log("AUTOMATION", $" ChatWindow not open - automation message queued but not sent");
-                            Messages.Message(
-                                $"RimMind automation triggered but chat window is closed. Open chat to see response.",
-                                MessageTypeDefOf.CautionInput
-                            );
-                        }
+                        Messages.Message(
+                            $"RimMind automation: {let.Label}",
+                            MessageTypeDefOf.NeutralEvent
+                        );
                     }
                     catch (Exception ex)
                     {

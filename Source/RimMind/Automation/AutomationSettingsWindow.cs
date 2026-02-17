@@ -28,7 +28,7 @@ namespace RimMind.Automation
             doCloseX = true;
             draggable = true;
             resizeable = true;
-            absorbInputAroundWindow = true;
+            absorbInputAroundWindow = false;
 
             // Ensure all known event types have entries
             EnsureDefaultRules();
@@ -191,64 +191,64 @@ namespace RimMind.Automation
             Widgets.DrawBoxSolid(rect, new Color(0.15f, 0.15f, 0.15f, 0.8f));
             var innerRect = rect.ContractedBy(10f);
 
+            GUI.BeginGroup(innerRect);
+            float w = innerRect.width;
+            float h = innerRect.height;
             float curY = 0f;
 
             // Event type title
             Text.Font = GameFont.Medium;
-            var titleRect = new Rect(0f, curY, innerRect.width, 30f);
-            Widgets.Label(titleRect, selectedEventType);
+            Widgets.Label(new Rect(0f, curY, w, 30f), selectedEventType);
             Text.Font = GameFont.Small;
             curY += 35f;
 
             // Enabled toggle
             var rule = RimMindMod.Settings.automationRules[selectedEventType];
-            var enabledRect = new Rect(0f, curY, innerRect.width, 30f);
-            Widgets.CheckboxLabeled(enabledRect, "Enabled", ref rule.enabled);
+            Widgets.CheckboxLabeled(new Rect(0f, curY, w, 30f), "Enabled", ref rule.enabled);
             curY += 35f;
 
             // Cooldown setting
-            var cooldownLabelRect = new Rect(0f, curY, innerRect.width, 25f);
-            Widgets.Label(cooldownLabelRect, $"Cooldown: {editingCooldown} seconds");
+            Widgets.Label(new Rect(0f, curY, w, 25f), $"Cooldown: {editingCooldown} seconds");
             curY += 25f;
 
-            var cooldownSliderRect = new Rect(0f, curY, innerRect.width, 25f);
-            editingCooldown = Mathf.RoundToInt(Widgets.HorizontalSlider(cooldownSliderRect, editingCooldown, 10f, 300f, true, null, "10s", "300s"));
+            editingCooldown = Mathf.RoundToInt(Widgets.HorizontalSlider(new Rect(0f, curY, w, 25f), editingCooldown, 10f, 300f, true, null, "10s", "300s"));
             curY += 30f;
 
             // Custom prompt label
-            var promptLabelRect = new Rect(0f, curY, innerRect.width, 25f);
-            Widgets.Label(promptLabelRect, "Custom Prompt:");
+            Widgets.Label(new Rect(0f, curY, w, 25f), "Custom Prompt:");
             curY += 25f;
 
             // Prompt text area
-            var promptRect = new Rect(0f, curY, innerRect.width, innerRect.height - curY - 80f);
-            editingPrompt = Widgets.TextArea(promptRect, editingPrompt);
-            curY = innerRect.height - 75f;
+            float promptHeight = h - curY - 80f;
+            if (promptHeight > 30f)
+            {
+                editingPrompt = Widgets.TextArea(new Rect(0f, curY, w, promptHeight), editingPrompt);
+            }
+            curY = h - 75f;
 
             // Use default button
-            var defaultButtonRect = new Rect(0f, curY, innerRect.width / 2f - 5f, 30f);
-            if (Widgets.ButtonText(defaultButtonRect, "Use Default"))
+            if (Widgets.ButtonText(new Rect(0f, curY, w / 2f - 5f, 30f), "Use Default"))
             {
                 editingPrompt = DefaultAutomationPrompts.Get(selectedEventType);
             }
 
             // Clear button
-            var clearButtonRect = new Rect(innerRect.width / 2f + 5f, curY, innerRect.width / 2f - 5f, 30f);
-            if (Widgets.ButtonText(clearButtonRect, "Clear"))
+            if (Widgets.ButtonText(new Rect(w / 2f + 5f, curY, w / 2f - 5f, 30f), "Clear"))
             {
                 editingPrompt = "";
             }
             curY += 35f;
 
             // Save button
-            var saveButtonRect = new Rect(0f, curY, innerRect.width, 30f);
-            if (Widgets.ButtonText(saveButtonRect, "Save Changes"))
+            if (Widgets.ButtonText(new Rect(0f, curY, w, 30f), "Save Changes"))
             {
                 rule.customPrompt = editingPrompt;
                 rule.cooldownSeconds = editingCooldown;
                 RimMindMod.Settings.Write();
                 Messages.Message($"Saved automation rule for {selectedEventType}", MessageTypeDefOf.TaskCompletion);
             }
+
+            GUI.EndGroup();
         }
 
         private float CalculateContentHeight()

@@ -1,3 +1,4 @@
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -10,8 +11,29 @@ namespace RimMind.Core
         public RimMindMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<RimMindSettings>();
-            Log.Message("[RimMind] Mod loaded successfully.");
             DebugLogger.Init();
+
+            // Apply Harmony patches
+            try
+            {
+                var harmony = new Harmony("com.rimmind.mod");
+                harmony.PatchAll();
+
+                // Manual patch for LetterStack.ReceiveLetter (3 overloads in RimWorld 1.6,
+                // attribute-based patching causes AmbiguousMatchException)
+                Automation.LetterAutomationPatch.Apply(harmony);
+
+                var patched = harmony.GetPatchedMethods();
+                int count = 0;
+                foreach (var m in patched) count++;
+                Log.Message("[RimMind] Harmony patches applied: " + count + " method(s) patched.");
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error("[RimMind] Harmony patching failed: " + ex);
+            }
+
+            Log.Message("[RimMind] Mod loaded successfully.");
         }
 
         public override string SettingsCategory() => "RimMind AI";
