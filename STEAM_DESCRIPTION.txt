@@ -1,160 +1,353 @@
-[h1]RimMind: AI-Powered Colony Advisor 🤖[/h1]
+[h1]🤖 RimMind: AI-Powered Colony Advisor[/h1]
 
-Transform your RimWorld colony with an intelligent AI advisor. Ask questions, get tactical insights, and let Claude guide your decisions through 40+ specialized tools.
+[b]Transform your RimWorld colony with an intelligent AI advisor that actually understands your game state.[/b]
 
-[hr][/hr]
-
-[h2]🧠 Your Colony Deserves a Brain[/h2]
-
-Ever wished you had a strategic advisor who actually understood your colony's situation? [b]RimMind[/b] brings cutting-edge AI directly into RimWorld, giving you an intelligent assistant that can analyze threats, optimize layouts, manage your colonists, and answer any question about your game.
-
-This isn't just another info mod — it's a [b]conversational AI agent[/b] with deep game integration and 40+ specialized tools.
+RimMind integrates cutting-edge AI directly into RimWorld, giving you a conversational assistant with [b]49 specialized tools[/b] to analyze, advise, and even build for your colony. Ask questions, get tactical insights, and let Claude guide your decisions with real-time colony intelligence.
 
 [hr][/hr]
 
-[h2]✨ What Can RimMind Do?[/h2]
+[h1]✨ What Can RimMind Do?[/h1]
 
-[h3]Colony Intelligence[/h3]
+[h2]🧠 Colony Intelligence & Analysis[/h2]
 [list]
-[*] 🏘️ [b]Colony Analysis[/b] - Get comprehensive reports on your colony's health, wealth, mood, and vulnerabilities
-[*] 👥 [b]Colonist Management[/b] - Analyze skills, relationships, health status, and work assignments
-[*] 📊 [b]Performance Insights[/b] - Track your colony's growth, production rates, and efficiency metrics
+[*][b]Deep Colony Analysis[/b] - Comprehensive reports on wealth, mood, defenses, and vulnerabilities
+[*][b]Colonist Management[/b] - Full backstories, traits, skills, needs, health, and relationships
+[*][b]Resource Tracking[/b] - Detailed inventory analysis across all stockpiles and categories
+[*][b]Production Planning[/b] - Workbench bills, manufacturing chains, and efficiency insights
 [/list]
 
-[h3]Tactical Support[/h3]
+[h2]⚔️ Tactical & Military Support[/h2]
 [list]
-[*] ⚔️ [b]Combat Analysis[/b] - Evaluate threats, raid strength, and defensive positioning
-[*] 🗺️ [b]Map Intelligence[/b] - Scan terrain, identify resources, analyze chokepoints
-[*] 🎯 [b]Target Prioritization[/b] - AI-driven recommendations for combat and defense
+[*][b]Threat Assessment[/b] - Real-time analysis of hostile pawns, raids, and sieges
+[*][b]Combat Readiness[/b] - Per-colonist weapon/armor/skill evaluation
+[*][b]Defense Analysis[/b] - Turret status, trap coverage, and fortification review
+[*][b]Map Intelligence[/b] - ASCII grid visualization of your entire base layout
 [/list]
 
-[h3]Resource & Production[/h3]
+[h2]🏗️ Construction & Building[/h2]
 [list]
-[*] 📦 [b]Inventory Management[/b] - Deep analysis of stockpiles, materials, and supplies
-[*] 🏭 [b]Production Planning[/b] - Optimize workbenches, bills, and manufacturing chains
-[*] 🌾 [b]Food & Agriculture[/b] - Crop analysis, meal planning, nutrition tracking
+[*][b]Smart Room Building[/b] - Create complete rooms with one command (walls + door + material)
+[*][b]Batch Blueprints[/b] - Place up to 100 building blueprints in a single operation
+[*][b]Shared Wall Detection[/b] - Automatically handles adjacent room construction
+[*][b]Blueprint Management[/b] - AI-placed blueprints are forbidden until you approve them
+[*][b]Structure Primitives[/b] - Build rooms, wall lines, and rectangles efficiently
 [/list]
 
-[h3]Building & Construction[/h3]
+[h2]🗺️ Zone & Planning Tools[/h2]
 [list]
-[*] 🏗️ [b]Place Buildings[/b] - AI can place blueprints for walls, rooms, and structures
-[*] 🧱 [b]Smart Rooms[/b] - Create complete rooms with one command (walls + door)
-[*] 📐 [b]Shared Wall Detection[/b] - Automatically handles adjacent room building
+[*][b]Real Zone Creation[/b] - Create actual stockpile and growing zones the game recognizes
+[*][b]Visual Planning[/b] - Place colored plan markers for base design
+[*][b]Map Visualization[/b] - ASCII grid view so AI can "see" your colony layout
+[*][b]Cell Details[/b] - Drill down into specific coordinates for terrain, room stats, and contents
 [/list]
 
-[h3]Zone Management[/h3]
+[h2]📊 Research & Development[/h2]
 [list]
-[*] 📍 [b]Create Zones[/b] - Stockpiles, growing zones, planning areas
-[*] 🗺️ [b]Map Viewing[/b] - ASCII grid view so AI can "see" your base layout
+[*][b]Research Tracking[/b] - Current progress, available projects, and tech tree navigation
+[*][b]Tech Recommendations[/b] - AI suggests optimal research paths based on colony needs
+[/list]
+
+[h2]🌾 Agriculture & Animals[/h2]
+[list]
+[*][b]Growing Zone Management[/b] - Crop analysis, growth progress, and soil fertility
+[*][b]Animal Tracking[/b] - Tamed animal details, training progress, and bonding status
+[*][b]Food Planning[/b] - Meal production and nutrition analysis
+[/list]
+
+[h2]🏥 Medical & Health[/h2]
+[list]
+[*][b]Patient Tracking[/b] - Who needs treatment, medicine supplies, available doctors
+[*][b]Health Monitoring[/b] - Injuries, diseases, immunity progress, and pain levels
+[*][b]Bionic Analysis[/b] - Implants and body modifications per colonist
+[/list]
+
+[h2]🌍 World & Diplomacy[/h2]
+[list]
+[*][b]Faction Relations[/b] - Goodwill tracking with all known factions
+[*][b]Trade Intelligence[/b] - Visiting trader inventory analysis
+[*][b]Caravan Planning[/b] - Available colonists and animals for expeditions
+[*][b]Settlement Discovery[/b] - World map destinations with distances and faction info
+[/list]
+
+[h2]🎯 Colony Directives System[/h2]
+[list]
+[*][b]Custom Rules[/b] - Define standing orders and playstyle preferences
+[*][b]Persistent Memory[/b] - AI remembers your colony's unique personality across sessions
+[*][b]Auto-Detection[/b] - AI offers to save preferences it notices in conversation
 [/list]
 
 [hr][/hr]
 
-[h2]🚀 40+ Specialized Tools[/h2]
+[h1]🛠️ Complete Tool Arsenal (49 Tools)[/h1]
 
-RimMind's AI can call these tools to understand your colony:
+[h3]Colonist & Social (5 tools)[/h3]
+[code]list_colonists, get_colonist_details, get_colonist_health, get_relationships, get_faction_relations[/code]
 
-[code]
-list_colonists - All colonists with mood, job, mental state
-get_colonist_details - Full backstory, traits, skills, needs
-get_colonist_health - Injuries, diseases, bionics, pain level
-get_relationships - Social bonds, opinions, rivalries
-get_faction_relations - Diplomacy with all factions
-get_work_priorities - Work type assignments
-get_bills - Production queues at workbenches
-get_schedules - Hour-by-hour colonist schedules
-get_colony_overview - Wealth, days survived, difficulty
-get_resources - All stockpiled items by category
-get_rooms - Room stats (impressiveness, beauty, etc.)
-get_stockpiles - Zone priorities and filters
-get_research_status - Current research progress
-get_threats - Active hostiles, raids, infestations
-get_defenses - Turrets, traps, defensive structures
-get_combat_readiness - Weapons, armor, combat skills
-get_weather_and_season - Current conditions
-get_growing_zones - Crops and growth progress
-get_power_status - Generation, consumption, batteries
-get_map_region - ASCII grid view of your base
-list_animals - Tamed animals and training
-get_recent_events - Recent raids, events, letters
-get_active_alerts - Current game alerts
-get_medical_overview - Patients, medicine, doctors
-place_plans - Visual planning markers
-create_zone - Stockpiles, growing zones
-place_building - Individual building blueprints
-place_structure - Complete rooms and wall lines
-get_directives - Player-defined colony rules
-...and more!
-[/code]
+[h3]Work & Production (3 tools)[/h3]
+[code]get_work_priorities, get_bills, get_schedules[/code]
+
+[h3]Colony Management (4 tools)[/h3]
+[code]get_colony_overview, get_resources, get_rooms, get_stockpiles[/code]
+
+[h3]Research (3 tools)[/h3]
+[code]get_research_status, get_available_research, get_completed_research[/code]
+
+[h3]Military & Defense (3 tools)[/h3]
+[code]get_threats, get_defenses, get_combat_readiness[/code]
+
+[h3]Map & Environment (5 tools)[/h3]
+[code]get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details[/code]
+
+[h3]Animals (2 tools)[/h3]
+[code]list_animals, get_animal_details[/code]
+
+[h3]Events & Alerts (2 tools)[/h3]
+[code]get_recent_events, get_active_alerts[/code]
+
+[h3]Medical (1 tool)[/h3]
+[code]get_medical_overview[/code]
+
+[h3]Planning (3 tools)[/h3]
+[code]place_plans, get_plans, remove_plans[/code]
+
+[h3]Zones (3 tools)[/h3]
+[code]list_zones, create_zone, delete_zone[/code]
+
+[h3]World & Diplomacy (7 tools)[/h3]
+[code]list_world_destinations, get_caravan_info, get_trade_status, list_trader_inventory, list_factions, get_diplomatic_summary, get_diplomacy_options[/code]
+
+[h3]Building & Construction (5 tools)[/h3]
+[code]list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings[/code]
+
+[h3]Directives (3 tools)[/h3]
+[code]get_directives, add_directive, remove_directive[/code]
 
 [hr][/hr]
 
-[h2]⚙️ Setup (5 Minutes)[/h2]
+[h1]💬 Example Conversations[/h1]
+
+[quote]
+[b]You:[/b] "What's wrong with my colony?"
+[b]RimMind:[/b] [i]*analyzes colonists, resources, threats*[/i] "Three colonists are close to mental breaks due to low recreation. Your food supply will last 8 days at current consumption. The south wall has no turret coverage. I recommend..."
+[/quote]
+
+[quote]
+[b]You:[/b] "Build me a 5x5 bedroom at coordinates 45,30 using granite"
+[b]RimMind:[/b] [i]*places blueprints*[/i] "Done! Placed a granite room (5x5 interior, 7x7 exterior) with autodoor facing south. 24 wall segments + 1 door. Blueprints are forbidden - approve when ready."
+[/quote]
+
+[quote]
+[b]You:[/b] "Who should I recruit from these prisoners?"
+[b]RimMind:[/b] [i]*analyzes skills and traits*[/i] "The pirate with 15 shooting and Tough trait would strengthen your defense. The one with Pyromaniac trait is high-risk - consider banishment instead."
+[/quote]
+
+[quote]
+[b]You:[/b] "Show me my base layout"
+[b]RimMind:[/b] [i]*generates ASCII map*[/i] "Here's your colony (50x50 grid). Legend: W=wall, D=door, B=bed, T=table, C=colonist, #=mountain. Your killbox at (10,5) has good coverage but the western flank is exposed..."
+[/quote]
+
+[hr][/hr]
+
+[h1]⚙️ Setup (5 Minutes)[/h1]
 
 [olist]
-[*] [b]Subscribe & Enable[/b] this mod
-[*] [b]Get an API Key[/b] from [url=https://openrouter.ai/]OpenRouter[/url] (free tier available)
-[*] [b]Configure[/b] in Mod Settings → RimMind → Paste API key
-[*] [b]Play![/b] Click the RimMind button in the toolbar
+[*][b]Subscribe[/b] to this mod and enable it in your mod list
+[*][b]Get an API key[/b] from [url=https://openrouter.ai/]OpenRouter[/url] (free tier available, pay-as-you-go pricing)
+[*][b]Configure[/b] in Mod Settings → RimMind → Paste your API key
+[*][b]Play![/b] Click the RimMind button in the bottom toolbar to open the chat window
 [/olist]
 
+[b]First-time users:[/b] Start with "Tell me about my colony" or "What should I do next?" to see RimMind in action.
+
 [hr][/hr]
 
-[h2]🤖 Supported AI Providers[/h2]
+[h1]🤖 Supported AI Models[/h1]
 
-[b]Via OpenRouter:[/b]
+RimMind works with [b]any OpenRouter-compatible model[/b]. Recommended options:
+
+[h3]Top Tier (Best Performance)[/h3]
 [list]
-[*] Claude Sonnet 4 (Anthropic) - Recommended
-[*] GPT-4o (OpenAI)
-[*] Gemini 2.0 Flash (Google)
-[*] DeepSeek-V3 - Budget friendly
-[*] Llama, Mistral, Qwen, and more
+[*][b]Claude Sonnet 4[/b] (Anthropic) - [i]Recommended for best results[/i]
+[*][b]GPT-4o[/b] (OpenAI) - Excellent all-around performance
+[*][b]Gemini 2.0 Flash[/b] (Google) - Fast and capable
 [/list]
 
-[b]Direct API:[/b]
+[h3]Budget Friendly[/h3]
 [list]
-[*] Anthropic API (Claude direct)
-[*] Claude Code (for Max/Pro subscribers)
+[*][b]DeepSeek-V3[/b] - High quality at low cost
+[*][b]Claude Haiku 3.5[/b] - Fast and affordable
+[*][b]Llama 3.3 70B[/b] - Open source alternative
+[/list]
+
+[h3]Direct API Support[/h3]
+[list]
+[*][b]Anthropic API[/b] - Use Claude directly (requires Anthropic API key instead of OpenRouter)
+[*][b]Claude Code[/b] - For Anthropic Max/Pro subscribers
+[/list]
+
+[i]Model selection is configurable in mod settings. Pricing varies by model - check [url=https://openrouter.ai/]OpenRouter[/url] for current rates.[/i]
+
+[hr][/hr]
+
+[h1]🔧 Compatibility[/h1]
+
+[list]
+[*][b]RimWorld Versions:[/b] 1.5, 1.6+
+[*][b]Required Dependency:[/b] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077]Harmony[/url]
+[*][b]Save Game Compatible:[/b] Yes - safe to add/remove mid-game
+[*][b]Mod Conflicts:[/b] None known
+[*][b]Performance Impact:[/b] Minimal (API calls are asynchronous)
+[/list]
+
+[b]Internet Required:[/b] RimMind queries AI models over the internet. API calls typically take 1-3 seconds depending on model and complexity.
+
+[hr][/hr]
+
+[h1]📋 Features Overview[/h1]
+
+[table]
+[tr]
+[th]Feature[/th]
+[th]Status[/th]
+[/tr]
+[tr]
+[td]Chat Interface[/td]
+[td]✅ Fully functional[/td]
+[/tr]
+[tr]
+[td]49 Colony Tools[/td]
+[td]✅ Complete[/td]
+[/tr]
+[tr]
+[td]Building Placement[/td]
+[td]✅ Rooms, walls, furniture[/td]
+[/tr]
+[tr]
+[td]Zone Management[/td]
+[td]✅ Stockpiles, growing, planning[/td]
+[/tr]
+[tr]
+[td]Map Visualization[/td]
+[td]✅ ASCII grid + cell details[/td]
+[/tr]
+[tr]
+[td]Colony Directives[/td]
+[td]✅ Persistent preferences[/td]
+[/tr]
+[tr]
+[td]Blueprint Approval[/td]
+[td]✅ Manual control over AI builds[/td]
+[/tr]
+[tr]
+[td]Multi-Model Support[/td]
+[td]✅ 100+ models via OpenRouter[/td]
+[/tr]
+[/table]
+
+[hr][/hr]
+
+[h1]🔒 Privacy & Security[/h1]
+
+[list]
+[*][b]Your API key[/b] is stored locally in RimWorld's mod settings (never transmitted except to OpenRouter/Anthropic)
+[*][b]Colony data[/b] is sent to AI models only when you use the chat (colonist names, stats, etc.)
+[*][b]No telemetry[/b] - RimMind doesn't collect usage data or analytics
+[*][b]Open source[/b] - Full source code available on GitHub for audit
 [/list]
 
 [hr][/hr]
 
-[h2]📖 Example Conversations[/h2]
+[h1]🐛 Troubleshooting[/h1]
 
-[b]You:[/b] "What's wrong with my colony?"
-[b]RimMind:[/b] [i]*analyzes colonists, resources, threats*[/i] "Three colonists are close to mental breaks due to low recreation. Your food supply will last 8 days at current consumption. I'd recommend..."
-
-[b]You:[/b] "Build me a 5x5 bedroom at coordinates 45,30"
-[b]RimMind:[/b] [i]*places blueprints*[/i] "Done! Placed a granite room with door facing south. 12 wall segments, 1 autodoor."
-
-[b]You:[/b] "Who should I recruit from these prisoners?"
-[b]RimMind:[/b] [i]*analyzes skills and traits*[/i] "The pirate with 15 shooting and Tough trait would strengthen your defense. Avoid the pyromaniac."
-
-[hr][/hr]
-
-[h2]🔗 Links[/h2]
-
+[h3]"API Error" Messages[/h3]
 [list]
-[*] [b]GitHub:[/b] [url=https://github.com/Bwarhness/RimMind]https://github.com/Bwarhness/RimMind[/url]
-[*] [b]Issues & Suggestions:[/b] [url=https://github.com/Bwarhness/RimMind/issues]GitHub Issues[/url]
-[*] [b]OpenRouter:[/b] [url=https://openrouter.ai/]https://openrouter.ai/[/url]
+[*]Verify your API key is correct in Mod Settings → RimMind
+[*]Check your OpenRouter account has credits/payment method
+[*]Ensure internet connection is active
+[/list]
+
+[h3]Chat Window Not Opening[/h3]
+[list]
+[*]Check Harmony is installed and loaded before RimMind
+[*]Look for errors in RimWorld's debug log (Dev Mode → "~" key)
+[/list]
+
+[h3]AI Responses Are Slow[/h3]
+[list]
+[*]Larger models (GPT-4o, Claude Sonnet) take longer but give better results
+[*]Try a faster model like Gemini Flash or Claude Haiku
+[*]Complex tool calls (map visualization, building placement) require more processing
+[/list]
+
+[h3]Blueprints Won't Build[/h3]
+[list]
+[*]AI-placed blueprints are [b]forbidden by default[/b] for safety
+[*]Use the [b]approve_buildings[/b] tool or manually unforbid them
+[*]Or use [b]auto_approve: true[/b] parameter when placing buildings
 [/list]
 
 [hr][/hr]
 
-[h2]⚠️ Requirements[/h2]
+[h1]🔗 Links & Resources[/h1]
 
 [list]
-[*] RimWorld 1.5+
-[*] Harmony
-[*] Internet connection for AI queries
-[*] OpenRouter API key
+[*][b]GitHub Repository:[/b] [url=https://github.com/Bwarhness/RimMind]https://github.com/Bwarhness/RimMind[/url]
+[*][b]Report Issues:[/b] [url=https://github.com/Bwarhness/RimMind/issues]GitHub Issues[/url]
+[*][b]OpenRouter:[/b] [url=https://openrouter.ai/]https://openrouter.ai/[/url]
+[*][b]Anthropic API:[/b] [url=https://console.anthropic.com/]https://console.anthropic.com/[/url]
 [/list]
 
 [hr][/hr]
 
-[b]MIT License[/b] - Open source, free forever
+[h1]👨‍💻 Development[/h1]
 
-Created by [b]Bwarhness[/b] 🎮
+RimMind is [b]open source[/b] under the MIT License. Contributions, bug reports, and feature suggestions are welcome!
 
-[b]Enjoy your new AI colony advisor! 🚀[/b]
+[b]Tech Stack:[/b]
+[list]
+[*]C# (.NET Framework 4.7.2)
+[*]RimWorld 1.5/1.6 API
+[*]Harmony patching
+[*]OpenRouter API integration
+[*]49 specialized game data extraction tools
+[/list]
+
+[hr][/hr]
+
+[h1]📜 Credits[/h1]
+
+[list]
+[*][b]Created by:[/b] Bwarhness
+[*][b]License:[/b] MIT (free forever)
+[*][b]AI Models:[/b] Anthropic (Claude), OpenAI (GPT), Google (Gemini), Meta (Llama), DeepSeek, and more
+[*][b]Special Thanks:[/b] RimWorld modding community, Ludeon Studios
+[/list]
+
+[hr][/hr]
+
+[h1]⚠️ Requirements[/h1]
+
+[list]
+[*]✅ RimWorld 1.5 or 1.6+
+[*]✅ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077]Harmony[/url] (required dependency)
+[*]✅ Internet connection for AI queries
+[*]✅ OpenRouter API key ([url=https://openrouter.ai/]free tier available[/url])
+[/list]
+
+[hr][/hr]
+
+[h1]🚀 Get Started Now[/h1]
+
+[olist]
+[*]Subscribe to this mod
+[*]Get your free OpenRouter API key
+[*]Configure in mod settings
+[*]Click the RimMind button in-game
+[*]Ask your first question!
+[/olist]
+
+[b]Your colony deserves a brain. Give it one.[/b] 🧠
+
+[hr][/hr]
+
+[i]Last updated: 2025-02-16 | Version: 1.0 | 49 Tools | RimWorld 1.5-1.6+[/i]
