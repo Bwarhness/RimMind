@@ -56,6 +56,19 @@ namespace RimMind.Tools
             { "get_threats", args => MilitaryTools.GetThreats() },
             { "get_defenses", args => MilitaryTools.GetDefenses() },
             { "get_combat_readiness", args => MilitaryTools.GetCombatReadiness() },
+            
+            // Combat Intelligence (Phase 5)
+            { "get_weapon_stats", args => CombatTools.GetWeaponStats(args?["pawnName"]?.Value) },
+            { "get_armor_stats", args => CombatTools.GetArmorStats(args?["pawnName"]?.Value) },
+            { "get_enemy_morale", args => CombatTools.GetEnemyMorale() },
+            { "get_friendly_fire_risk", args => CombatTools.GetFriendlyFireRisk(args?["shooterName"]?.Value, args?["targetName"]?.Value) },
+            { "get_cover_analysis", args => CombatTools.GetCoverAnalysis(args) },
+            { "get_tactical_pathfinding", args => CombatTools.GetTacticalPathfinding(args) },
+
+            // DLC Combat (Royalty & Biotech)
+            { "get_psycasts", args => DLCTools.GetPsycasts(args?["name"]?.Value) },
+            { "get_genes", args => DLCTools.GetGenes(args?["name"]?.Value) },
+            { "get_mechanitor_info", args => DLCTools.GetMechanitorInfo(args?["name"]?.Value) },
 
             // Map
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
@@ -69,6 +82,8 @@ namespace RimMind.Tools
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
+            { "get_animal_stats", args => AnimalTools.GetAnimalStats(args?["species"]?.Value) },
+            { "get_wild_animals", args => AnimalTools.GetWildAnimals() },
 
             // Events
             { "get_recent_events", args => EventTools.GetRecentEvents(args?["count"]?.AsInt ?? 5) },

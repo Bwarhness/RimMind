@@ -231,7 +231,7 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (52 tools)
+## Current Tool Catalog (54 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (2): get_relationships, get_faction_relations
 - **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
@@ -239,7 +239,7 @@ RimMind/
 - **Research** (3): get_research_status, get_available_research, get_completed_research
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
 - **Map** (7): get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, get_blueprints, search_map
-- **Animals** (2): list_animals, get_animal_details
+- **Animals** (4): list_animals, get_animal_details, get_animal_stats, get_wild_animals
 - **Events** (2): get_recent_events, get_active_alerts
 - **Medical** (1): get_medical_overview
 - **Directives** (3): get_directives, add_directive, remove_directive
@@ -252,6 +252,7 @@ RimMind/
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ## Changelog
+- **2026-02-17**: Phase 8 - Animal Intelligence — Enhanced animal visibility and management. Added `get_animal_stats` tool for comprehensive species data (carrying capacity, movement speed, combat stats, production abilities with intervals, wildness, trainability, filth rate, manhunter chances). Added `get_wild_animals` tool to list all wild animals on map by species with taming difficulty, hunting value, rarity assessment, and recommendations. Enhanced `list_animals` to show current carrying load for pack animals. Enhanced `get_animal_details` to show production schedules (next shearing/milking/egg with ready status). AI can now: identify taming opportunities ("Rare Thrumbo - worth attempting tame"), optimize pack animals for caravans, remind about production readiness ("Muffalo ready for milking"), and advise on hunting targets. Total tools increased from 52 to 54.
 - **2026-02-17**: Enhanced blueprint visibility — AI can now clearly distinguish blueprints from built structures. Added `get_blueprints` tool to query all placed blueprints on the map with defName, position, material, size, and rotation. Updated `get_cell_details` to separate blueprints into dedicated array with "unbuilt" status vs built structures with "built" status. Enhanced system prompt to explain uppercase (built) vs lowercase (blueprint) character codes at the top, not just in building section. Map grid legend already showed "(blueprint)" for lowercase codes. This fixes issue where RimMind couldn't see player-placed blueprints even though they were visible as lowercase characters in the grid.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.

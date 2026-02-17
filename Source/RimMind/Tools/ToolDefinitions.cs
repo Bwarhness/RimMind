@@ -101,9 +101,24 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_completed_research", "Get a list of all completed research projects."));
 
             // Military Tools
-            tools.Add(MakeTool("get_threats", "Get active threats on the map: hostile pawns/factions, sieges, infestations, manhunter animals, and mechanoid clusters."));
+            tools.Add(MakeTool("get_threats", "Get active threats on the map with detailed combat analysis: hostile pawns with raid composition breakdown (melee/ranged/grenadiers/special units), weapon and armor analysis for each enemy, dangerous unit identification (centipedes, scythers, sappers, breachers), automatic raid strategy detection (assault/siege/sapper/breach/drop pod) with counter-tactics suggestions, manhunter animals, and active game conditions."));
             tools.Add(MakeTool("get_defenses", "Get defensive structures: turrets (type, status, ammo), traps, and sandbags/barricades with their locations."));
             tools.Add(MakeTool("get_combat_readiness", "Get combat readiness for each colonist: equipped weapon, armor pieces, shooting skill, melee skill, and any combat-relevant traits."));
+            
+            // Combat Intelligence Tools (Phase 5)
+            tools.Add(MakeTool("get_weapon_stats", "Get detailed weapon statistics for any pawn (colonist or enemy). Returns weapon name, quality, damage type, base damage, DPS, armor penetration, range, accuracy curve (touch/short/medium/long), cooldown, warmup time, and burst shot count. Use this to analyze combat effectiveness and compare weapons.",
+                MakeParam("pawnName", "string", "Name of the pawn (colonist or hostile) to analyze")));
+            tools.Add(MakeTool("get_armor_stats", "Get detailed armor statistics for any pawn (colonist or enemy). Returns overall armor ratings (sharp/blunt/heat protection percentages), individual armor pieces with their quality, coverage (body parts protected), and hit points. Use this to assess defensive capabilities and vulnerability.",
+                MakeParam("pawnName", "string", "Name of the pawn (colonist or hostile) to analyze")));
+            tools.Add(MakeTool("get_enemy_morale", "Analyze enemy morale and predict when they will flee. Returns casualties breakdown (alive/downed/dead), morale percentage, flee threshold, and status prediction. Most raids flee around 40-50% casualties. Use this to determine if you're winning and when enemies will retreat."));
+            tools.Add(MakeTool("get_friendly_fire_risk", "Calculate friendly fire risk for a specific shooter-target engagement. Identifies colonists in the line of fire, calculates friendly fire probability percentage, and provides tactical recommendations (clear/caution/danger). Use this before engaging enemies when colonists are nearby.",
+                MakeParam("shooterName", "string", "Name of the colonist who will shoot"),
+                MakeParam("targetName", "string", "Name of the target (enemy or location)")));
+            tools.Add(MakeTool("get_cover_analysis", "Analyze cover positions in an area. Identifies full cover (75% protection), half cover (25-50% protection), and exposed positions. Returns optimal defensive positions and tactical recommendations. Use this for positioning colonists during combat.",
+                MakeParam("x", "integer", "X coordinate of area center"),
+                MakeParam("z", "integer", "Z coordinate of area center"),
+                MakeOptionalParam("radius", "integer", "Search radius in cells (default: 10)")));
+            tools.Add(MakeTool("get_tactical_pathfinding", "Get tactical combat intelligence and defensive positioning advice. Identifies enemy approach vectors, detects chokepoints (doors, narrow passages), analyzes defensive structures (turrets, sandbags), and provides actionable tactical recommendations. Includes specific advice for killbox design, drop pod defense, and counter-tactics for sappers/breachers. Use this to understand combat flow and optimize defensive positioning."));
 
             // Map Tools
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
@@ -134,9 +149,12 @@ namespace RimMind.Tools
                 MakeOptionalParam("z2", "integer", "End Z of search bounds")));
 
             // Animal Tools
-            tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, and training completion status."));
-            tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, and bonded colonist.",
+            tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));
+            tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, bonded colonist, carrying capacity (pack animals), and production schedules (shearing, milking, eggs).",
                 MakeParam("name", "string", "The animal's name")));
+            tools.Add(MakeTool("get_animal_stats", "Get comprehensive stats for an animal species: body size, movement speed, carrying capacity (pack animals), combat stats (damage, armor), production abilities (wool, milk, eggs with intervals), wildness level, trainability intelligence, filth rate, manhunter chances, diet type, and lifespan. Use this to understand animal capabilities before taming or to optimize pack animal selection for caravans.",
+                MakeParam("species", "string", "The animal species name (e.g., 'Muffalo', 'Labrador', 'Thrumbo')")));
+            tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map, grouped by species. For each species shows: count, location, tameable status with wildness level and taming difficulty, trainability intelligence, manhunter chances, huntable status with meat/leather yields, value assessment (rare/valuable animals), and recommendations (e.g., 'Rare Thrumbo - worth attempting tame', 'Good hunting target for food'). Use this to identify taming opportunities, hunting targets, and rare animals."));
 
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
