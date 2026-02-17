@@ -227,8 +227,8 @@ namespace RimMind.Tools
                             {
                                 var cell = new IntVec3(x, 0, z);
                                 if (!cell.InBounds(map)) continue;
-                                var des = map.designationManager.DesignationAt(cell, DesignationDefOf.Plan);
-                                if (des != null) { map.designationManager.RemoveDesignation(des); plansRemoved++; }
+                                var plan = map.planManager.PlanAt(cell);
+                                if (plan != null) { plan.Delete(); plansRemoved++; }
                             }
                     }
 

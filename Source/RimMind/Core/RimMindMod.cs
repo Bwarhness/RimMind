@@ -11,7 +11,7 @@ namespace RimMind.Core
         public RimMindMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<RimMindSettings>();
-            DebugLogger.Init();
+            DebugLogger.Init(content.RootDir);
 
             // Apply Harmony patches
             try

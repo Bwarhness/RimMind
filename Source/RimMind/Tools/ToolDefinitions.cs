@@ -5,8 +5,11 @@ namespace RimMind.Tools
 {
     public static class ToolDefinitions
     {
+        private static List<JSONNode> cachedTools;
+
         public static List<JSONNode> GetAllTools()
         {
+            if (cachedTools != null) return cachedTools;
             var tools = new List<JSONNode>();
 
             // Colonist Tools
@@ -249,15 +252,12 @@ namespace RimMind.Tools
                 MakeParam("colonist", "string", "The colonist's name")));
 
             // Designation Tools (Hunting/Taming/Resource Gathering)
-            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Use get_map_region to find animals.",
-                MakeParam("x", "integer", "Animal X coordinate"),
-                MakeParam("z", "integer", "Animal Z coordinate")));
-            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Animal must not be too wild.",
-                MakeParam("x", "integer", "Animal X coordinate"),
-                MakeParam("z", "integer", "Animal Z coordinate")));
-            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal.",
-                MakeParam("x", "integer", "Animal X coordinate"),
-                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Search by name or species (e.g., 'Hare', 'Wild boar', 'Muffalo'). Use list_animals or search_map type='animals' to see available wild animals.",
+                MakeParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo', 'Wild boar')")));
+            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Search by name or species. Animal must not be too wild (wildness < 98%).",
+                MakeParam("animal", "string", "Animal name or species to tame (e.g., 'Husky', 'Muffalo', 'Alpaca')")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Search by name or species.",
+                MakeParam("animal", "string", "Animal name or species to cancel designation for")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
                 MakeParam("x1", "integer", "Start X coordinate"),
                 MakeParam("z1", "integer", "Start Z coordinate"),
@@ -347,6 +347,7 @@ namespace RimMind.Tools
             tools.Add(MakeTool("analyze_trade_opportunity", "Analyze trade opportunities with current traders. Compares colony resources against trader inventory to suggest profitable trades: items to buy for urgent needs (medicine, components, food), items to sell for profit (surplus materials), and strategic purchases. Returns recommendations with priority scores and reasoning.",
                 MakeOptionalParam("traderFilter", "string", "Optional filter to analyze specific trader by name, faction, or type (e.g., 'orbital', 'caravan'). If omitted, analyzes all traders.")));
 
+            cachedTools = tools;
             return tools;
         }
 
@@ -405,27 +406,6 @@ namespace RimMind.Tools
             p["param_type"] = type;
             p["description"] = description;
             p["required"] = false;
-            return p;
-        }
-
-        private static JSONObject MakeArrayParam(string name, string description, bool required)
-        {
-            var p = new JSONObject();
-            p["name"] = name;
-            p["param_type"] = "array";
-            p["description"] = description;
-            p["required"] = required;
-
-            var itemSchema = new JSONObject();
-            itemSchema["type"] = "object";
-            var itemProps = new JSONObject();
-            var xProp = new JSONObject(); xProp["type"] = "integer"; itemProps["x"] = xProp;
-            var zProp = new JSONObject(); zProp["type"] = "integer"; itemProps["z"] = zProp;
-            itemSchema["properties"] = itemProps;
-            var itemRequired = new JSONArray(); itemRequired.Add("x"); itemRequired.Add("z");
-            itemSchema["required"] = itemRequired;
-            p["items"] = itemSchema;
-
             return p;
         }
 

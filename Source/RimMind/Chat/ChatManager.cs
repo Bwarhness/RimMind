@@ -53,7 +53,20 @@ namespace RimMind.Chat
 
             DebugLogger.LogToolLoop(toolLoopCount, MAX_TOOL_LOOPS);
 
-            var request = BuildRequest();
+            ChatRequest request;
+            try
+            {
+                request = BuildRequest();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[RimMind] BuildRequest error: " + ex);
+                conversationHistory.Add(ChatMessage.Assistant("[Error building request: " + ex.Message + "]"));
+                isProcessing = false;
+                StatusMessage = "";
+                OnMessageUpdated?.Invoke();
+                return;
+            }
             DebugLogger.LogAPIRequest(request.messages.Count, request.tools?.Count ?? 0, request.model);
 
             Action<ChatResponse> handleResponse = response =>

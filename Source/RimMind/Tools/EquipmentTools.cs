@@ -111,8 +111,17 @@ namespace RimMind.Tools
                 // Weapon
                 if (pawn.equipment != null && pawn.equipment.Primary != null)
                 {
-                    obj["weapon"] = pawn.equipment.Primary.LabelCap.ToString();
-                    obj["weaponDamage"] = pawn.equipment.Primary.def.Verbs?.FirstOrDefault()?.defaultProjectile?.projectile?.GetDamageAmount(pawn.equipment.Primary, null).ToString() ?? "0";
+                    var weapon = pawn.equipment.Primary;
+                    obj["weapon"] = weapon.LabelCap.ToString();
+                    if (weapon.def.IsRangedWeapon)
+                    {
+                        var projDef = weapon.def.Verbs?.FirstOrDefault(v => v.defaultProjectile != null)?.defaultProjectile;
+                        obj["weaponDamage"] = projDef?.projectile != null ? projDef.projectile.GetDamageAmount(weapon, null).ToString() : "0";
+                    }
+                    else
+                    {
+                        obj["weaponDamage"] = weapon.GetStatValue(StatDefOf.MeleeWeapon_AverageDPS).ToString("F1");
+                    }
                 }
                 else
                 {
