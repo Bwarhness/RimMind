@@ -6,18 +6,25 @@ namespace RimMind.Core
 {
     public static class DebugLogger
     {
-        private static readonly string LogDir = Path.Combine(
-            "C:\\Program Files (x86)\\Steam\\steamapps\\common\\RimWorld\\Mods\\RimMind", "Logs");
-        private static readonly string LogPath = Path.Combine(LogDir, "debug.log");
+        private static string LogDir;
+        private static string LogPath;
         private static readonly object lockObj = new object();
         private static bool initialized = false;
 
-        public static void Init()
+        public static void Init(string modRootDir = null)
         {
             lock (lockObj)
             {
                 try
                 {
+                    if (string.IsNullOrEmpty(modRootDir))
+                    {
+                        Verse.Log.Warning("[RimMind] No mod root dir provided to DebugLogger.Init");
+                        return;
+                    }
+                    LogDir = Path.Combine(modRootDir, "Logs");
+                    LogPath = Path.Combine(LogDir, "debug.log");
+
                     if (!Directory.Exists(LogDir))
                         Directory.CreateDirectory(LogDir);
 

@@ -24,7 +24,7 @@ namespace RimMind.Tools
             obj["hour"] = GenLocalDate.HourInteger(map);
 
             // Growing season info
-            obj["growingSeasonActive"] = map.mapTemperature.SeasonalTemp > 0;
+            obj["growingSeasonActive"] = map.mapTemperature.OutdoorTemp > 0f;
 
             return obj.ToString();
         }

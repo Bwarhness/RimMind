@@ -117,21 +117,21 @@ namespace RimMind.Tools
             // Bed Assignments
             { "list_beds", args => BedTools.ListBeds() },
             { "get_bed_assignments", args => BedTools.GetBedAssignments() },
-            { "assign_bed", args => BedTools.AssignBed(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "assign_bed", args => args?["x"] == null || args?["z"] == null ? JsonError("'x' and 'z' coordinates are required.") : BedTools.AssignBed(args["colonist"]?.Value, args["x"].AsInt, args["z"].AsInt) },
             { "unassign_bed", args => BedTools.UnassignBed(args?["colonist"]?.Value) },
 
             // Designations
-            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
-            { "designate_tame", args => DesignationTools.DesignateTame(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
-            { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
-            { "designate_mine", args => DesignationTools.DesignateMine(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
-            { "designate_chop", args => DesignationTools.DesignateChop(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
-            { "designate_harvest", args => DesignationTools.DesignateHarvest(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["animal"]?.Value) },
+            { "designate_tame", args => DesignationTools.DesignateTame(args?["animal"]?.Value) },
+            { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["animal"]?.Value) },
+            { "designate_mine", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateMine(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
+            { "designate_chop", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateChop(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
+            { "designate_harvest", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateHarvest(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
 
             // Equipment & Policies
             { "list_equipment", args => EquipmentTools.ListEquipment() },
-            { "equip_weapon", args => EquipmentTools.EquipWeapon(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
-            { "wear_apparel", args => EquipmentTools.WearApparel(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "equip_weapon", args => args?["x"] == null || args?["z"] == null ? JsonError("'x' and 'z' coordinates are required.") : EquipmentTools.EquipWeapon(args["colonist"]?.Value, args["x"].AsInt, args["z"].AsInt) },
+            { "wear_apparel", args => args?["x"] == null || args?["z"] == null ? JsonError("'x' and 'z' coordinates are required.") : EquipmentTools.WearApparel(args["colonist"]?.Value, args["x"].AsInt, args["z"].AsInt) },
             { "drop_equipment", args => EquipmentTools.DropEquipment(args?["colonist"]?.Value) },
             { "assign_outfit", args => EquipmentTools.AssignOutfit(args?["colonist"]?.Value, args?["outfitName"]?.Value) },
             { "assign_drug_policy", args => EquipmentTools.AssignDrugPolicy(args?["colonist"]?.Value, args?["policyName"]?.Value) },

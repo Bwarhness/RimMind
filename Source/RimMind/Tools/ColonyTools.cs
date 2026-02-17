@@ -22,7 +22,7 @@ namespace RimMind.Tools
             if (storyteller != null)
                 obj["storyteller"] = storyteller.def.LabelCap.ToString();
 
-            obj["difficulty"] = Find.Storyteller?.difficulty?.ToString() ?? "Unknown";
+            obj["difficulty"] = Find.Storyteller?.difficultyDef?.label ?? "Unknown";
 
             var biome = map.Biome;
             if (biome != null)
@@ -30,8 +30,9 @@ namespace RimMind.Tools
 
             obj["mapSize"] = map.Size.x + "x" + map.Size.z;
             obj["prisonersCount"] = map.mapPawns.PrisonersOfColonyCount;
-            obj["guestsCount"] = map.mapPawns.FreeHumanlikesSpawnedOfFaction(Faction.OfPlayer)
-                .Count() - map.mapPawns.FreeColonistsCount;
+            obj["guestsCount"] = map.mapPawns.AllPawnsSpawned
+                .Count(p => p.RaceProps.Humanlike && !p.IsColonist && !p.IsPrisoner
+                    && p.HostFaction == Faction.OfPlayer);
 
             return obj.ToString();
         }
@@ -88,7 +89,7 @@ namespace RimMind.Tools
             if (cat == "weapons" || cat == "all")
             {
                 int weapons = map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon)
-                    .Count(t => t.Faction == Faction.OfPlayer || t.Position.Fogged(map) == false);
+                    .Count(t => t.Faction == Faction.OfPlayer || (t.Faction == null && !t.Position.Fogged(map)));
                 obj["weaponsCount"] = weapons;
             }
 
