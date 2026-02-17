@@ -2,7 +2,7 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 46 different colony data tools via function calling.
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 51 different colony data tools via function calling.
 
 ## Build & Development
 
@@ -231,22 +231,22 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (46 tools)
-- **Colonist**: list_colonists, get_colonist_details, get_colonist_health
-- **Social**: get_relationships, get_faction_relations
-- **Work**: get_work_priorities, set_work_priority, get_bills, get_schedules
-- **Colony**: get_colony_overview, get_resources, get_rooms, get_stockpiles
-- **Research**: get_research_status, get_available_research, get_completed_research
-- **Military**: get_threats, get_defenses, get_combat_readiness
-- **Map**: get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, search_map
-- **Animals**: list_animals, get_animal_details
-- **Events**: get_recent_events, get_active_alerts
-- **Medical**: get_medical_overview
-- **Directives**: get_directives, add_directive, remove_directive
-- **Plan**: get_plans, place_plans, remove_plans
-- **Zone**: list_zones, create_zone, delete_zone
-- **Building**: list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
-- **Area**: list_areas, get_area_restrictions, restrict_to_area, unrestrict
+## Current Tool Catalog (51 tools)
+- **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
+- **Social** (2): get_relationships, get_faction_relations
+- **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
+- **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
+- **Research** (3): get_research_status, get_available_research, get_completed_research
+- **Military** (3): get_threats, get_defenses, get_combat_readiness
+- **Map** (6): get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, search_map
+- **Animals** (2): list_animals, get_animal_details
+- **Events** (2): get_recent_events, get_active_alerts
+- **Medical** (1): get_medical_overview
+- **Directives** (3): get_directives, add_directive, remove_directive
+- **Plan** (3): get_plans, place_plans, remove_plans
+- **Zone** (3): list_zones, create_zone, delete_zone
+- **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
+- **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
 
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.

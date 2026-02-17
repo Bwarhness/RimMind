@@ -1,106 +1,171 @@
-[h1]RimMind: AI-Powered Colony Advisor 🤖[/h1]
+[h1]RimMind: AI-Powered Colony Advisor[/h1]
 
-Transform your RimWorld colony with an intelligent AI advisor. Ask questions, get tactical insights, and let Claude guide your decisions through 40+ specialized tools.
-
-[hr][/hr]
-
-[h2]🧠 Your Colony Deserves a Brain[/h2]
-
-Ever wished you had a strategic advisor who actually understood your colony's situation? [b]RimMind[/b] brings cutting-edge AI directly into RimWorld, giving you an intelligent assistant that can analyze threats, optimize layouts, manage your colonists, and answer any question about your game.
-
-This isn't just another info mod — it's a [b]conversational AI agent[/b] with deep game integration and 40+ specialized tools.
+Transform your RimWorld colony with an intelligent AI advisor that can read, analyze, and act on your colony. Ask questions, get tactical insights, build structures, manage colonists, and let the AI guide your decisions through 51 specialized tools.
 
 [hr][/hr]
 
-[h2]✨ What Can RimMind Do?[/h2]
+[h2]Your Colony Deserves a Brain[/h2]
+
+Ever wished you had a strategic advisor who actually understood your colony's situation? [b]RimMind[/b] brings cutting-edge AI directly into RimWorld, giving you an intelligent assistant that can analyze threats, optimize layouts, manage your colonists, build structures, and answer any question about your game.
+
+This isn't just another info mod — it's a [b]conversational AI agent[/b] with deep game integration and 51 specialized tools that can both read and write to your colony.
+
+[hr][/hr]
+
+[h2]What Can RimMind Do?[/h2]
 
 [h3]Colony Intelligence[/h3]
 [list]
-[*] 🏘️ [b]Colony Analysis[/b] - Get comprehensive reports on your colony's health, wealth, mood, and vulnerabilities
-[*] 👥 [b]Colonist Management[/b] - Analyze skills, relationships, health status, and work assignments
-[*] 📊 [b]Performance Insights[/b] - Track your colony's growth, production rates, and efficiency metrics
+[*] [b]Colony Analysis[/b] - Comprehensive reports on health, wealth, mood, and vulnerabilities
+[*] [b]Colonist Management[/b] - Analyze skills, relationships, health status, and work assignments
+[*] [b]Medical Overview[/b] - Patients, medicine supply, available beds, doctor skill levels
+[*] [b]Resource Tracking[/b] - Deep analysis of stockpiles, materials, and supplies by category
 [/list]
 
 [h3]Tactical Support[/h3]
 [list]
-[*] ⚔️ [b]Combat Analysis[/b] - Evaluate threats, raid strength, and defensive positioning
-[*] 🗺️ [b]Map Intelligence[/b] - Scan terrain, identify resources, analyze chokepoints
-[*] 🎯 [b]Target Prioritization[/b] - AI-driven recommendations for combat and defense
+[*] [b]Combat Analysis[/b] - Evaluate threats, raid strength, and defensive positioning
+[*] [b]Map Intelligence[/b] - ASCII grid view lets the AI "see" your base layout
+[*] [b]Map Search[/b] - Find colonists, enemies, ore deposits, items, buildings by type and name
+[*] [b]Combat Readiness[/b] - Weapons, armor, skills assessment for each colonist
 [/list]
 
-[h3]Resource & Production[/h3]
+[h3]Work & Schedule Management[/h3]
 [list]
-[*] 📦 [b]Inventory Management[/b] - Deep analysis of stockpiles, materials, and supplies
-[*] 🏭 [b]Production Planning[/b] - Optimize workbenches, bills, and manufacturing chains
-[*] 🌾 [b]Food & Agriculture[/b] - Crop analysis, meal planning, nutrition tracking
+[*] [b]Work Priorities[/b] - View and set work priorities for all colonists (auto-enables manual mode)
+[*] [b]Schedules[/b] - View, set, and copy hour-by-hour schedules (Sleep, Work, Anything, Joy)
+[*] [b]Area Restrictions[/b] - Restrict colonists to specific allowed areas or unrestrict them
+[*] [b]Production Bills[/b] - View active bills at all workbenches
 [/list]
 
 [h3]Building & Construction[/h3]
 [list]
-[*] 🏗️ [b]Place Buildings[/b] - AI can place blueprints for walls, rooms, and structures
-[*] 🧱 [b]Smart Rooms[/b] - Create complete rooms with one command (walls + door)
-[*] 📐 [b]Shared Wall Detection[/b] - Automatically handles adjacent room building
+[*] [b]Place Buildings[/b] - AI places blueprints for walls, doors, furniture, workbenches, and more
+[*] [b]Smart Rooms[/b] - Build complete rooms with one command (walls + door + material choice)
+[*] [b]Shared Wall Detection[/b] - Adjacent rooms automatically share walls
+[*] [b]Approval System[/b] - Blueprints are forbidden by default until you approve them
+[*] [b]Batch Placement[/b] - Place up to 100 buildings in one call for fast construction
+[*] [b]Auto-Rotation[/b] - Furniture tries all 4 rotations to find valid placement
 [/list]
 
-[h3]Zone Management[/h3]
+[h3]Zone & Area Management[/h3]
 [list]
-[*] 📍 [b]Create Zones[/b] - Stockpiles, growing zones, planning areas
-[*] 🗺️ [b]Map Viewing[/b] - ASCII grid view so AI can "see" your base layout
+[*] [b]Create Zones[/b] - Real stockpile zones, growing zones, and planning areas
+[*] [b]Growing Zones[/b] - Set crops, track growth progress, analyze soil fertility
+[*] [b]Plan Markers[/b] - Place and manage visual plans using RimWorld 1.6's native plan system
+[*] [b]Area Overview[/b] - View Home, Allowed, Snow Clear, Roof areas
+[/list]
+
+[h3]Colony Directives[/h3]
+[list]
+[*] [b]Standing Rules[/b] - Define colony personality rules the AI follows every conversation
+[*] [b]Playstyle Preferences[/b] - "Melee only", "No pyromaniacs", "Granite everything"
+[*] [b]Persists With Saves[/b] - Directives are saved per-colony in your save file
 [/list]
 
 [hr][/hr]
 
-[h2]🚀 40+ Specialized Tools[/h2]
+[h2]51 Specialized Tools[/h2]
 
-RimMind's AI can call these tools to understand your colony:
+The AI has access to these tools organized by category:
 
 [code]
-list_colonists - All colonists with mood, job, mental state
-get_colonist_details - Full backstory, traits, skills, needs
-get_colonist_health - Injuries, diseases, bionics, pain level
-get_relationships - Social bonds, opinions, rivalries
-get_faction_relations - Diplomacy with all factions
-get_work_priorities - Work type assignments
-get_bills - Production queues at workbenches
-get_schedules - Hour-by-hour colonist schedules
-get_colony_overview - Wealth, days survived, difficulty
-get_resources - All stockpiled items by category
-get_rooms - Room stats (impressiveness, beauty, etc.)
-get_stockpiles - Zone priorities and filters
-get_research_status - Current research progress
-get_threats - Active hostiles, raids, infestations
-get_defenses - Turrets, traps, defensive structures
-get_combat_readiness - Weapons, armor, combat skills
-get_weather_and_season - Current conditions
-get_growing_zones - Crops and growth progress
-get_power_status - Generation, consumption, batteries
-get_map_region - ASCII grid view of your base
-list_animals - Tamed animals and training
-get_recent_events - Recent raids, events, letters
-get_active_alerts - Current game alerts
-get_medical_overview - Patients, medicine, doctors
-place_plans - Visual planning markers
-create_zone - Stockpiles, growing zones
-place_building - Individual building blueprints
-place_structure - Complete rooms and wall lines
-get_directives - Player-defined colony rules
-...and more!
+COLONIST (3)
+  list_colonists          - All colonists: mood, job, mental state
+  get_colonist_details    - Backstory, traits, skills, needs, thoughts
+  get_colonist_health     - Injuries, diseases, bionics, pain level
+
+SOCIAL (2)
+  get_relationships       - Opinions, bonds, rivalries between colonists
+  get_faction_relations   - Diplomacy with all factions
+
+WORK & SCHEDULES (6)
+  get_work_priorities     - Work type priority grid for all colonists
+  set_work_priority       - Set a colonist's priority for any work type
+  get_bills               - Production bills at workbenches
+  get_schedules           - Hour-by-hour schedules for all colonists
+  set_schedule            - Set schedule for a colonist at a specific hour
+  copy_schedule           - Copy one colonist's schedule to another
+
+COLONY (4)
+  get_colony_overview     - Wealth, days survived, difficulty, storyteller
+  get_resources           - Stockpiled items by category
+  get_rooms               - Room stats: impressiveness, beauty, space
+  get_stockpiles          - Zone priorities and filters
+
+RESEARCH (3)
+  get_research_status     - Current project and progress
+  get_available_research  - Unlocked but incomplete projects
+  get_completed_research  - All finished research
+
+MILITARY (3)
+  get_threats             - Active hostiles, raids, infestations
+  get_defenses            - Turrets, traps, defensive structures
+  get_combat_readiness    - Weapons, armor, combat skills per colonist
+
+MAP (6)
+  get_weather_and_season  - Weather, temperature, season, biome
+  get_growing_zones       - Crops, growth progress, soil fertility
+  get_power_status        - Generation, consumption, batteries
+  get_map_region          - ASCII grid view of your base layout
+  get_cell_details        - Drill-down: terrain, things, room info
+  search_map              - Find entities by type and name filter
+
+ANIMALS (2)
+  list_animals            - Tamed animals, training, assigned master
+  get_animal_details      - Health, training progress, food needs
+
+EVENTS (2)
+  get_recent_events       - Recent raids, events, letters
+  get_active_alerts       - Current game alerts
+
+MEDICAL (1)
+  get_medical_overview    - Patients, medicine, beds, doctors
+
+PLANS (3)
+  place_plans             - Place visual plan markers (shapes supported)
+  get_plans               - View all plans on the map
+  remove_plans            - Remove plans by label, area, or all
+
+ZONES (3)
+  list_zones              - All zones with type, bounds, cell count
+  create_zone             - Stockpile, growing, or planning zones
+  delete_zone             - Remove zones by name
+
+AREAS (4)
+  list_areas              - All allowed areas for colonist restriction
+  get_area_restrictions   - Current area assignments per colonist
+  restrict_to_area        - Assign a colonist to an area
+  unrestrict              - Remove area restriction from a colonist
+
+BUILDINGS (6)
+  list_buildable          - Available buildings by category with costs
+  get_building_info       - Detailed building stats and requirements
+  place_building          - Place individual or batch blueprints
+  place_structure         - Build rooms, wall lines, wall rectangles
+  remove_building         - Remove AI-proposed blueprints
+  approve_buildings       - Approve blueprints for construction
+
+DIRECTIVES (3)
+  get_directives          - View colony personality rules
+  add_directive           - Add a new standing rule
+  remove_directive        - Remove a directive by text match
 [/code]
 
 [hr][/hr]
 
-[h2]⚙️ Setup (5 Minutes)[/h2]
+[h2]Setup (5 Minutes)[/h2]
 
 [olist]
 [*] [b]Subscribe & Enable[/b] this mod
 [*] [b]Get an API Key[/b] from [url=https://openrouter.ai/]OpenRouter[/url] (free tier available)
-[*] [b]Configure[/b] in Mod Settings → RimMind → Paste API key
+[*] [b]Configure[/b] in Mod Settings > RimMind > Paste API key
 [*] [b]Play![/b] Click the RimMind button in the toolbar
 [/olist]
 
 [hr][/hr]
 
-[h2]🤖 Supported AI Providers[/h2]
+[h2]Supported AI Providers[/h2]
 
 [b]Via OpenRouter:[/b]
 [list]
@@ -119,20 +184,39 @@ get_directives - Player-defined colony rules
 
 [hr][/hr]
 
-[h2]📖 Example Conversations[/h2]
+[h2]Example Conversations[/h2]
 
 [b]You:[/b] "What's wrong with my colony?"
-[b]RimMind:[/b] [i]*analyzes colonists, resources, threats*[/i] "Three colonists are close to mental breaks due to low recreation. Your food supply will last 8 days at current consumption. I'd recommend..."
+[b]AI:[/b] [i]*analyzes colonists, resources, threats*[/i] "Three colonists are close to mental breaks due to low recreation. Your food supply will last 8 days. I'd recommend..."
 
-[b]You:[/b] "Build me a 5x5 bedroom at coordinates 45,30"
-[b]RimMind:[/b] [i]*places blueprints*[/i] "Done! Placed a granite room with door facing south. 12 wall segments, 1 autodoor."
+[b]You:[/b] "Build me a 5x5 bedroom near the dining room"
+[b]AI:[/b] [i]*scans map, places blueprints*[/i] "Done! Placed a granite 7x7 room with door facing the hallway. I've added a bed, end table, and dresser inside."
 
-[b]You:[/b] "Who should I recruit from these prisoners?"
-[b]RimMind:[/b] [i]*analyzes skills and traits*[/i] "The pirate with 15 shooting and Tough trait would strengthen your defense. Avoid the pyromaniac."
+[b]You:[/b] "Set all colonists to sleep from 22 to 6"
+[b]AI:[/b] [i]*updates schedules*[/i] "Updated schedules for 8 colonists. Hours 22-23 and 0-5 set to Sleep, remaining hours unchanged."
+
+[b]You:[/b] "Find all steel on the map"
+[b]AI:[/b] [i]*searches map*[/i] "Found 847 steel in stockpiles and 3 steel ore deposits: compacted steel at (45,120), (78,95), and (112,34)."
+
+[b]You:[/b] "Remember: I only use granite for walls"
+[b]AI:[/b] [i]*saves directive*[/i] "Got it! I've saved that as a colony directive. I'll use granite for all wall construction going forward."
 
 [hr][/hr]
 
-[h2]🔗 Links[/h2]
+[h2]Features[/h2]
+
+[list]
+[*] [b]Token Tracking[/b] - See prompt/completion token counts for each API call
+[*] [b]Context Inspector[/b] - View the full system prompt, tools, and chat history sent to the AI
+[*] [b]Quick Prompts[/b] - One-click test prompts for common tasks (bedroom, kitchen, killbox, etc.)
+[*] [b]Colony Directives[/b] - Persistent per-save rules that shape AI behavior
+[*] [b]Debug Logging[/b] - Full API request/response logs in RimMind/Logs/debug.log
+[*] [b]Approval System[/b] - AI blueprints are forbidden until you approve, so nothing gets built without your say
+[/list]
+
+[hr][/hr]
+
+[h2]Links[/h2]
 
 [list]
 [*] [b]GitHub:[/b] [url=https://github.com/Bwarhness/RimMind]https://github.com/Bwarhness/RimMind[/url]
@@ -142,7 +226,7 @@ get_directives - Player-defined colony rules
 
 [hr][/hr]
 
-[h2]⚠️ Requirements[/h2]
+[h2]Requirements[/h2]
 
 [list]
 [*] RimWorld 1.5+
@@ -155,6 +239,4 @@ get_directives - Player-defined colony rules
 
 [b]MIT License[/b] - Open source, free forever
 
-Created by [b]Bwarhness[/b] 🎮
-
-[b]Enjoy your new AI colony advisor! 🚀[/b]
+Created by [b]Bwarhness[/b]
