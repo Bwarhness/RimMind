@@ -15,6 +15,12 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name (first name or nickname)")));
             tools.Add(MakeTool("get_colonist_health", "Get health details for a specific colonist: injuries, diseases, immunity progress, bionics/implants, pain level, and consciousness.",
                 MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("draft_colonist", "Draft a colonist for combat. Drafted colonists will follow orders instead of performing normal work tasks.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("undraft_colonist", "Undraft a colonist, returning them to normal work tasks.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
+            tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));
 
             // Social Tools
             tools.Add(MakeTool("get_relationships", "Get a colonist's social relationships: opinions of and from other colonists, relationship types (lover, spouse, rival, friend, etc).",
@@ -37,6 +43,27 @@ namespace RimMind.Tools
             tools.Add(MakeTool("copy_schedule", "Copy one colonist's schedule to another colonist.",
                 MakeParam("from", "string", "Source colonist name"),
                 MakeParam("to", "string", "Target colonist name")));
+
+            // Job Prioritization Tools
+            tools.Add(MakeTool("prioritize_rescue", "Force a colonist to immediately rescue a downed pawn.",
+                MakeParam("colonist", "string", "The rescuer's name"),
+                MakeParam("target", "string", "The downed pawn's name")));
+            tools.Add(MakeTool("prioritize_tend", "Force a doctor to immediately tend to a patient.",
+                MakeParam("doctor", "string", "The doctor's name"),
+                MakeParam("patient", "string", "The patient's name")));
+            tools.Add(MakeTool("prioritize_haul", "Force a colonist to haul a specific item at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "X coordinate of the item"),
+                MakeParam("z", "integer", "Z coordinate of the item")));
+            tools.Add(MakeTool("prioritize_repair", "Force a colonist to repair a damaged building at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "X coordinate of the building"),
+                MakeParam("z", "integer", "Z coordinate of the building")));
+            tools.Add(MakeTool("prioritize_clean", "Force a colonist to clean filth in an area.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "X coordinate of the center"),
+                MakeParam("z", "integer", "Z coordinate of the center"),
+                MakeParam("radius", "integer", "Radius to search for filth (1-20)")));
 
             // Colony Tools
             tools.Add(MakeTool("get_colony_overview", "Get a high-level colony overview: colonist count, total wealth, days survived, difficulty setting, storyteller, and map tile info."));

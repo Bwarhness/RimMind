@@ -13,6 +13,10 @@ namespace RimMind.Tools
             { "list_colonists", args => ColonistTools.ListColonists() },
             { "get_colonist_details", args => ColonistTools.GetColonistDetails(args?["name"]?.Value) },
             { "get_colonist_health", args => ColonistTools.GetColonistHealth(args?["name"]?.Value) },
+            { "draft_colonist", args => ColonistTools.DraftColonist(args?["name"]?.Value) },
+            { "undraft_colonist", args => ColonistTools.UndraftColonist(args?["name"]?.Value) },
+            { "draft_all", args => ColonistTools.DraftAll() },
+            { "undraft_all", args => ColonistTools.UndraftAll() },
 
             // Social
             { "get_relationships", args => SocialTools.GetRelationships(args?["name"]?.Value) },
@@ -25,6 +29,13 @@ namespace RimMind.Tools
             { "get_schedules", args => WorkTools.GetSchedules() },
             { "set_schedule", args => WorkTools.SetSchedule(args?["colonist"]?.Value, args?["hour"]?.AsInt ?? -1, args?["assignment"]?.Value) },
             { "copy_schedule", args => WorkTools.CopySchedule(args?["from"]?.Value, args?["to"]?.Value) },
+
+            // Job Prioritization
+            { "prioritize_rescue", args => JobTools.PrioritizeRescue(args?["colonist"]?.Value, args?["target"]?.Value) },
+            { "prioritize_tend", args => JobTools.PrioritizeTend(args?["doctor"]?.Value, args?["patient"]?.Value) },
+            { "prioritize_haul", args => JobTools.PrioritizeHaul(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "prioritize_repair", args => JobTools.PrioritizeRepair(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "prioritize_clean", args => JobTools.PrioritizeClean(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0, args?["radius"]?.AsInt ?? 5) },
 
             // Colony
             { "get_colony_overview", args => ColonyTools.GetColonyOverview() },
