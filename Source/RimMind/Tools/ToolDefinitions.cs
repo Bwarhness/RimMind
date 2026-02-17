@@ -132,6 +132,11 @@ namespace RimMind.Tools
             // Medical Tools
             tools.Add(MakeTool("get_medical_overview", "Get medical overview: patients needing treatment, medicine supply by type, available medical beds, and doctors with their medical skill level."));
 
+            // Mood Tools
+            tools.Add(MakeTool("get_mood_risks", "Analyze all colonists for mental break risk. Returns colonists at risk with their current mood level, break thresholds, negative thoughts, risk-affecting traits, and estimated time to mental break. Use this proactively to prevent mental breaks before they happen."));
+            tools.Add(MakeTool("suggest_mood_interventions", "Get actionable mood improvement suggestions for a specific colonist. Analyzes their mood issues (recreation, bedroom quality, food, pain, social needs, etc.) and provides concrete steps to improve their mood and prevent mental breaks.",
+                MakeParam("name", "string", "The colonist's name")));
+
             // Plan Tools
             tools.Add(MakeTool("place_plans", "Place plan designations on the map to mark where structures should be built. Plans are visual markers only — they don't consume resources or trigger construction. Use get_map_region first to understand the layout, then place plans at specific coordinates. Supports shapes: 'single' (one cell), 'rect' (rectangle outline for walls/rooms), 'filled_rect' (solid rectangle), 'line' (line between two points for corridors).",
                 MakeParam("x", "integer", "X coordinate (or start X for shapes)"),
@@ -319,6 +324,11 @@ namespace RimMind.Tools
                 MakeParam("text", "string", "The directive text to add (e.g., 'Melee weapons only - no ranged weapons or turrets')")));
             tools.Add(MakeTool("remove_directive", "Remove a colony directive by searching for matching text. Use when the player wants to remove or change a standing rule.",
                 MakeParam("search", "string", "Text to search for in existing directives. The first directive line containing this text (case-insensitive) will be removed.")));
+
+            // Trade Tools
+            tools.Add(MakeTool("get_active_traders", "Get all currently available traders: orbital trade ships, visiting caravans, and allied settlements in comms range. For each trader, returns faction, items in stock with quantities and prices (buy/sell), silver available, and time until departure. Use this to discover trading opportunities."));
+            tools.Add(MakeTool("analyze_trade_opportunity", "Analyze trade opportunities with current traders. Compares colony resources against trader inventory to suggest profitable trades: items to buy for urgent needs (medicine, components, food), items to sell for profit (surplus materials), and strategic purchases. Returns recommendations with priority scores and reasoning.",
+                MakeOptionalParam("traderFilter", "string", "Optional filter to analyze specific trader by name, faction, or type (e.g., 'orbital', 'caravan'). If omitted, analyzes all traders.")));
 
             return tools;
         }

@@ -242,16 +242,20 @@ RimMind/
 - **Animals** (2): list_animals, get_animal_details
 - **Events** (2): get_recent_events, get_active_alerts
 - **Medical** (1): get_medical_overview
+- **HealthCheck** (1): colony_health_check
+- **Mood** (2): get_mood_risks, suggest_mood_interventions
 - **Directives** (3): get_directives, add_directive, remove_directive
 - **Plan** (3): get_plans, place_plans, remove_plans
 - **Zone** (3): list_zones, create_zone, delete_zone
 - **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
+- **Trade** (2): get_active_traders, analyze_trade_opportunity
 
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ## Changelog
+- **2026-02-16**: Added trade analysis tools (`get_active_traders`, `analyze_trade_opportunity`) — AI can now discover all available traders (orbital ships, visiting caravans, allied settlements in comms range) with full inventory details, buy/sell prices, and departure times. Trade opportunity analysis compares colony resources against trader inventory to suggest profitable trades: urgent purchases (medicine, components, food when low), profitable sales (surplus materials), and strategic acquisitions (high-value items like plasteel, advanced components). Returns prioritized recommendations with utility scores and reasoning.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.
 - **2026-02-15**: Fixed Enter key in chat window — overrode `OnAcceptKeyPressed()` and set `forceCatchAcceptAndCancelEventEvenIfUnfocused = true`. RimWorld's `WindowStack.Notify_PressedAccept` skips windows where both `closeOnAccept` and `forceCatch` are false. The keybinding system consumes Return before `DoWindowContents` runs, so KeyDown handlers there never see it.
