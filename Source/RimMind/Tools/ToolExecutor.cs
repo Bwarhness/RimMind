@@ -77,6 +77,9 @@ namespace RimMind.Tools
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
 
+            // Health Check
+            { "colony_health_check", args => HealthCheckTools.ColonyHealthCheck() },
+
             // Mood
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
             { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },

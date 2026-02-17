@@ -137,7 +137,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -225,7 +225,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -304,7 +304,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -408,7 +408,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -489,7 +489,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -540,7 +540,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -572,7 +572,7 @@ namespace RimMind.Tools
                         colonistsWithBeds.Add(owner);
 
                     var room = bed.GetRoom();
-                    if (room != null && !room.OutdoorNow)
+                    if (room != null && !room.PsychologicallyOutdoors)
                     {
                         int bedsInRoom = room.ContainedBeds.Count();
                         if (bedsInRoom == 1)
@@ -623,7 +623,7 @@ namespace RimMind.Tools
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
@@ -654,7 +654,6 @@ namespace RimMind.Tools
                         // Check if anyone can do this work
                         if (bill.recipe?.workSkill != null)
                         {
-                            var workType = bill.recipe.workSkill.workTags.ToString();
                             bool hasWorker = map.mapPawns.FreeColonists
                                 .Any(p => !p.WorkTypeIsDisabled(DefDatabase<WorkTypeDef>.AllDefs
                                     .FirstOrDefault(wt => wt.relevantSkills.Contains(bill.recipe.workSkill))));
@@ -686,26 +685,16 @@ namespace RimMind.Tools
             if (totalBills == 0)
             {
                 if (status == "healthy") status = "stable";
-                details = "No active production bills";
-            }
-            else
-            {
-                string details = totalBills + " total bills";
-                if (suspendedBills > 0)
-                    details += ", " + suspendedBills + " suspended";
-                if (billsWithoutWorkers > 0)
-                    details += ", " + billsWithoutWorkers + " without workers";
-                system["details"] = details;
             }
 
             system["status"] = status;
-            system["details"] = totalBills > 0 
+            system["details"] = totalBills > 0
                 ? totalBills + " active bills, " + suspendedBills + " suspended"
                 : "No production bills configured";
             system["issues"] = issues;
             system["recommendations"] = recs;
             
-            foreach (var rec in recs.AsArray) recommendations.Add(rec.Value);
+            foreach (JSONNode rec in recs) recommendations.Add(rec.Value);
 
             return system;
         }
