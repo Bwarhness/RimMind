@@ -231,6 +231,13 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_mood_risks", "Analyze all colonists for mental break risk. Returns colonists at risk with their current mood level, break thresholds, negative thoughts, risk-affecting traits, and estimated time to mental break. Use this proactively to prevent mental breaks before they happen."));
             tools.Add(MakeTool("suggest_mood_interventions", "Get actionable mood improvement suggestions for a specific colonist. Analyzes their mood issues (recreation, bedroom quality, food, pain, social needs, etc.) and provides concrete steps to improve their mood and prevent mental breaks.",
                 MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("get_mood_trends", "Track colonist mood over the last 3 days with trend analysis. Calculates mood velocity (rising/falling/stable), flags colonists trending toward mental break, shows top negative thoughts, and predicts time-to-break (e.g., 'Mira will break in ~4 hours'). Requires 2-3 hours of gameplay data for accurate trends. Use this for early warning of mental break risks and proactive intervention."));
+
+            // Social Tools
+            tools.Add(MakeTool("get_social_risks", "Detect social conflicts between colonists. Finds colonist pairs with negative opinions (< -20), calculates mutual hostility, identifies risk-affecting traits (Abrasive, Volatile, Bloodlust, Psychopath), and provides intervention suggestions (separate work areas, avoid shared recreation, etc.). Use this to prevent social fights and optimize colonist interactions."));
+
+            // Environment Tools
+            tools.Add(MakeTool("get_environment_quality", "Score each room for beauty, cleanliness, space, and impressiveness. Flags rooms causing negative thoughts, identifies specific issues (poor lighting, extreme temperature, low beauty, cramped space), and suggests concrete improvements (add sculptures, install heaters, expand room, clean floors). Use this for root cause analysis of mood problems and to optimize room quality."));
 
             // Plan Tools
             tools.Add(MakeTool("place_plans", "Place plan designations on the map to mark where structures should be built. Plans are visual markers only — they don't consume resources or trigger construction. Use get_map_region first to understand the layout, then place plans at specific coordinates. Supports shapes: 'single' (one cell), 'rect' (rectangle outline for walls/rooms), 'filled_rect' (solid rectangle), 'line' (line between two points for corridors).",
