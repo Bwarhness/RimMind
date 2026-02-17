@@ -113,6 +113,14 @@ namespace RimMind.Tools
             { "assign_bed", args => BedTools.AssignBed(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
             { "unassign_bed", args => BedTools.UnassignBed(args?["colonist"]?.Value) },
 
+            // Designations
+            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "designate_tame", args => DesignationTools.DesignateTame(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "designate_mine", args => DesignationTools.DesignateMine(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+            { "designate_chop", args => DesignationTools.DesignateChop(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+            { "designate_harvest", args => DesignationTools.DesignateHarvest(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
