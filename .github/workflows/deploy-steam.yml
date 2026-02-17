@@ -2,7 +2,7 @@ name: Deploy to Steam Workshop
 
 on:
   push:
-    branches: [master]
+    branches: [master, dev]
   workflow_dispatch:
 
 jobs:
@@ -40,6 +40,6 @@ jobs:
           username: ${{ secrets.STEAM_USERNAME }}
           configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
           appId: 294100
-          publishedFileId: 3666997391
+          publishedFileId: ${{ github.ref_name == 'master' && '3666997391' || '3668326181' }}
           path: staging
-          changeNote: "${{ github.event.head_commit.message }}"
+          changeNote: "${{ github.ref_name == 'dev' && '[DEV] ' || '' }}${{ github.event.head_commit.message }}"
