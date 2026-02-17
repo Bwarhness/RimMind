@@ -1,234 +1,135 @@
-[h1] RimMind: Your Colony Just Got a Brain[/h1]
+[h1]RimMind: Your Colony Just Got a Brain[/h1]
 
 [b]What if your colony could think?[/b]
 
-Imagine having a tactical advisor who never sleeps. Someone who can instantly tell you why your colonists are miserable, which prisoner has the skills to turn your defense from "good enough" to unstoppable, or how to squeeze another three days out of your dwindling food supply before everyone starves.
+Imagine a tactical advisor who never sleeps—instantly telling you why colonists are miserable, which prisoner could make your defense unstoppable, or how to survive three more days on dwindling food.
 
 [b]That's RimMind.[/b] An AI that lives inside your game, sees everything you see, and knows things you don't.
 
 [hr][/hr]
 
-[h1] This Isn't a Calculator. It's an Oracle.[/h1]
+[h1]This Isn't a Calculator. It's an Oracle.[/h1]
 
-Stop alt-tabbing to wikis. Stop squinting at stat screens. Stop wondering if you're about to make a catastrophic mistake.
-
-RimMind plugs [b]cutting-edge AI[/b] (Claude, GPT-4o, Gemini) directly into RimWorld and gives it [b]49 specialized tools[/b] to read, analyze, and [i]manipulate[/i] your colony. It doesn't just answer questions—it [b]solves problems[/b].
+Stop alt-tabbing to wikis. Stop squinting at stat screens. RimMind plugs [b]cutting-edge AI[/b] (Claude, GPT-4o, Gemini) directly into RimWorld with [b]49 specialized tools[/b] to analyze and manipulate your colony.
 
 [quote]
 [b]"Should I accept this quest?"[/b]
-[i]*RimMind analyzes the threat, your combat readiness, travel time, and potential rewards in 2 seconds*[/i]
-"You have a 73% chance of success. Your best fighter is recovering from malaria—wait 2 days. But if you go now, bring Brick for tanking and Maya for ranged DPS. Her sniper rifle has 98% durability."
+"You have a 73% chance of success. Your best fighter is recovering from malaria—wait 2 days. But if you go now, bring Brick for tanking and Maya for ranged DPS."
 [/quote]
 
-Yeah. [i]That[/i] kind of advisor.
+[i]That[/i] kind of advisor.
 
 [hr][/hr]
 
-[h1] What Makes RimMind Terrifying (In a Good Way)[/h1]
+[h1]What Makes RimMind Terrifying (In a Good Way)[/h1]
 
-[h2] It Sees EVERYTHING[/h2]
+[h2]It Sees EVERYTHING[/h2]
+Colonist skills, traits, moods, the exact moment someone's about to snap. Every resource across all stockpiles. Raider weapons and tactics while you're still drafting colonists.
 
-Your colonists? RimMind knows their skills, traits, backstories, relationships, health, mood, and the exact moment they're about to snap.
-
-Your resources? It tracks every meal, every medicine, every steel plate across all your stockpiles. Ask "How much steel do I have?" Get an answer. Ask "How much steel do I need to build a hospital?" Get a [i]plan[/i].
-
-Your threats? Raiders incoming? RimMind analyzes their weapons, armor, and tactics while you're still scrambling to draft colonists.
-
-[h2] It Plans Like a Strategist[/h2]
-
+[h2]It Plans Like a Strategist[/h2]
 [quote]
-[b]You:[/b] "My defenses suck."
-[b]RimMind:[/b] [i]*scans your base layout, turret coverage, and wall integrity*[/i] "Your south wall has no turret coverage and your sandbags are positioned 2 tiles too far forward. Raiders will flank through the western gap. I recommend: move sandbags back, add an autocannon at (47,12), and replace that wooden door with plasteel. Want me to blueprint it?"
+[b]"My defenses suck."[/b]
+"Your south wall has no turret coverage. Sandbags are 2 tiles too forward. Raiders will flank west. Move sandbags back, add an autocannon at (47,12), replace that wooden door with plasteel. Want me to blueprint it?"
 [/quote]
 
-You just got a custom defense audit in 3 seconds.
+Custom defense audit in 3 seconds.
 
-[h2] It Builds. Like, Actually Builds.[/h2]
-
-Need a 6x6 granite bedroom at coordinates 45,30? [b]Done.[/b] Walls, door, material, perfect dimensions.
-
-Want a freezer complex with shared walls? [b]Placed.[/b] RimMind handles adjacent construction so you don't waste materials.
-
-Furniture? Workbenches? Defensive walls? Up to [b]100 blueprints in one command[/b]. And they're auto-forbidden until you approve them, so the AI can't accidentally delete your killbox.
+[h2]It Actually Builds[/h2]
+Need a 6x6 granite bedroom? [b]Done.[/b] Freezer with shared walls? [b]Placed.[/b] Up to [b]100 blueprints[/b] in one command—auto-forbidden until you approve.
 
 [quote]
-[b]You:[/b] "Build a hospital."
-[b]RimMind:[/b] "What size? Where? What material?"
-[b]You:[/b] "8x10, near my base, use granite."
-[b]RimMind:[/b] [i]*places blueprints*[/i] "Hospital room placed at (52,18). 8x10 interior granite construction with autodoor facing east. Ready for beds and medical equipment. Approve when ready."
+[b]"Build a hospital, 8x10, granite."[/b]
+"Hospital placed at (52,18). Granite construction, autodoor facing east. Approve when ready."
 [/quote]
 
-You just saved 15 minutes of fiddly blueprint placement.
+[h2]ASCII Map Vision[/h2]
+RimMind generates [b]ASCII maps of your entire colony[/b]—walls, doors, threats. Like a general studying a battlefield.
 
-[h2] It "Sees" Your Base With ASCII Vision[/h2]
-
-RimMind doesn't just read stats—it can generate an [b]ASCII map of your entire colony[/b]. Walls, doors, furniture, colonists, threats. It looks at your base layout like a general studying a battle map.
-
-You: "Show me my base."
-RimMind: [i]*generates 50x50 grid*[/i] "Here's your colony. Your prison is isolated (good). Your food storage is adjacent to your furnace (bad—fire risk). Your killbox has excellent crossfire but zero retreat coverage."
-
-Instant tactical overview.
-
-[h2] It Remembers Your Playstyle[/h2]
-
-The [b]Directives System[/b] lets RimMind learn [i]your[/i] colony. Pacifist run? Cannibal raiders? Bionic supremacy? Tell it once, and it remembers forever.
-
-[quote]
-[b]You:[/b] "I never use wooden walls. Too flammable."
-[b]RimMind:[/b] "Noted. I've added a directive: [b]'Prefer stone construction for fire safety.'[/b] I'll recommend granite, limestone, or slate going forward."
-[/quote]
-
-Your AI advisor just learned your philosophy.
+[h2]It Remembers Your Style[/h2]
+The [b]Directives System[/b] learns your preferences. Hate wooden walls? Tell it once. It remembers forever.
 
 [hr][/hr]
 
-[h1] The Full Arsenal: 49 Tools[/h1]
+[h1]49 Specialized Tools[/h1]
 
-RimMind isn't a chatbot with Google. It has [b]49 specialized tools[/b] that hook directly into RimWorld's guts:
+[b]Colony:[/b] Analysis, wealth tracking, mood monitoring
+[b]Combat:[/b] Threat assessment, defense audits, tactical maps
+[b]Construction:[/b] Rooms, batch blueprints, shared walls
+[b]Zones:[/b] Real stockpile/growing zones (not just plans)
+[b]Medical:[/b] Patient tracking, immunity, bionics
+[b]Research:[/b] Tech tree navigation, optimal paths
+[b]Diplomacy:[/b] Factions, trade, caravans
+[b]Resources:[/b] Inventory, production chains
 
-[b]Colony Intelligence:[/b] Deep analysis, wealth tracking, vulnerability scans, mood monitoring
-[b]Combat:[/b] Threat assessment, weapon/armor evaluation, defense audits, ASCII tactical maps
-[b]Construction:[/b] Room building, batch blueprints, shared wall detection, structure primitives
-[b]Zones:[/b] Create actual stockpile/growing zones the game recognizes (not just plans)
-[b]Medical:[/b] Patient tracking, immunity progress, bionic analysis
-[b]Research:[/b] Tech tree navigation, optimal research path recommendations
-[b]Diplomacy:[/b] Faction relations, trade analysis, caravan planning, settlement discovery
-[b]Animals:[/b] Training progress, bonding status, herd management
-[b]Resources:[/b] Inventory tracking, production chains, meal planning
-[b]And more...[/b] Work priorities, bills, schedules, events, alerts, weather, power grids
-
-[i]Every tool is purpose-built for RimWorld. No generic AI nonsense.[/i]
+[i]Every tool built for RimWorld. No generic AI nonsense.[/i]
 
 [hr][/hr]
 
-[h1] Real Conversations, Real Results[/h1]
+[h1]Real Conversations[/h1]
 
 [quote]
-[b]You:[/b] "Why is everyone sad?"
-[b]RimMind:[/b] [i]*analyzes mood, needs, relationships*[/i] "Three colonists are recreation-starved. Your chess table is in a cramped 3x3 room with -15 beauty. Build a proper rec room (8x8 minimum), add a poker table and horseshoes, and install a sculpture. Also, Brick and Maya just had a social fight—keep them on different work schedules for a few days."
+[b]"Why is everyone sad?"[/b]
+"Three colonists are recreation-starved. Your chess table is in a cramped room with -15 beauty. Build an 8x8 rec room, add poker and horseshoes."
 [/quote]
 
 [quote]
-[b]You:[/b] "Which prisoner should I recruit?"
-[b]RimMind:[/b] [i]*scans skills, traits, health*[/i] "The tribal with 18 melee and Brawler trait is a monster in close combat. The pirate with Pyromaniac? Hard pass unless you enjoy fires. The third one has Industrious + 12 crafting—recruit her and your production speed jumps 20%."
+[b]"Which prisoner should I recruit?"[/b]
+"The tribal with 18 melee and Brawler—monster in combat. The Pyromaniac? Hard pass. The third has Industrious + 12 crafting—recruit her."
 [/quote]
 
 [quote]
-[b]You:[/b] "I need a defense plan."
-[b]RimMind:[/b] [i]*generates killbox blueprint*[/i] "Placing a 15x10 killbox at your north entrance. Granite walls, 4 autocannons, sandbag cover, retreat corridor. Estimated cost: 800 steel, 400 components. Build time: 3 days with 4 builders. Approve?"
+[b]"What should I research?"[/b]
+"You're 2 days from Geothermal Power—3600W unlimited electricity. Then Fabrication so your crafter can pump out masterwork charge rifles."
 [/quote]
-
-[quote]
-[b]You:[/b] "What should I research next?"
-[b]RimMind:[/b] "You're 2 days from Geothermal Power. That gives you 3600W unlimited electricity and frees up your chemfuel for mortar shells. After that, go Fabrication—your legendary crafter can start pumping out masterwork charge rifles."
-[/quote]
-
-This is what happens when AI actually [i]understands[/i] RimWorld.
 
 [hr][/hr]
 
-[h1] Setup: Stupidly Easy[/h1]
+[h1]Setup (2 Minutes)[/h1]
 
 [olist]
-[*][b]Subscribe[/b] to this mod (you're here, so you're halfway done)
-[*][b]Grab an API key[/b] from [url=https://openrouter.ai/]OpenRouter[/url] (free tier works, pay-as-you-go after that)
-[*][b]Paste it[/b] in Mod Settings → RimMind
-[*][b]Click the RimMind button[/b] on your toolbar
-[*][b]Ask literally anything[/b]
+[*]Subscribe to this mod
+[*]Get an API key from [url=https://openrouter.ai/]OpenRouter[/url] (free tier available)
+[*]Paste it in Mod Settings > RimMind
+[*]Click the RimMind button, ask anything
 [/olist]
 
-First question? Try: [b]"Tell me about my colony."[/b]
-
-Watch RimMind analyze your entire operation in real-time. You'll never play RimWorld the same way again.
+Try: [b]"Tell me about my colony."[/b]
 
 [hr][/hr]
 
-[h1] Choose Your Brain[/h1]
+[h1]Choose Your AI[/h1]
 
-RimMind works with [b]any OpenRouter model[/b]. Pick your poison:
+[b]Power:[/b] Claude Sonnet 4, GPT-4o, Gemini Flash
+[b]Budget:[/b] DeepSeek-V3, Claude Haiku, Llama 3.3 70B
+[b]Direct:[/b] Anthropic API, Claude Code
 
-[h3] Maximum Power[/h3]
-[b]Claude Sonnet 4[/b] — The recommended choice. Scary smart.
-[b]GPT-4o[/b] — OpenAI's beast. Fast, capable, excellent at planning.
-[b]Gemini 2.0 Flash[/b] — Google's speed demon. Great balance.
-
-[h3]💰 Budget Champions[/h3]
-[b]DeepSeek-V3[/b] — Shockingly good for the price.
-[b]Claude Haiku 3.5[/b] — Fast, cheap, Anthropic quality.
-[b]Llama 3.3 70B[/b] — Open source, surprisingly competent.
-
-[h3]🔐 Direct APIs[/h3]
-[b]Anthropic API[/b] — Use Claude natively (requires Anthropic key).
-[b]Claude Code[/b] — For Anthropic Pro/Max subscribers.
-
-[i]Switch models anytime in settings. No commitment. Use the cheap one for chatting, the smart one for planning.[/i]
+Switch anytime. Use cheap for chat, smart for planning.
 
 [hr][/hr]
 
-[h1] Works With Everything[/h1]
+[h1]Compatibility[/h1]
 
 [b]RimWorld:[/b] 1.5, 1.6+
-[b]Dependencies:[/b] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077]Harmony[/url] (required)
-[b]Save Compatible:[/b] Yes—add or remove mid-game, no save corruption
-[b]Conflicts:[/b] None known
-[b]Performance:[/b] Near-zero impact (API calls are async, won't lag your game)
+[b]Required:[/b] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077]Harmony[/url]
+[b]Save Safe:[/b] Add/remove mid-game
+[b]Performance:[/b] Near-zero (async API calls)
 
-[b]Internet required.[/b] RimMind talks to AI models in the cloud. Calls take 1-3 seconds depending on complexity.
-
-[hr][/hr]
-
-[h1] Your Data, Your Control[/h1]
-
-[b]Privacy locked down:[/b]
-- API key stored locally (never leaves your machine except to OpenRouter/Anthropic)
-- Colony data only sent when you use the chat
-- Zero telemetry, zero analytics, zero tracking
-- Open source—audit the code yourself on GitHub
-
-RimMind doesn't spy. It just works.
+Internet required for AI queries (1-3 seconds).
 
 [hr][/hr]
 
-[h1] Common Issues (And Fixes)[/h1]
+[h1]Privacy[/h1]
 
-[b]"API Error!"[/b] → Check your key, verify OpenRouter credits, confirm internet connection
-
-[b]Chat won't open?[/b] → Make sure Harmony loads [i]before[/i] RimMind in your mod list
-
-[b]AI is slow?[/b] → Big models = better results but slower. Try Gemini Flash or Claude Haiku for speed
-
-[b]Blueprints won't build?[/b] → AI blueprints are forbidden by default for safety. Unforbid them or use [code]auto_approve: true[/code]
+API key stored locally. Colony data only sent when chatting. Zero telemetry. Open source on GitHub.
 
 [hr][/hr]
 
-[h1] Links[/h1]
+[h1]Links[/h1]
 
-[b]GitHub:[/b] [url=https://github.com/Bwarhness/RimMind]https://github.com/Bwarhness/RimMind[/url]
-[b]Bug Reports:[/b] [url=https://github.com/Bwarhness/RimMind/issues]GitHub Issues[/url]
-[b]OpenRouter:[/b] [url=https://openrouter.ai/]Get Your API Key[/url]
-[b]Anthropic:[/b] [url=https://console.anthropic.com/]Direct Claude Access[/url]
+[url=https://github.com/Bwarhness/RimMind]GitHub[/url] | [url=https://github.com/Bwarhness/RimMind/issues]Bug Reports[/url] | [url=https://openrouter.ai/]OpenRouter[/url]
 
 [hr][/hr]
 
-[h1] Credits[/h1]
+[b]Created by:[/b] Bwarhness | [b]License:[/b] MIT
 
-[b]Created by:[/b] Bwarhness
-[b]License:[/b] MIT (open source forever)
-[b]AI Partners:[/b] Anthropic, OpenAI, Google, Meta, DeepSeek, and more
-[b]Thanks to:[/b] The RimWorld modding community and Ludeon Studios
-
-[hr][/hr]
-
-[h1] Your Colony Is Waiting[/h1]
-
-You've been playing RimWorld blind. Guessing. Hoping. Reloading saves when things go wrong.
-
-[b]Not anymore.[/b]
-
-RimMind is the tactical advisor you didn't know you needed. The strategist who sees patterns you miss. The builder who never gets tired. The analyst who knows your colony better than you do.
-
-[b]Give your colony a brain. Subscribe now.[/b] 
-
-[hr][/hr]
-
-[i]Version 1.0 | 49 Tools | RimWorld 1.5-1.6+ | Updated 2025-02-16[/i]
+[b]Give your colony a brain. Subscribe now.[/b]
