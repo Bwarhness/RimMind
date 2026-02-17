@@ -227,14 +227,15 @@ RimMind/
     ├── RimMind.csproj
     ├── Core/          (RimMindMod, Settings, MainThreadDispatcher)
     ├── API/           (OpenRouterClient, DTOs, SimpleJSON, PromptBuilder)
-    ├── Tools/         (54 tools: Colonist, Social, Work, Colony, Research, Military, Map, Animal, Event, Medical, Plan, Zone, Building)
+    ├── Tools/         (98 tools: Colonist, Social, Work, Job, Colony, Research, Military, Map, Animal, Event, Medical, Mood, Plan, Zone, Area, World, Bed, Designation, Equipment, Building, Directive, Trade)
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (54 tools)
-- **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
+## Current Tool Catalog (98 tools)
+- **Colonist** (7): list_colonists, get_colonist_details, get_colonist_health, draft_colonist, undraft_colonist, draft_all, undraft_all
 - **Social** (2): get_relationships, get_faction_relations
-- **Work** (9): get_work_priorities, set_work_priority, get_bills, create_bill, modify_bill, delete_bill, get_schedules, set_schedule, copy_schedule
+- **Work** (10): get_work_priorities, set_work_priority, get_bills, list_recipes, create_bill, modify_bill, delete_bill, get_schedules, set_schedule, copy_schedule
+- **Job Prioritization** (5): prioritize_rescue, prioritize_tend, prioritize_haul, prioritize_repair, prioritize_clean
 - **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research** (3): get_research_status, get_available_research, get_completed_research
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
@@ -244,18 +245,22 @@ RimMind/
 - **Medical** (1): get_medical_overview
 - **HealthCheck** (1): colony_health_check
 - **Mood** (2): get_mood_risks, suggest_mood_interventions
-- **Directives** (3): get_directives, add_directive, remove_directive
 - **Plan** (3): get_plans, place_plans, remove_plans
-- **Zone** (3): list_zones, create_zone, delete_zone
-- **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
+- **Zone** (8): list_zones, create_zone, delete_zone, set_crop, get_recommended_crops, set_stockpile_priority, set_stockpile_filter, set_stockpile_item
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
+- **World & Diplomacy** (7): list_world_destinations, get_caravan_info, get_trade_status, list_trader_inventory, list_factions, get_diplomatic_summary, get_diplomacy_options
+- **Bed Assignments** (4): list_beds, get_bed_assignments, assign_bed, unassign_bed
+- **Designations** (6): designate_hunt, designate_tame, cancel_animal_designation, designate_mine, designate_chop, designate_harvest
+- **Equipment & Policies** (7): list_equipment, equip_weapon, wear_apparel, drop_equipment, assign_outfit, assign_drug_policy, assign_food_restriction
+- **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
+- **Directives** (3): get_directives, add_directive, remove_directive
 - **Trade** (2): get_active_traders, analyze_trade_opportunity
 
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ## Changelog
-- **2026-02-17**: Added bill/production management write tools — 3 new tools (`create_bill`, `modify_bill`, `delete_bill`) for complete control over workbench production queues. AI can now create bills with configurable target counts, forever mode, ingredient radius, skill requirements, and pause state. Bills can be modified to adjust target counts, toggle pause/resume, change ingredient search radius, and update skill requirements. Bills can be deleted by recipe name or index. All tools use fuzzy matching for workbench and recipe names with helpful suggestions on errors. Supports all bill types (Bill_Production, Bill_ProductionWithUom). This is the first production write action - players can now have the AI manage their manufacturing, cooking, crafting, and smelting operations.
+- **2026-02-17**: Merged 7 PRs adding 47 new tools (51→98 total). Major additions: bill management with fuzzy matching (`create_bill`, `modify_bill`, `delete_bill`, `list_recipes`), bed assignments (`list_beds`, `assign_bed`, `unassign_bed`), hunting/taming/mining designations, equipment & policy management (equip/wear/drop, assign outfits/drug policies/food restrictions), trade analysis, colony health checks, mood risk analysis. All tools fixed for RimWorld 1.6 API: `CurrentOutfit`→`CurrentApparelPolicy`, `FoodRestriction`→`FoodPolicy`, `RaceProperties.wildness`→`StatDefOf.Wildness`, `Building_Bed.TryAssignPawn`→`pawn.ownership.ClaimBedIfNonMedical`, `PassingShip`→`TradeShip` for ITrader, `ITrader.Goods` returns `Thing` not `Tradeable`, `bill.ingredientSearchRadius` is `float` not `float?`.
 - **2026-02-16**: Added trade analysis tools (`get_active_traders`, `analyze_trade_opportunity`) — AI can now discover all available traders (orbital ships, visiting caravans, allied settlements in comms range) with full inventory details, buy/sell prices, and departure times. Trade opportunity analysis compares colony resources against trader inventory to suggest profitable trades: urgent purchases (medicine, components, food when low), profitable sales (surplus materials), and strategic acquisitions (high-value items like plasteel, advanced components). Returns prioritized recommendations with utility scores and reasoning.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.
