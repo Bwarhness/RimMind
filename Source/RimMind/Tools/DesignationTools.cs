@@ -15,7 +15,7 @@ namespace RimMind.Tools
             var cell = new IntVec3(x, 0, z);
             if (!cell.InBounds(map)) return ToolExecutor.JsonError("Coordinates out of bounds.");
 
-            var animal = cell.GetThingList(map).OfType<Pawn>().FirstOrDefault(p => p.RaceProps.Animal && !p.Faction.IsPlayer);
+            var animal = cell.GetThingList(map).OfType<Pawn>().FirstOrDefault(p => p.RaceProps.Animal && (p.Faction == null || !p.Faction.IsPlayer));
             if (animal == null) return ToolExecutor.JsonError("No wild animal found at " + x + "," + z);
 
             if (map.designationManager.DesignationOn(animal, DesignationDefOf.Hunt) != null)
@@ -39,11 +39,12 @@ namespace RimMind.Tools
             var cell = new IntVec3(x, 0, z);
             if (!cell.InBounds(map)) return ToolExecutor.JsonError("Coordinates out of bounds.");
 
-            var animal = cell.GetThingList(map).OfType<Pawn>().FirstOrDefault(p => p.RaceProps.Animal && !p.Faction.IsPlayer);
+            var animal = cell.GetThingList(map).OfType<Pawn>().FirstOrDefault(p => p.RaceProps.Animal && (p.Faction == null || !p.Faction.IsPlayer));
             if (animal == null) return ToolExecutor.JsonError("No wild animal found at " + x + "," + z);
 
-            if (!animal.RaceProps.wildness.HasValue || animal.RaceProps.wildness > 0.98f)
-                return ToolExecutor.JsonError("Animal is too wild to tame.");
+            float wildness = animal.GetStatValue(StatDefOf.Wildness);
+            if (wildness > 0.98f)
+                return ToolExecutor.JsonError("Animal is too wild to tame (wildness: " + wildness.ToString("P0") + ").");
 
             if (map.designationManager.DesignationOn(animal, DesignationDefOf.Tame) != null)
                 return ToolExecutor.JsonError("Animal already designated for taming.");
@@ -54,7 +55,7 @@ namespace RimMind.Tools
             result["success"] = true;
             result["animal"] = animal.LabelCap.ToString();
             result["location"] = x + "," + z;
-            result["wildness"] = animal.RaceProps.wildness.HasValue ? animal.RaceProps.wildness.Value.ToString("P0") : "Unknown";
+            result["wildness"] = wildness.ToString("P0");
             result["action"] = "tame";
             return result.ToString();
         }
