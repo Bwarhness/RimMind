@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using RimMind.Automation;
 using Verse;
 
 namespace RimMind.Core
@@ -24,6 +26,10 @@ namespace RimMind.Core
         public bool enableChatCompanion = true;
         public bool autoDetectDirectives = true;
 
+        // Event Automation settings
+        public bool enableEventAutomation = false;
+        public Dictionary<string, AutomationRule> automationRules = new Dictionary<string, AutomationRule>();
+
         public bool IsAnthropic => apiProvider == "anthropic";
         public bool IsClaudeCode => apiProvider == "claudecode";
 
@@ -49,6 +55,14 @@ namespace RimMind.Core
             Scribe_Values.Look(ref maxTokens, "maxTokens", 4096);
             Scribe_Values.Look(ref enableChatCompanion, "enableChatCompanion", true);
             Scribe_Values.Look(ref autoDetectDirectives, "autoDetectDirectives", true);
+            Scribe_Values.Look(ref enableEventAutomation, "enableEventAutomation", false);
+            Scribe_Collections.Look(ref automationRules, "automationRules", LookMode.Value, LookMode.Deep);
+
+            if (Scribe.mode == LoadSaveMode.LoadingVars && automationRules == null)
+            {
+                automationRules = new Dictionary<string, AutomationRule>();
+            }
+
             base.ExposeData();
         }
     }

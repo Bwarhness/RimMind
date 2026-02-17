@@ -1,3 +1,4 @@
+using HarmonyLib;
 using UnityEngine;
 using Verse;
 
@@ -10,8 +11,29 @@ namespace RimMind.Core
         public RimMindMod(ModContentPack content) : base(content)
         {
             Settings = GetSettings<RimMindSettings>();
-            Log.Message("[RimMind] Mod loaded successfully.");
             DebugLogger.Init(content.RootDir);
+
+            // Apply Harmony patches
+            try
+            {
+                var harmony = new Harmony("com.rimmind.mod");
+                harmony.PatchAll();
+
+                // Manual patch for LetterStack.ReceiveLetter (3 overloads in RimWorld 1.6,
+                // attribute-based patching causes AmbiguousMatchException)
+                Automation.LetterAutomationPatch.Apply(harmony);
+
+                var patched = harmony.GetPatchedMethods();
+                int count = 0;
+                foreach (var m in patched) count++;
+                Log.Message("[RimMind] Harmony patches applied: " + count + " method(s) patched.");
+            }
+            catch (System.Exception ex)
+            {
+                Log.Error("[RimMind] Harmony patching failed: " + ex);
+            }
+
+            Log.Message("[RimMind] Mod loaded successfully.");
         }
 
         public override string SettingsCategory() => "RimMind AI";
@@ -104,6 +126,17 @@ namespace RimMind.Core
 
             listing.CheckboxLabeled("Enable Chat Companion", ref Settings.enableChatCompanion);
             listing.CheckboxLabeled("Auto-detect Directives", ref Settings.autoDetectDirectives, "When enabled, the AI will detect playstyle preferences during conversation and offer to save them as colony directives.");
+
+            listing.GapLine();
+
+            // Event Automation
+            listing.Label("<b>Event Automation</b>");
+            listing.CheckboxLabeled("Enable Event Automation", ref Settings.enableEventAutomation, "When enabled, RimMind can automatically respond to game events with configured prompts.");
+            
+            if (listing.ButtonText("Configure Automation Rules..."))
+            {
+                Find.WindowStack.Add(new RimMind.Automation.AutomationSettingsWindow());
+            }
 
             listing.End();
         }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+    <!-- EventAutomationManager - tracks cooldowns for event automation -->
+    <GameComponentDef>
+        <defName>EventAutomationManager</defName>
+        <label>event automation manager</label>
+        <gameComponentClass>RimMind.Automation.EventAutomationManager</gameComponentClass>
+    </GameComponentDef>
+</Defs>
