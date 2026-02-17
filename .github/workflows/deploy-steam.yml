@@ -1,0 +1,45 @@
+name: Deploy to Steam Workshop
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Source/RimMind/RimMind.csproj
+
+      - name: Build
+        run: dotnet build Source/RimMind/RimMind.csproj -c Release --no-restore
+
+      - name: Stage mod for upload
+        run: |
+          mkdir -p staging/About
+          mkdir -p staging/Assemblies
+          mkdir -p staging/Defs
+
+          cp -r About/* staging/About/
+          cp Assemblies/RimMind.dll staging/Assemblies/
+          cp -r Defs/* staging/Defs/
+
+      - name: Deploy to Steam Workshop
+        uses: m00nl1ght-dev/steam-workshop-deploy@v4
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          appId: 294100
+          publishedFileId: 3666997391
+          path: staging
+          changeNote: "${{ github.event.head_commit.message }}"
