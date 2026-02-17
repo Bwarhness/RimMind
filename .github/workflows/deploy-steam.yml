@@ -34,6 +34,12 @@ jobs:
           cp Assemblies/RimMind.dll staging/Assemblies/
           cp -r Defs/* staging/Defs/
 
+      - name: Patch About.xml for dev
+        if: github.ref_name == 'dev'
+        run: |
+          sed -i 's|<packageId>rimmind.ai</packageId>|<packageId>rimmind.ai.dev</packageId>|' staging/About/About.xml
+          sed -i 's|<name>RimMind</name>|<name>RimMind (Dev)</name>|' staging/About/About.xml
+
       - name: Deploy to Steam Workshop
         uses: m00nl1ght-dev/steam-workshop-deploy@v4
         with:
