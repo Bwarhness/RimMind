@@ -14,7 +14,8 @@ namespace RimMind.Tools
             if (Find.WorldObjects == null) return ToolExecutor.JsonError("World not accessible.");
 
             var arr = new JSONArray();
-            var playerHome = Find.AnyPlayerHomeMap?.Tile ?? -1;
+            var homeMap = Find.AnyPlayerHomeMap;
+            int playerHome = homeMap != null ? (int)homeMap.Tile : -1;
 
             foreach (var settlement in Find.WorldObjects.Settlements)
             {
@@ -25,11 +26,12 @@ namespace RimMind.Tools
                 obj["name"] = settlement.LabelCap.ToString();
                 obj["faction"] = settlement.Faction.Name;
                 obj["factionRelation"] = settlement.Faction.PlayerRelationKind.ToString();
-                obj["tile"] = settlement.Tile;
+                int tileId = (int)settlement.Tile;
+                obj["tile"] = tileId;
 
-                if (playerHome >= 0)
+                if (playerHome >= 0 && tileId >= 0)
                 {
-                    int distance = Find.WorldGrid.TraversalDistanceBetween(playerHome, settlement.Tile);
+                    int distance = Find.WorldGrid.TraversalDistanceBetween(playerHome, tileId);
                     obj["distance"] = distance;
                     obj["travelDays"] = (distance / 5.0f).ToString("F1");
                 }
@@ -72,18 +74,19 @@ namespace RimMind.Tools
             if (trader == null) return ToolExecutor.JsonError("No trader in session.");
 
             var arr = new JSONArray();
-            var tradeableItems = trader.ColonyThingsWillingToBuy(Faction.OfPlayer);
-            
+            var negotiator = TradeSession.playerNegotiator;
+            if (negotiator == null) return ToolExecutor.JsonError("No negotiator found for trade session.");
+
+            var tradeableItems = trader.ColonyThingsWillingToBuy(negotiator);
+
             foreach (var thing in tradeableItems.Take(50))
             {
                 var obj = new JSONObject();
                 obj["name"] = thing.LabelCap.ToString();
                 obj["category"] = thing.def.category.ToString();
                 obj["stackCount"] = thing.stackCount;
-                
-                var priceOffset = trader.TraderKind != null ? trader.TraderKind.priceTypeCountOffset : 0f;
                 obj["note"] = "Use colony trade UI to execute trades.";
-                
+
                 arr.Add(obj);
             }
 

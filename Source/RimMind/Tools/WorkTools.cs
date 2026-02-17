@@ -174,8 +174,7 @@ namespace RimMind.Tools
             var assignmentDef = DefDatabase<TimeAssignmentDef>.AllDefsListForReading
                 .FirstOrDefault(a =>
                     a.defName.ToLower() == assignmentLower ||
-                    (a.label?.ToLower() == assignmentLower) ||
-                    (a.labelShort?.ToLower() == assignmentLower));
+                    (a.label?.ToLower() == assignmentLower));
 
             if (assignmentDef == null)
             {

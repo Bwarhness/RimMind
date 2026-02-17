@@ -446,7 +446,7 @@ namespace RimMind.Tools
             ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.AllDefsListForReading
                 .FirstOrDefault(c => 
                     c.defName.ToLower() == catLower ||
-                    c.label.ToLower().Contains(catLower));
+                    (c.label != null && c.label.ToLower().Contains(catLower)));
 
             if (categoryDef == null)
             {
