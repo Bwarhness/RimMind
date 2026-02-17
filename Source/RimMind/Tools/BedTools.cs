@@ -87,12 +87,15 @@ namespace RimMind.Tools
             if (currentOwners != null && currentOwners.Count >= maxOwners && !currentOwners.Contains(pawn))
                 return ToolExecutor.JsonError("Bed is full (max " + maxOwners + " owners).");
 
-            // Unassign from current bed
+            // Unassign from current bed if any
             if (pawn.ownership != null && pawn.ownership.OwnedBed != null)
-                pawn.ownership.UnclaimBed();
+            {
+                var oldBedComp = pawn.ownership.OwnedBed.CompAssignableToPawn;
+                oldBedComp?.TryUnassignPawn(pawn);
+            }
 
             // Assign new bed
-            bed.TryAssignPawn(pawn);
+            pawn.ownership.ClaimBedIfNonMedical(bed);
 
             var result = new JSONObject();
             result["success"] = true;
@@ -128,7 +131,11 @@ namespace RimMind.Tools
             var bed = pawn.ownership.OwnedBed;
             string bedLabel = bed.LabelCap.ToString();
 
-            pawn.ownership.UnclaimBed();
+            var bedComp = bed.CompAssignableToPawn;
+            if (bedComp != null)
+                bedComp.TryUnassignPawn(pawn);
+            else
+                return ToolExecutor.JsonError("Cannot unassign from this bed type.");
 
             var result = new JSONObject();
             result["success"] = true;
