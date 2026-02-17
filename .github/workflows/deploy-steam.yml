@@ -1,0 +1,51 @@
+name: Deploy to Steam Workshop
+
+on:
+  push:
+    branches: [master, dev]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Source/RimMind/RimMind.csproj
+
+      - name: Build
+        run: dotnet build Source/RimMind/RimMind.csproj -c Release --no-restore
+
+      - name: Stage mod for upload
+        run: |
+          mkdir -p staging/About
+          mkdir -p staging/Assemblies
+          mkdir -p staging/Defs
+
+          cp -r About/* staging/About/
+          cp Assemblies/RimMind.dll staging/Assemblies/
+          cp -r Defs/* staging/Defs/
+
+      - name: Patch About.xml for dev
+        if: github.ref_name == 'dev'
+        run: |
+          sed -i 's|<packageId>rimmind.ai</packageId>|<packageId>rimmind.ai.dev</packageId>|' staging/About/About.xml
+          sed -i 's|<name>RimMind</name>|<name>RimMind (Dev)</name>|' staging/About/About.xml
+
+      - name: Deploy to Steam Workshop
+        uses: m00nl1ght-dev/steam-workshop-deploy@v4
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          appId: 294100
+          publishedFileId: ${{ github.ref_name == 'master' && '3666997391' || '3668326181' }}
+          path: staging
+          changeNote: "${{ github.ref_name == 'dev' && '[DEV] ' || '' }}${{ github.event.head_commit.message }}"

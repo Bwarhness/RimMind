@@ -11,7 +11,14 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- NuGet references for CI and portable builds -->
+  <ItemGroup Condition="'$(UseGameDlls)' != 'true'">
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4633" ExcludeAssets="runtime" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.3" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <!-- Local game DLL references (use with: dotnet build -p:UseGameDlls=true) -->
+  <ItemGroup Condition="'$(UseGameDlls)' == 'true'">
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>false</Private>

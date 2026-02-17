@@ -26,6 +26,10 @@ namespace RimMind.Tools
             { "get_work_priorities", args => WorkTools.GetWorkPriorities() },
             { "set_work_priority", args => WorkTools.SetWorkPriority(args?["colonist"]?.Value, args?["workType"]?.Value, args?["priority"]?.AsInt ?? 0) },
             { "get_bills", args => WorkTools.GetBills(args?["workbench"]?.Value) },
+            { "list_recipes", args => WorkTools.ListRecipes(args?["workbench"]?.Value) },
+            { "create_bill", args => WorkTools.CreateBill(args) },
+            { "modify_bill", args => WorkTools.ModifyBill(args) },
+            { "delete_bill", args => WorkTools.DeleteBill(args) },
             { "get_schedules", args => WorkTools.GetSchedules() },
             { "set_schedule", args => WorkTools.SetSchedule(args?["colonist"]?.Value, args?["hour"]?.AsInt ?? -1, args?["assignment"]?.Value) },
             { "copy_schedule", args => WorkTools.CopySchedule(args?["from"]?.Value, args?["to"]?.Value) },
@@ -73,6 +77,13 @@ namespace RimMind.Tools
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
 
+            // Health Check
+            { "colony_health_check", args => HealthCheckTools.ColonyHealthCheck() },
+
+            // Mood
+            { "get_mood_risks", args => MoodTools.GetMoodRisks() },
+            { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
+
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
             { "remove_plans", args => PlanTools.RemovePlans(args) },
@@ -84,9 +95,9 @@ namespace RimMind.Tools
             { "delete_zone", args => ZoneTools.DeleteZone(args) },
             { "set_crop", args => ZoneTools.SetCrop(args?["zoneName"]?.Value, args?["plantType"]?.Value) },
             { "get_recommended_crops", args => ZoneTools.GetRecommendedCrops() },
-            { "set_stockpile_priority", args => ZoneTools.SetStockpilePriority(args?["zoneName"]?.Value, args?["priority"]?.Value) },
-            { "set_stockpile_filter", args => ZoneTools.SetStockpileFilter(args?["zoneName"]?.Value, args?["category"]?.Value, args?["allowed"]?.AsBool ?? false) },
-            { "set_stockpile_item", args => ZoneTools.SetStockpileItem(args?["zoneName"]?.Value, args?["item"]?.Value, args?["allowed"]?.AsBool ?? false) },
+            { "set_stockpile_priority", args => ZoneTools.SetStockpilePriority(args) },
+            { "set_stockpile_filter", args => ZoneTools.SetStockpileFilter(args) },
+            { "set_stockpile_item", args => ZoneTools.SetStockpileItem(args) },
 
             // Area Restrictions
             { "list_areas", args => AreaTools.ListAreas() },
@@ -103,6 +114,29 @@ namespace RimMind.Tools
             { "get_diplomatic_summary", args => WorldTools.GetDiplomaticSummary() },
             { "get_diplomacy_options", args => WorldTools.GetDiplomacyOptions(args?["factionName"]?.Value) },
 
+            // Bed Assignments
+            { "list_beds", args => BedTools.ListBeds() },
+            { "get_bed_assignments", args => BedTools.GetBedAssignments() },
+            { "assign_bed", args => BedTools.AssignBed(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "unassign_bed", args => BedTools.UnassignBed(args?["colonist"]?.Value) },
+
+            // Designations
+            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "designate_tame", args => DesignationTools.DesignateTame(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "designate_mine", args => DesignationTools.DesignateMine(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+            { "designate_chop", args => DesignationTools.DesignateChop(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+            { "designate_harvest", args => DesignationTools.DesignateHarvest(args?["x1"]?.AsInt ?? 0, args?["z1"]?.AsInt ?? 0, args?["x2"]?.AsInt ?? 0, args?["z2"]?.AsInt ?? 0) },
+
+            // Equipment & Policies
+            { "list_equipment", args => EquipmentTools.ListEquipment() },
+            { "equip_weapon", args => EquipmentTools.EquipWeapon(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "wear_apparel", args => EquipmentTools.WearApparel(args?["colonist"]?.Value, args?["x"]?.AsInt ?? 0, args?["z"]?.AsInt ?? 0) },
+            { "drop_equipment", args => EquipmentTools.DropEquipment(args?["colonist"]?.Value) },
+            { "assign_outfit", args => EquipmentTools.AssignOutfit(args?["colonist"]?.Value, args?["outfitName"]?.Value) },
+            { "assign_drug_policy", args => EquipmentTools.AssignDrugPolicy(args?["colonist"]?.Value, args?["policyName"]?.Value) },
+            { "assign_food_restriction", args => EquipmentTools.AssignFoodRestriction(args?["colonist"]?.Value, args?["restrictionName"]?.Value) },
+
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
@@ -115,6 +149,10 @@ namespace RimMind.Tools
             { "get_directives", args => DirectiveTools.GetDirectives() },
             { "add_directive", args => DirectiveTools.AddDirective(args?["text"]?.Value) },
             { "remove_directive", args => DirectiveTools.RemoveDirective(args?["search"]?.Value) },
+
+            // Trade
+            { "get_active_traders", args => TradeTools.GetActiveTraders() },
+            { "analyze_trade_opportunity", args => TradeTools.AnalyzeTradeOpportunity(args?["traderFilter"]?.Value) },
         };
 
         public static string Execute(string toolName, string argumentsJson)

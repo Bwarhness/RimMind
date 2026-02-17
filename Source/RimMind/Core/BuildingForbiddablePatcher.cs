@@ -16,10 +16,12 @@ namespace RimMind.Core
                 bool isBuilding = def.category == ThingCategory.Building;
                 bool isBlueprint = typeof(Blueprint).IsAssignableFrom(def.thingClass);
                 if (!isBuilding && !isBlueprint) continue;
+                // Only patch player-buildable buildings and their blueprints
+                if (isBuilding && def.designationCategory == null) continue;
                 if (def.comps == null) continue;
                 if (def.comps.Any(c => c.compClass == typeof(CompForbiddable))) continue;
 
-                def.comps.Add(new CompProperties { compClass = typeof(CompForbiddable) });
+                def.comps.Add(new CompProperties_Forbiddable());
                 patched++;
             }
             Log.Message("[RimMind] Added CompForbiddable to " + patched + " building/blueprint defs.");

@@ -35,6 +35,29 @@ namespace RimMind.Tools
                 MakeParam("priority", "integer", "Priority level (0-4, where 0=disabled, 1=highest, 4=lowest)")));
             tools.Add(MakeTool("get_bills", "Get active production bills at workbenches: recipe name, target count, ingredients needed, assigned worker, and whether suspended.",
                 MakeOptionalParam("workbench", "string", "Filter by workbench name. If omitted, returns bills from all workbenches.")));
+            tools.Add(MakeTool("list_recipes", "List all available recipes at a specific workbench with ingredients and products.",
+                MakeParam("workbench", "string", "Workbench name (e.g., 'stove', 'smithy', 'tailor')")));
+            tools.Add(MakeTool("create_bill", "Create a new production bill at a workbench. Supports setting target count, forever mode, ingredient radius, minimum skill, and pause state.",
+                MakeParam("workbench", "string", "Workbench name or defName (e.g., 'Electric stove', 'FueledStove', 'Butcher table')"),
+                MakeParam("recipe", "string", "Recipe name or defName (e.g., 'Cook simple meal', 'Make cloth', 'Smelt weapon')"),
+                MakeOptionalParam("count", "integer", "Target count (default: 1). Ignored if 'forever' is true."),
+                MakeOptionalParam("forever", "boolean", "Set to true for perpetual production (default: false)"),
+                MakeOptionalParam("ingredientRadius", "integer", "Ingredient search radius in cells (default: 999)"),
+                MakeOptionalParam("minSkill", "integer", "Minimum skill level required (0-20, default: 0)"),
+                MakeOptionalParam("paused", "boolean", "Start the bill in suspended/paused state (default: false)")));
+            tools.Add(MakeTool("modify_bill", "Modify an existing production bill. Can change target count, pause/resume, ingredient radius, and skill requirements. Identify bill by recipe name or index.",
+                MakeParam("workbench", "string", "Workbench name or defName"),
+                MakeOptionalParam("recipe", "string", "Recipe name to find the bill (alternative to 'index')"),
+                MakeOptionalParam("index", "integer", "Bill index (0-based) at the workbench (alternative to 'recipe')"),
+                MakeOptionalParam("count", "integer", "New target count"),
+                MakeOptionalParam("forever", "boolean", "Set to true for perpetual production"),
+                MakeOptionalParam("paused", "boolean", "Pause (true) or resume (false) the bill"),
+                MakeOptionalParam("ingredientRadius", "integer", "New ingredient search radius"),
+                MakeOptionalParam("minSkill", "integer", "New minimum skill requirement (0-20)")));
+            tools.Add(MakeTool("delete_bill", "Delete/remove a production bill from a workbench. Identify bill by recipe name or index.",
+                MakeParam("workbench", "string", "Workbench name or defName"),
+                MakeOptionalParam("recipe", "string", "Recipe name to find the bill (alternative to 'index')"),
+                MakeOptionalParam("index", "integer", "Bill index (0-based) at the workbench (alternative to 'recipe')")));
             tools.Add(MakeTool("get_schedules", "Get daily schedules for all colonists: hour-by-hour assignments (Sleep, Work, Anything, Joy/Recreation)."));
             tools.Add(MakeTool("set_schedule", "Set the schedule assignment for a specific colonist at a specific hour. Assignments: 'Work', 'Sleep', 'Anything', 'Joy'.",
                 MakeParam("colonist", "string", "The colonist's name"),
@@ -123,6 +146,14 @@ namespace RimMind.Tools
             // Medical Tools
             tools.Add(MakeTool("get_medical_overview", "Get medical overview: patients needing treatment, medicine supply by type, available medical beds, and doctors with their medical skill level."));
 
+            // Health Check Tools
+            tools.Add(MakeTool("colony_health_check", "Perform a comprehensive colony diagnostic check. This is the 'doctor's checkup' for your entire colony - a single tool that analyzes all critical systems and returns actionable insights. Use this when asked 'How is my colony doing?' or when you need a complete status overview. Analyzes: Food Security (days remaining, growing capacity), Power Grid (generation vs consumption, battery reserves), Defense Readiness (turrets, armed colonists, weapons), Colonist Wellbeing (injuries, mood risks, needs), Resource Bottlenecks (medicine, steel, components), Research Progress, Housing Quality (bedroom quality, bed assignments), and Production Issues (stalled bills, missing workers). Returns overall status (healthy/stable/warning/critical), per-system breakdowns with issues and recommendations, critical alerts requiring immediate action, and top 5 priority recommendations."));
+
+            // Mood Tools
+            tools.Add(MakeTool("get_mood_risks", "Analyze all colonists for mental break risk. Returns colonists at risk with their current mood level, break thresholds, negative thoughts, risk-affecting traits, and estimated time to mental break. Use this proactively to prevent mental breaks before they happen."));
+            tools.Add(MakeTool("suggest_mood_interventions", "Get actionable mood improvement suggestions for a specific colonist. Analyzes their mood issues (recreation, bedroom quality, food, pain, social needs, etc.) and provides concrete steps to improve their mood and prevent mental breaks.",
+                MakeParam("name", "string", "The colonist's name")));
+
             // Plan Tools
             tools.Add(MakeTool("place_plans", "Place plan designations on the map to mark where structures should be built. Plans are visual markers only — they don't consume resources or trigger construction. Use get_map_region first to understand the layout, then place plans at specific coordinates. Supports shapes: 'single' (one cell), 'rect' (rectangle outline for walls/rooms), 'filled_rect' (solid rectangle), 'line' (line between two points for corridors).",
                 MakeParam("x", "integer", "X coordinate (or start X for shapes)"),
@@ -160,17 +191,33 @@ namespace RimMind.Tools
                 MakeParam("zoneName", "string", "Growing zone name"),
                 MakeParam("plantType", "string", "Crop to plant (e.g., 'rice', 'corn', 'potatoes', 'healroot', 'cotton')")));
             tools.Add(MakeTool("get_recommended_crops", "Get a list of recommended crops based on current season, growth time, yield, and purpose. Shows which crops can grow now and their characteristics."));
-            tools.Add(MakeTool("set_stockpile_priority", "Set the storage priority of a stockpile zone. Higher priority stockpiles are filled first.",
-                MakeParam("zoneName", "string", "Stockpile zone name"),
-                MakeParam("priority", "string", "Priority: 'Critical', 'Important', 'Preferred', 'Normal', or 'Low'")));
-            tools.Add(MakeTool("set_stockpile_filter", "Allow or disallow an entire category of items in a stockpile.",
-                MakeParam("zoneName", "string", "Stockpile zone name"),
-                MakeParam("category", "string", "Category name (e.g., 'Foods', 'RawResources', 'Manufactured', 'Weapons', 'Apparel', 'Medicine', 'Drugs')"),
-                MakeParam("allowed", "boolean", "True to allow, false to disallow")));
-            tools.Add(MakeTool("set_stockpile_item", "Allow or disallow a specific item type in a stockpile.",
-                MakeParam("zoneName", "string", "Stockpile zone name"),
+            tools.Add(MakeTool("set_stockpile_priority", "Set the storage priority of stockpile zones and/or storage buildings (shelves, dressers, tool cabinets). Works on blueprints too — configure storage IMMEDIATELY after placing, no need to wait for construction. Applies to ALL matching storage. Use 'room' to target storage in a specific room (e.g., 'kitchen', 'bedroom'). Use coordinate bounds to target a specific area. Higher priority storage is filled first.",
+                MakeParam("zoneName", "string", "Name to match against stockpile zones and storage buildings (e.g., 'Stockpile', 'Shelf', 'Dresser'). Matches ALL storage containing this name."),
+                MakeParam("priority", "string", "Priority: 'Critical', 'Important', 'Preferred', 'Normal', or 'Low'"),
+                MakeOptionalParam("room", "string", "Filter by room role (e.g., 'kitchen', 'bedroom', 'hospital', 'dining room'). Only affects storage inside rooms with this role."),
+                MakeOptionalParam("x1", "integer", "Start X of area bounds filter"),
+                MakeOptionalParam("z1", "integer", "Start Z of area bounds filter"),
+                MakeOptionalParam("x2", "integer", "End X of area bounds filter"),
+                MakeOptionalParam("z2", "integer", "End Z of area bounds filter")));
+            tools.Add(MakeTool("set_stockpile_filter", "Allow or disallow an entire category of items in stockpile zones and/or storage buildings (shelves, dressers, tool cabinets). Works on blueprints too — configure storage IMMEDIATELY after placing, no need to wait for construction. Use exclusive=true to ONLY allow that category (disallows everything else first). Applies to ALL matching storage. Use 'room' to target storage in a specific room (e.g., 'kitchen'). Use coordinate bounds to target a specific area.",
+                MakeParam("zoneName", "string", "Name to match against stockpile zones and storage buildings (e.g., 'Stockpile', 'Shelf', 'Dresser'). Matches ALL storage containing this name."),
+                MakeParam("category", "string", "Category name (e.g., 'Foods', 'ResourcesRaw', 'Items', 'Manufactured', 'Weapons', 'Apparel', 'Medicine', 'Drugs')"),
+                MakeParam("allowed", "boolean", "True to allow, false to disallow"),
+                MakeOptionalParam("exclusive", "boolean", "If true, disallow ALL categories first then allow ONLY this one. Use for 'only allow food' type requests. Ignores 'allowed' param."),
+                MakeOptionalParam("room", "string", "Filter by room role (e.g., 'kitchen', 'bedroom', 'hospital', 'dining room'). Only affects storage inside rooms with this role."),
+                MakeOptionalParam("x1", "integer", "Start X of area bounds filter"),
+                MakeOptionalParam("z1", "integer", "Start Z of area bounds filter"),
+                MakeOptionalParam("x2", "integer", "End X of area bounds filter"),
+                MakeOptionalParam("z2", "integer", "End Z of area bounds filter")));
+            tools.Add(MakeTool("set_stockpile_item", "Allow or disallow a specific item type in stockpile zones and/or storage buildings (shelves, dressers, tool cabinets). Works on blueprints too — configure storage IMMEDIATELY after placing, no need to wait for construction. Applies to ALL matching storage. Use 'room' to target storage in a specific room. Use coordinate bounds to target a specific area.",
+                MakeParam("zoneName", "string", "Name to match against stockpile zones and storage buildings (e.g., 'Stockpile', 'Shelf', 'Dresser'). Matches ALL storage containing this name."),
                 MakeParam("item", "string", "Item name or defName"),
-                MakeParam("allowed", "boolean", "True to allow, false to disallow")));
+                MakeParam("allowed", "boolean", "True to allow, false to disallow"),
+                MakeOptionalParam("room", "string", "Filter by room role (e.g., 'kitchen', 'bedroom', 'hospital', 'dining room'). Only affects storage inside rooms with this role."),
+                MakeOptionalParam("x1", "integer", "Start X of area bounds filter"),
+                MakeOptionalParam("z1", "integer", "Start Z of area bounds filter"),
+                MakeOptionalParam("x2", "integer", "End X of area bounds filter"),
+                MakeOptionalParam("z2", "integer", "End Z of area bounds filter")));
 
             // Area Restriction Tools
             tools.Add(MakeTool("list_areas", "List all allowed areas that can be assigned to colonists."));
@@ -190,6 +237,64 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_diplomatic_summary", "Get a summary count of allies, neutral factions, and hostile factions."));
             tools.Add(MakeTool("get_diplomacy_options", "Get available diplomatic actions with a specific faction.",
                 MakeParam("factionName", "string", "Faction name")));
+
+            // Bed Assignment Tools
+            tools.Add(MakeTool("list_beds", "List all beds in the colony with owner assignments, locations, and room quality."));
+            tools.Add(MakeTool("get_bed_assignments", "Get current bed assignments for all colonists."));
+            tools.Add(MakeTool("assign_bed", "Assign a colonist to a specific bed. Use list_beds to find bed locations.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "Bed X coordinate"),
+                MakeParam("z", "integer", "Bed Z coordinate")));
+            tools.Add(MakeTool("unassign_bed", "Remove a colonist's bed assignment.",
+                MakeParam("colonist", "string", "The colonist's name")));
+
+            // Designation Tools (Hunting/Taming/Resource Gathering)
+            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Use get_map_region to find animals.",
+                MakeParam("x", "integer", "Animal X coordinate"),
+                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Animal must not be too wild.",
+                MakeParam("x", "integer", "Animal X coordinate"),
+                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal.",
+                MakeParam("x", "integer", "Animal X coordinate"),
+                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate")));
+            tools.Add(MakeTool("designate_chop", "Mark trees for chopping in an area.",
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate")));
+            tools.Add(MakeTool("designate_harvest", "Mark plants for harvesting in an area.",
+                MakeParam("x1", "integer", "Start X coordinate"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate"),
+                MakeParam("z2", "integer", "End Z coordinate")));
+
+            // Equipment & Policy Tools
+            tools.Add(MakeTool("list_equipment", "List current weapon and apparel for all colonists with armor ratings."));
+            tools.Add(MakeTool("equip_weapon", "Force a colonist to equip a specific weapon at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "Weapon X coordinate"),
+                MakeParam("z", "integer", "Weapon Z coordinate")));
+            tools.Add(MakeTool("wear_apparel", "Force a colonist to wear specific apparel at the given coordinates.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("x", "integer", "Apparel X coordinate"),
+                MakeParam("z", "integer", "Apparel Z coordinate")));
+            tools.Add(MakeTool("drop_equipment", "Make a colonist drop their current weapon.",
+                MakeParam("colonist", "string", "The colonist's name")));
+            tools.Add(MakeTool("assign_outfit", "Assign a clothing policy/outfit to a colonist.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("outfitName", "string", "Outfit name (e.g., 'Worker', 'Soldier', 'Nudist')")));
+            tools.Add(MakeTool("assign_drug_policy", "Assign a drug policy to a colonist.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("policyName", "string", "Drug policy name")));
+            tools.Add(MakeTool("assign_food_restriction", "Assign a food restriction to a colonist.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("restrictionName", "string", "Food restriction name")));
 
             // Building Tools
             tools.Add(MakeTool("list_buildable", "List available buildings that can be constructed. Shows defName, label, size, material requirements, and research status. Use 'category' to filter (Structure, Furniture, Production, Power, Security, Temperature, Misc, Joy). Without filter, shows all buildings grouped by category.",
@@ -236,6 +341,11 @@ namespace RimMind.Tools
                 MakeParam("text", "string", "The directive text to add (e.g., 'Melee weapons only - no ranged weapons or turrets')")));
             tools.Add(MakeTool("remove_directive", "Remove a colony directive by searching for matching text. Use when the player wants to remove or change a standing rule.",
                 MakeParam("search", "string", "Text to search for in existing directives. The first directive line containing this text (case-insensitive) will be removed.")));
+
+            // Trade Tools
+            tools.Add(MakeTool("get_active_traders", "Get all currently available traders: orbital trade ships, visiting caravans, and allied settlements in comms range. For each trader, returns faction, items in stock with quantities and prices (buy/sell), silver available, and time until departure. Use this to discover trading opportunities."));
+            tools.Add(MakeTool("analyze_trade_opportunity", "Analyze trade opportunities with current traders. Compares colony resources against trader inventory to suggest profitable trades: items to buy for urgent needs (medicine, components, food), items to sell for profit (surplus materials), and strategic purchases. Returns recommendations with priority scores and reasoning.",
+                MakeOptionalParam("traderFilter", "string", "Optional filter to analyze specific trader by name, faction, or type (e.g., 'orbital', 'caravan'). If omitted, analyzes all traders.")));
 
             return tools;
         }
