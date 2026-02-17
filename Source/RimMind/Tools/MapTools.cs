@@ -120,7 +120,9 @@ namespace RimMind.Tools
 
             obj["totalGeneration"] = totalGeneration.ToString("F0") + " W";
             obj["totalConsumption"] = totalConsumption.ToString("F0") + " W";
-            obj["surplus"] = (totalGeneration - totalConsumption).ToString("F0") + " W";
+            
+            float surplus = totalGeneration - totalConsumption;
+            obj["surplus"] = surplus.ToString("F0") + " W";
             obj["batteryCount"] = batteryCount;
             obj["storedEnergy"] = totalStored.ToString("F0") + " Wd";
             obj["storageCapacity"] = totalStorageCapacity.ToString("F0") + " Wd";
@@ -128,6 +130,81 @@ namespace RimMind.Tools
 
             if (totalStorageCapacity > 0)
                 obj["batteryPercentage"] = (totalStored / totalStorageCapacity * 100f).ToString("F1") + "%";
+
+            // Phase 4: Power Failure Prediction
+            // Calculate battery drain rate and time until blackout
+            if (batteryCount > 0)
+            {
+                // Net power flow: negative = draining, positive = charging
+                float netPowerFlow = surplus;
+                
+                // Convert W to Wd/hour (1 hour = 2500 ticks, power is in watts)
+                // Power consumption is continuous, so Wd/hour = W * (2500 ticks/hour / 60000 ticks/day)
+                // Simplified: Wd/hour ≈ W / 24
+                float drainRatePerHour = -netPowerFlow / 24f;
+                
+                if (netPowerFlow < 0)
+                {
+                    // Batteries are draining
+                    obj["batteryDrainRate"] = drainRatePerHour.ToString("F1") + " Wd/hour";
+                    
+                    // Calculate hours until blackout
+                    if (drainRatePerHour > 0)
+                    {
+                        float hoursRemaining = totalStored / drainRatePerHour;
+                        obj["hoursUntilBlackout"] = hoursRemaining.ToString("F1");
+                        
+                        // Critical warning if < 2 hours
+                        if (hoursRemaining < 2f)
+                        {
+                            obj["status"] = "critical";
+                            obj["warning"] = string.Format("⚠️ CRITICAL: Batteries will die in {0:F1} hours without power generation!", hoursRemaining);
+                        }
+                        else if (hoursRemaining < 6f)
+                        {
+                            obj["status"] = "low";
+                            obj["warning"] = string.Format("Low power: {0:F1} hours of battery remaining", hoursRemaining);
+                        }
+                        else
+                        {
+                            obj["status"] = "draining";
+                        }
+                    }
+                    else
+                    {
+                        obj["hoursUntilBlackout"] = "unknown";
+                        obj["status"] = "draining";
+                    }
+                }
+                else if (netPowerFlow > 0)
+                {
+                    // Batteries are charging
+                    float chargeRate = netPowerFlow / 24f;
+                    obj["batteryChargeRate"] = chargeRate.ToString("F1") + " Wd/hour";
+                    obj["status"] = "charging";
+                    
+                    // Calculate time to full charge
+                    float energyNeeded = totalStorageCapacity - totalStored;
+                    if (chargeRate > 0 && energyNeeded > 0)
+                    {
+                        float hoursToFull = energyNeeded / chargeRate;
+                        obj["hoursToFullCharge"] = hoursToFull.ToString("F1");
+                    }
+                }
+                else
+                {
+                    // Perfectly balanced
+                    obj["status"] = "balanced";
+                }
+            }
+            else
+            {
+                // No batteries
+                if (surplus >= 0)
+                    obj["status"] = "stable";
+                else
+                    obj["status"] = "insufficient_generation";
+            }
 
             return obj.ToString();
         }

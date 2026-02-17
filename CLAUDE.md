@@ -231,10 +231,10 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (52 tools)
+## Current Tool Catalog (54 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (2): get_relationships, get_faction_relations
-- **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
+- **Work** (8): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule, get_work_queue, get_construction_status
 - **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research** (3): get_research_status, get_available_research, get_completed_research
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
@@ -252,6 +252,7 @@ RimMind/
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ## Changelog
+- **2026-02-17**: **Phase 2: Construction & Workflow Intelligence** — Added work bottleneck detection and construction progress tracking. New tools: `get_work_queue` (shows pending jobs by type with counts: total/in-progress/blocked/assigned colonists for hauling, construction, mining, planting, repair) and `get_construction_status` (lists all blueprints with completion %, materials needed vs available, forbidden status, current builders). Enhanced `place_building` with material pre-check: now warns if insufficient materials exist before placing blueprints, showing shortages with "need X more steel" format. Addresses issue #55.
 - **2026-02-17**: Enhanced blueprint visibility — AI can now clearly distinguish blueprints from built structures. Added `get_blueprints` tool to query all placed blueprints on the map with defName, position, material, size, and rotation. Updated `get_cell_details` to separate blueprints into dedicated array with "unbuilt" status vs built structures with "built" status. Enhanced system prompt to explain uppercase (built) vs lowercase (blueprint) character codes at the top, not just in building section. Map grid legend already showed "(blueprint)" for lowercase codes. This fixes issue where RimMind couldn't see player-placed blueprints even though they were visible as lowercase characters in the grid.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.

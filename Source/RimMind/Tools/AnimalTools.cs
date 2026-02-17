@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Generic;
 using RimMind.API;
 using RimWorld;
 using Verse;
@@ -27,6 +28,15 @@ namespace RimMind.Tools
                 var master = animal.playerSettings?.Master;
                 if (master != null)
                     obj["master"] = master.Name?.ToStringShort ?? "Unknown";
+
+                // Carrying capacity (Phase 8 enhancement)
+                if (animal.RaceProps.packAnimal)
+                {
+                    var massUtil = MassUtility.Capacity(animal);
+                    var massCurrent = MassUtility.GearAndInventoryMass(animal);
+                    obj["carrying"] = massCurrent.ToString("F1") + "/" + massUtil.ToString("F1") + " kg";
+                    obj["load_percentage"] = ((massCurrent / massUtil) * 100f).ToString("F0") + "%";
+                }
 
                 // Training
                 if (animal.training != null)
