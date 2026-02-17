@@ -392,5 +392,111 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        public static string SetStockpilePriority(string zoneName, string priority)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (string.IsNullOrEmpty(priority)) return ToolExecutor.JsonError("priority parameter required.");
+
+            string nameLower = zoneName.ToLower();
+            var stockpile = map.zoneManager.AllZones.OfType<Zone_Stockpile>()
+                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+
+            if (stockpile == null)
+                return ToolExecutor.JsonError("Stockpile '" + zoneName + "' not found.");
+
+            // Parse priority
+            StoragePriority newPriority;
+            string priorityLower = priority.ToLower();
+            if (priorityLower.Contains("crit")) newPriority = StoragePriority.Critical;
+            else if (priorityLower.Contains("import")) newPriority = StoragePriority.Important;
+            else if (priorityLower.Contains("prefer")) newPriority = StoragePriority.Preferred;
+            else if (priorityLower.Contains("normal")) newPriority = StoragePriority.Normal;
+            else if (priorityLower.Contains("low") || priorityLower.Contains("unstored")) newPriority = StoragePriority.Low;
+            else return ToolExecutor.JsonError("Priority must be: Critical, Important, Preferred, Normal, or Low.");
+
+            stockpile.settings.Priority = newPriority;
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["stockpile"] = stockpile.label;
+            result["priority"] = newPriority.ToString();
+            return result.ToString();
+        }
+
+        public static string SetStockpileFilter(string zoneName, string category, bool allowed)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (string.IsNullOrEmpty(category)) return ToolExecutor.JsonError("category parameter required.");
+
+            string nameLower = zoneName.ToLower();
+            var stockpile = map.zoneManager.AllZones.OfType<Zone_Stockpile>()
+                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+
+            if (stockpile == null)
+                return ToolExecutor.JsonError("Stockpile '" + zoneName + "' not found.");
+
+            // Find matching category
+            string catLower = category.ToLower();
+            ThingCategoryDef categoryDef = DefDatabase<ThingCategoryDef>.AllDefsListForReading
+                .FirstOrDefault(c => 
+                    c.defName.ToLower() == catLower ||
+                    c.label.ToLower().Contains(catLower));
+
+            if (categoryDef == null)
+            {
+                return ToolExecutor.JsonError("Category '" + category + "' not found. Examples: Foods, RawResources, Manufactured, Weapons, Apparel, Medicine, Drugs");
+            }
+
+            stockpile.settings.filter.SetAllow(categoryDef, allowed);
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["stockpile"] = stockpile.label;
+            result["category"] = categoryDef.label;
+            result["allowed"] = allowed;
+            return result.ToString();
+        }
+
+        public static string SetStockpileItem(string zoneName, string itemName, bool allowed)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(zoneName)) return ToolExecutor.JsonError("zoneName parameter required.");
+            if (string.IsNullOrEmpty(itemName)) return ToolExecutor.JsonError("item parameter required.");
+
+            string nameLower = zoneName.ToLower();
+            var stockpile = map.zoneManager.AllZones.OfType<Zone_Stockpile>()
+                .FirstOrDefault(z => z.label.ToLower().Contains(nameLower));
+
+            if (stockpile == null)
+                return ToolExecutor.JsonError("Stockpile '" + zoneName + "' not found.");
+
+            // Find matching thing def
+            string itemLower = itemName.ToLower();
+            ThingDef thingDef = DefDatabase<ThingDef>.AllDefsListForReading
+                .FirstOrDefault(t => 
+                    t.defName.ToLower() == itemLower ||
+                    (t.label != null && t.label.ToLower().Contains(itemLower)));
+
+            if (thingDef == null)
+                return ToolExecutor.JsonError("Item '" + itemName + "' not found.");
+
+            stockpile.settings.filter.SetAllow(thingDef, allowed);
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["stockpile"] = stockpile.label;
+            result["item"] = thingDef.LabelCap.ToString();
+            result["allowed"] = allowed;
+            return result.ToString();
+        }
+
     }
 }
