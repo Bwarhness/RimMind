@@ -501,6 +501,37 @@ Keep existing tools for detailed queries:
 
 **Benefit:** AI can suggest building recreation
 
+#### 3.4 Mental Break Risk Predictions (ENHANCE: `get_mood_trends`)
+**Impact:** 🔥🔥🔥 (Proactive Prevention)  
+**Complexity:** Medium (30 minutes)  
+**Implementation:**
+- Calculate time-to-break estimates based on mood velocity
+- Predict "Mira will break in ~4 hours at current trend"
+- Include break threshold warnings (minor/major/extreme)
+
+**Benefit:** AI gives specific time windows for intervention
+
+#### 3.5 Actionable Mitigation Suggestions (NEW TOOL: `suggest_mood_interventions`)
+**Impact:** 🔥🔥🔥 (Prescriptive Guidance)  
+**Complexity:** Medium (45 minutes)  
+**Implementation:**
+- Analyze top negative thoughts for each at-risk colonist
+- Suggest specific actions: "Build dining table (fixes 'Ate without table')", "Improve bedroom beauty", "Schedule recreation time"
+- Prioritize by impact (which intervention helps most)
+- Include social interaction needs ("Mira needs positive social - pair with Jonas who likes her")
+
+**Benefit:** AI doesn't just warn - it tells you what to do
+
+#### 3.6 Environment Quality Scoring (NEW TOOL: `get_environment_quality`)
+**Impact:** 🔥🔥 (Root Cause Analysis)  
+**Complexity:** Medium (30 minutes)  
+**Implementation:**
+- Score each room for beauty, cleanliness, space, impressiveness
+- Flag rooms causing negative thoughts ("Disturbed sleep - bedroom too ugly")
+- Suggest specific improvements ("Add sculptures, clean filth, increase room size")
+
+**Benefit:** AI identifies environmental mood penalties
+
 ---
 
 ### **Phase 4: Power & Climate Monitoring** ⚡ **MEDIUM IMPACT**
@@ -529,21 +560,238 @@ Keep existing tools for detailed queries:
 
 ---
 
-### **Phase 5: Advanced Analytics** 📊 **LOW IMPACT** (Nice to Have)
+### **Phase 5: Combat Intelligence** ⚔️ **HIGH IMPACT**
 
-#### 5.1 Wealth Breakdown
+**Goal:** Give AI complete combat awareness for tactical decision-making
+
+#### 5.1 Weapon & Armor Stats (NEW TOOL: `get_weapon_stats` + `get_armor_stats`)
+**Impact:** 🔥🔥🔥🔥 (Combat Calculations)  
+**Complexity:** Medium (1 hour)  
+**Implementation:**
+- Weapon stats: damage, DPS, range, accuracy curve, cooldown, armor penetration
+- Armor stats: sharp/blunt/heat protection percentages
+- Quality modifiers (poor/normal/good/excellent/masterwork/legendary)
+- Show for both colonist and enemy equipment
+
+**Benefit:** AI can calculate actual combat effectiveness, not just "has a gun"
+
+```json
+{
+  "weapon": {
+    "defName": "Gun_Revolver",
+    "label": "revolver",
+    "damage": 12,
+    "dps": 8.5,
+    "range": 25.9,
+    "accuracy_touch": 0.91,
+    "accuracy_short": 0.83,
+    "accuracy_medium": 0.64,
+    "accuracy_long": 0.41,
+    "cooldown": 1.3,
+    "quality": "normal"
+  }
+}
+```
+
+#### 5.2 Raid Composition Analysis (ENHANCE: `get_threats`)
+**Impact:** 🔥🔥🔥🔥 (Tactical Awareness)  
+**Complexity:** Medium (45 minutes)  
+**Implementation:**
+- Break down raid by role: melee/ranged/grenadiers/special units
+- Show enemy weapon types and quality
+- Show enemy armor coverage
+- Identify dangerous units (centipedes, scythers, etc.)
+
+**Benefit:** AI can say "3 melee pikemen, 5 riflemen, 2 grenadiers - focus fire on grenadiers first"
+
+#### 5.3 Raid Strategy Detection (ENHANCE: `get_threats`)
+**Impact:** 🔥🔥🔥🔥 (Counter-Strategy)  
+**Complexity:** Medium (45 minutes)  
+**Implementation:**
+- Detect raid type: assault, siege, sapper, breach, drop pod, tunneler
+- Show raid behavior pattern and approach vector
+- Suggest counter-tactics based on raid type
+
+**Benefit:** AI can say "This is a sapper raid - they'll dig through walls. Reinforce interior defenses."
+
+```json
+{
+  "raid_strategy": "sapper",
+  "description": "Sappers will mine through walls to bypass defenses",
+  "counter_tactics": ["Reinforce interior walls", "Set up fallback positions", "Don't rely on exterior defenses"]
+}
+```
+
+#### 5.4 Enemy Morale & Fleeing (NEW TOOL: `get_enemy_morale`)
+**Impact:** 🔥🔥🔥 (Predicting Retreat)  
+**Complexity:** High (1.5 hours)  
+**Implementation:**
+- Track enemy casualties vs starting count
+- Calculate morale threshold (typically flee at ~50% losses)
+- Predict "enemy will flee soon" or "enemy committed to fight"
+- Show per-raider morale if accessible
+
+**Benefit:** AI can say "Enemy lost 4 of 8 - expect retreat soon. Push hard now."
+
+#### 5.5 Friendly Fire Risk (NEW TOOL: `get_friendly_fire_risk`)
+**Impact:** 🔥🔥🔥 (Positioning Safety)  
+**Complexity:** High (1.5 hours)  
+**Implementation:**
+- Calculate shooting accuracy from current positions
+- Identify colonists in line of fire
+- Calculate friendly fire probability percentage
+- Suggest safe firing positions or repositioning
+
+**Benefit:** AI can warn "Don't shoot - 40% chance Jonas hits Mira who's in melee"
+
+#### 5.6 Cover Effectiveness (NEW TOOL: `get_cover_analysis`)
+**Impact:** 🔥🔥 (Positioning Optimization)  
+**Complexity:** Medium (45 minutes)  
+**Implementation:**
+- Identify cover objects (walls, sandbags, trees, rocks)
+- Calculate cover bonus percentage (25% half cover, 75% full cover)
+- Show optimal cover positions for each colonist
+- Highlight exposed positions
+
+**Benefit:** AI can say "Move Jonas behind sandbags at (120,85) for 75% cover"
+
+#### 5.7 Optimal Engagement Ranges (enhance previous tools)
+**Impact:** 🔥🔥 (Tactical Positioning)  
+**Complexity:** Low (20 minutes)  
+**Implementation:**
+- Calculate optimal range per weapon (where accuracy is best)
+- Compare to enemy weapon ranges
+- Suggest positioning: "Keep distance 15-25 for revolver advantage"
+
+**Benefit:** AI understands range advantage/disadvantage
+
+---
+
+### **Phase 6: DLC Combat Intelligence** 🧬 **HIGH IMPACT** (for DLC players)
+
+**Goal:** Full visibility into Royalty and Biotech DLC combat features
+
+#### 6.1 Psycasts (Royalty DLC) (NEW TOOL: `get_psycasts`)
+**Impact:** 🔥🔥🔥🔥🔥 (DLC Game-Changer)  
+**Complexity:** High (2 hours)  
+**Implementation:**
+- List available psycasts per psycaster
+- Show psycast effects and combat applications
+- Show psylink level (1-6)
+- Show neural heat (current/max)
+- Show psycast cooldowns
+- Show psyfocus level
+- Suggest tactical psycast usage
+
+**Benefit:** AI can say "Jonas has Skip - teleport the grenadier next to your colonists and focus fire"
+
+```json
+{
+  "psycaster": "Jonas",
+  "psylink_level": 3,
+  "neural_heat": "15/30",
+  "psyfocus": "85%",
+  "available_psycasts": [
+    {
+      "name": "Skip",
+      "effect": "Teleport target to selected location",
+      "neural_heat_cost": 15,
+      "range": 25,
+      "cooldown": "ready",
+      "combat_use": "Teleport enemies into killbox or away from colonists"
+    },
+    {
+      "name": "Berserk",
+      "effect": "Target goes berserk and attacks nearest pawn",
+      "neural_heat_cost": 18,
+      "cooldown": "3 hours",
+      "combat_use": "Turn enemies against each other"
+    }
+  ]
+}
+```
+
+#### 6.2 Xenotype Genes (Biotech DLC) (NEW TOOL: `get_genes`)
+**Impact:** 🔥🔥🔥🔥 (Combat Abilities)  
+**Complexity:** High (2 hours)  
+**Implementation:**
+- List genes per colonist
+- Show gene-granted abilities (fire breath, toxic immunity, etc.)
+- Show stat modifiers from genes
+- Show xenotype combat bonuses/penalties
+- Identify combat-relevant genes
+
+**Benefit:** AI can say "Mira is a Dirtmole - toxic immune, send her against insects"
+
+```json
+{
+  "colonist": "Mira",
+  "xenotype": "Dirtmole",
+  "combat_genes": [
+    {
+      "gene": "ToxicEnvironmentResistance",
+      "effect": "Immune to toxic buildup",
+      "combat_use": "Can fight in toxic environments, effective vs insects"
+    },
+    {
+      "gene": "Brawler",
+      "effect": "+4 melee hit chance",
+      "combat_use": "Effective in melee combat"
+    }
+  ]
+}
+```
+
+#### 6.3 Mechanitor Control (Biotech DLC) (NEW TOOL: `get_mechanitor_info`)
+**Impact:** 🔥🔥🔥🔥 (Mech Army)  
+**Complexity:** High (2 hours)  
+**Implementation:**
+- List controlled mechs per mechanitor
+- Show mech types, weapons, health
+- Show mech capabilities and combat roles
+- Show bandwidth usage (current/max)
+- Suggest mech deployment strategies
+
+**Benefit:** AI can say "Deploy your 2 Scorchers (flamethrower mechs) against the clustered melee rush"
+
+```json
+{
+  "mechanitor": "Jonas",
+  "bandwidth": "4/6",
+  "controlled_mechs": [
+    {
+      "type": "Scorcher",
+      "weapon": "Mini-Flamethrower",
+      "health": "100/100",
+      "role": "Anti-infantry, area denial",
+      "combat_use": "Effective against melee rushes, burns multiple targets"
+    },
+    {
+      "type": "Lifter",
+      "role": "Support, hauling",
+      "combat_use": "Non-combat support"
+    }
+  ]
+}
+```
+
+---
+
+### **Phase 7: Advanced Analytics** 📊 **LOW IMPACT** (Nice to Have)
+
+#### 7.1 Wealth Breakdown
 - Show wealth by category (buildings, items, pawns)
 - Track wealth velocity (gaining/losing value)
 
-#### 5.2 Trade Profitability
+#### 7.2 Trade Profitability
 - Analyze trader inventory vs colony needs
 - Suggest profitable trades
 
-#### 5.3 Quest Visibility
+#### 7.3 Quest Visibility
 - Expose active quests from RimWorld's quest system
 - Show rewards and risks
 
-#### 5.4 Event Prediction
+#### 7.4 Event Prediction
 - Track storyteller adaptation level
 - Estimate "major event likely in next 2 days"
 
@@ -630,6 +878,69 @@ Keep existing tools for detailed queries:
 
 ---
 
+### **Week 5-6: Combat Intelligence** (Phase 5)
+**Focus:** Weapon/armor stats, raid analysis, enemy morale, friendly fire, cover
+
+**Week 5, Day 1-2:**
+- Implement `get_weapon_stats` and `get_armor_stats`
+- Parse weapon damage, DPS, range, accuracy curves
+- Parse armor protection values
+
+**Week 5, Day 3-4:**
+- Enhance `get_threats` with raid composition breakdown
+- Show melee/ranged/grenadier counts, weapon types, armor
+
+**Week 5, Day 5:**
+- Enhance `get_threats` with raid strategy detection
+- Detect assault/siege/sapper/breach/drop pod/tunneler types
+
+**Week 6, Day 1-2:**
+- Implement `get_enemy_morale` for fleeing predictions
+- Calculate morale thresholds and retreat timing
+
+**Week 6, Day 3:**
+- Implement `get_friendly_fire_risk`
+- Calculate line-of-fire and friendly fire probabilities
+
+**Week 6, Day 4:**
+- Implement `get_cover_analysis`
+- Identify cover objects and calculate cover bonuses
+
+**Week 6, Day 5:**
+- Add optimal engagement range calculations
+- Test and document Phase 5 tools
+
+**Deliverable:** RimMind has tactical combat intelligence for positioning and strategy
+
+---
+
+### **Week 7-8: DLC Combat Intelligence** (Phase 6)
+**Focus:** Psycasts, genes, mechanitor abilities
+
+**Week 7, Day 1-3:**
+- Implement `get_psycasts` (Royalty DLC)
+- Parse available psycasts, effects, neural heat, psylink level
+- Add combat application suggestions
+
+**Week 7, Day 4-5:**
+- Implement `get_genes` (Biotech DLC)
+- Parse xenotype genes and combat abilities
+- Identify combat-relevant genes
+
+**Week 8, Day 1-3:**
+- Implement `get_mechanitor_info` (Biotech DLC)
+- Parse controlled mechs, weapons, health, roles
+- Add mech deployment suggestions
+
+**Week 8, Day 4-5:**
+- Test DLC features across different scenarios
+- Document Phase 6 tools
+- Create compatibility notes for vanilla vs DLC
+
+**Deliverable:** RimMind fully understands DLC combat features
+
+---
+
 ## Part 5: Success Metrics
 
 ### **How to Measure Improvement**
@@ -680,15 +991,32 @@ RimMind should eventually know:
 - `get_construction_status`
 - Enhanced `place_building` (material check)
 
-**Phase 3 (Week 3): 2 tools**
+**Phase 3 (Week 3): 5 tools**
 - `get_mood_trends`
 - `get_social_risks`
+- `suggest_mood_interventions`
+- `get_environment_quality`
+- Enhanced `get_colony_overview` (recreation analysis)
 
 **Phase 4 (Week 4): 2 tools**
 - Enhanced `get_power_status` (drain rate)
 - `get_temperature_risks`
 
-**Total New/Enhanced Tools:** 11 (52 → 63 tools)
+**Phase 5 (Week 5-6): 7 tools**
+- `get_weapon_stats`
+- `get_armor_stats`
+- Enhanced `get_threats` (raid composition + strategy detection)
+- `get_enemy_morale`
+- `get_friendly_fire_risk`
+- `get_cover_analysis`
+- Optimal engagement ranges (enhancement)
+
+**Phase 6 (Week 7-8): 3 tools**
+- `get_psycasts` (Royalty DLC)
+- `get_genes` (Biotech DLC)
+- `get_mechanitor_info` (Biotech DLC)
+
+**Total New/Enhanced Tools:** 24 (52 → 76 tools)
 
 ---
 
@@ -698,16 +1026,19 @@ RimMind's visibility improvements follow a clear path:
 
 1. **Phase 1 (Critical):** Always-on context + real-time alerts → AI knows what's urgent
 2. **Phase 2 (High):** Work queue + construction status → AI diagnoses bottlenecks
-3. **Phase 3 (Medium):** Mood trends + social risks → AI prevents mental breaks
+3. **Phase 3 (High):** Mood trends + actionable interventions → AI prevents mental breaks
 4. **Phase 4 (Medium):** Power/temp monitoring → AI prevents infrastructure failures
-5. **Phase 5 (Low):** Analytics & optimization → AI becomes strategic advisor
+5. **Phase 5 (High):** Combat intelligence → AI provides tactical combat advice
+6. **Phase 6 (High):** DLC combat → AI understands psycasts, genes, mechs
+7. **Phase 7 (Low):** Analytics & optimization → AI becomes strategic advisor
 
-**Implementation Time:** 4 weeks for Phases 1-4 (core improvements)
+**Implementation Time:** 8 weeks for Phases 1-6 (core + combat improvements)
 
 **Expected Outcome:** RimMind sees the game world as clearly as a human player, responds to emergencies in real-time, and proactively prevents common colony failures.
 
 ---
 
-**Document Version:** 1.0  
+**Document Version:** 2.0  
 **Date:** 2026-02-17  
+**Updated:** Added Phase 5 (Combat Intelligence) and Phase 6 (DLC Combat) based on combat visibility requirements. Enhanced Phase 3 with actionable mood interventions and environment quality analysis.  
 **Author:** RimMind Development Team

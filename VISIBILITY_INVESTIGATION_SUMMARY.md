@@ -102,7 +102,7 @@ Keep 52 existing tools for detailed queries when needed.
 
 ---
 
-## Priority Roadmap (4 Weeks)
+## Priority Roadmap (8 Weeks)
 
 ### **Phase 1: Critical Real-Time Awareness** ⚠️ (Week 1)
 **Focus:** Auto-context + real-time alerts + locations + resource trends
@@ -136,17 +136,19 @@ Keep 52 existing tools for detailed queries when needed.
 ---
 
 ### **Phase 3: Social & Mood Intelligence** 😊 (Week 3)
-**Focus:** Mood trends + social risks + recreation analysis
+**Focus:** Mood trends + social risks + actionable interventions
 
 **Additions:**
-1. NEW: `get_mood_trends` (mood velocity, mental break risk, top negative thoughts)
+1. NEW: `get_mood_trends` (mood velocity, mental break risk, time-to-break estimates)
 2. NEW: `get_social_risks` (hostile colonist pairs, fight warnings)
-3. Enhanced colony overview (recreation source analysis)
+3. NEW: `suggest_mood_interventions` (actionable suggestions for mood fixes)
+4. NEW: `get_environment_quality` (room quality scoring, improvement suggestions)
+5. Enhanced colony overview (recreation variety analysis, social interaction needs)
 
-**Impact:** 🔥🔥🔥 (Mental Break Prevention)  
-**Time:** ~4 hours implementation
+**Impact:** 🔥🔥🔥🔥 (Mental Break Prevention + Mitigation)  
+**Time:** ~6 hours implementation
 
-**Result:** RimMind prevents mental breaks before they happen
+**Result:** RimMind prevents mental breaks AND tells you how to fix mood issues
 
 ---
 
@@ -164,13 +166,55 @@ Keep 52 existing tools for detailed queries when needed.
 
 ---
 
+### **Phase 5: Combat Intelligence** ⚔️ (Week 5-6)
+**Focus:** Weapon/armor stats + raid analysis + enemy morale + friendly fire + cover
+
+**Additions:**
+1. NEW: `get_weapon_stats` (damage, DPS, range, accuracy curves, armor penetration)
+2. NEW: `get_armor_stats` (sharp/blunt/heat protection percentages)
+3. Enhanced `get_threats` (raid composition breakdown: melee/ranged/grenadiers)
+4. Enhanced `get_threats` (raid strategy detection: assault/siege/sapper/breach/drop pod)
+5. NEW: `get_enemy_morale` (fleeing predictions, morale thresholds)
+6. NEW: `get_friendly_fire_risk` (line-of-fire analysis, positioning safety)
+7. NEW: `get_cover_analysis` (cover objects, cover bonuses, optimal positions)
+8. Optimal engagement ranges (range advantage calculations)
+
+**Impact:** 🔥🔥🔥🔥🔥 (Tactical Combat Advice)  
+**Time:** ~10 hours implementation
+
+**Result:** RimMind provides tactical combat intelligence - "This is a sapper raid, they'll dig through walls. Reinforce interior defenses. Move Jonas behind sandbags at (120,85) for 75% cover."
+
+---
+
+### **Phase 6: DLC Combat Intelligence** 🧬 (Week 7-8)
+**Focus:** Psycasts (Royalty) + Genes (Biotech) + Mechanitor (Biotech)
+
+**Additions:**
+1. NEW: `get_psycasts` (Royalty DLC - available psycasts, effects, neural heat, psylink level, cooldowns, tactical usage)
+2. NEW: `get_genes` (Biotech DLC - xenotype genes, combat abilities, stat modifiers)
+3. NEW: `get_mechanitor_info` (Biotech DLC - controlled mechs, weapons, health, roles, deployment suggestions)
+
+**Impact:** 🔥🔥🔥🔥🔥 (DLC Game-Changer)  
+**Time:** ~12 hours implementation
+
+**Result:** RimMind fully understands DLC combat features - "Jonas has Skip psycast - teleport the grenadier into your killbox. Mira is toxic-immune (Dirtmole gene) - send her against insects."
+
+---
+
 ## Total Roadmap Summary
 
-**Timeline:** 4 weeks (Phases 1-4)  
-**New Tools:** 7 (get_colonist_locations, get_resource_trends, get_work_queue, get_construction_status, get_mood_trends, get_social_risks, get_temperature_risks)  
-**Enhanced Tools:** 3 (get_active_alerts, place_building, get_power_status)  
+**Timeline:** 8 weeks (Phases 1-6)  
+**New Tools:** 18 tools across all phases
+- Phase 1: get_colonist_locations, get_resource_trends
+- Phase 2: get_work_queue, get_construction_status
+- Phase 3: get_mood_trends, get_social_risks, suggest_mood_interventions, get_environment_quality
+- Phase 4: get_temperature_risks
+- Phase 5: get_weapon_stats, get_armor_stats, get_enemy_morale, get_friendly_fire_risk, get_cover_analysis
+- Phase 6: get_psycasts, get_genes, get_mechanitor_info
+
+**Enhanced Tools:** 5 (get_active_alerts, place_building, get_power_status, get_threats [2x], get_colony_overview)  
 **New Components:** 2 (GameStateContext for auto-context, ResourceTracker for burn rates)  
-**Final Tool Count:** 52 → 59 tools
+**Final Tool Count:** 52 → 76 tools
 
 ---
 
