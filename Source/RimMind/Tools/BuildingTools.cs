@@ -202,6 +202,189 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        /// <summary>
+        /// Get comprehensive placement requirements for a building.
+        /// Returns size, power, placement rules, terrain requirements, resources, research, and build work.
+        /// </summary>
+        public static string GetRequirements(JSONNode args)
+        {
+            if (args == null || string.IsNullOrEmpty(args["building"]?.Value))
+                return ToolExecutor.JsonError("'building' parameter is required.");
+
+            string buildingName = args["building"].Value;
+            var def = ResolveBuildingDef(buildingName);
+            if (def == null)
+            {
+                string suggestions = FindSimilarBuildings(buildingName);
+                string msg = "Building not found: " + buildingName;
+                if (suggestions != null)
+                    msg += ". Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
+            }
+
+            var result = new JSONObject();
+            result["building"] = def.defName;
+            result["label"] = def.label;
+
+            // Size
+            var sizeObj = new JSONObject();
+            sizeObj["width"] = def.size.x;
+            sizeObj["height"] = def.size.z;
+            result["size"] = sizeObj;
+
+            // Power stats
+            var powerComp = def.GetCompProperties<CompProperties_Power>();
+            if (powerComp != null)
+            {
+                result["powerOutput"] = (int)Math.Round(powerComp.PowerConsumption > 0 ? 0 : Math.Abs(powerComp.PowerConsumption));
+                result["powerConsumption"] = (int)Math.Round(powerComp.PowerConsumption > 0 ? powerComp.PowerConsumption : 0);
+            }
+            else
+            {
+                result["powerOutput"] = 0;
+                result["powerConsumption"] = 0;
+            }
+
+            // Placement rules
+            var placementRules = new JSONObject();
+            
+            // Check PlaceWorkers for special placement requirements
+            var placeWorkerNotes = new List<string>();
+            if (def.placeWorkers != null && def.placeWorkers.Count > 0)
+            {
+                foreach (var pwType in def.placeWorkers)
+                {
+                    string pwName = pwType.Name;
+                    
+                    // Detect common special placement requirements
+                    if (pwName.Contains("OnSteamGeyser"))
+                    {
+                        placementRules["mustBeOnSteamGeyser"] = true;
+                        placeWorkerNotes.Add("Must be placed directly on a steam geyser");
+                    }
+                    else if (pwName.Contains("WatchForGrowth"))
+                    {
+                        placementRules["mustWatchGrowingPlants"] = true;
+                        placeWorkerNotes.Add("Must face growing plants (sun lamps, etc.)");
+                    }
+                    else if (pwName.Contains("WaterDepth"))
+                    {
+                        placementRules["mustBeInWater"] = true;
+                        placeWorkerNotes.Add("Must be placed in water");
+                    }
+                    else if (pwName.Contains("NotUnderRoof"))
+                    {
+                        placementRules["mustBeOutdoors"] = true;
+                        placementRules["requiresRoof"] = false;
+                        placeWorkerNotes.Add("Must be outdoors (unroofed)");
+                    }
+                }
+            }
+            
+            // Standard placement flags
+            if (def.building != null)
+            {
+                // Indoors/outdoors requirements (if not already set by PlaceWorkers)
+                if (!placementRules.HasKey("mustBeOutdoors"))
+                {
+                    placementRules["mustBeIndoors"] = false;
+                    placementRules["mustBeOutdoors"] = false;
+                }
+                
+                if (!placementRules.HasKey("requiresRoof"))
+                {
+                    placementRules["requiresRoof"] = false;
+                }
+                
+                // Minifiable (can be uninstalled and moved)
+                placementRules["minifiable"] = def.minifiedDef != null;
+            }
+
+            result["placementRules"] = placementRules;
+
+            // Terrain requirements
+            var terrainReqs = new JSONArray();
+            if (def.terrainAffordanceNeeded != null)
+            {
+                string affordance = def.terrainAffordanceNeeded.defName;
+                
+                // Translate affordance to human-readable requirements
+                if (affordance.Contains("Heavy"))
+                    terrainReqs.Add("Supports heavy structures");
+                else if (affordance.Contains("Medium"))
+                    terrainReqs.Add("Supports medium structures");
+                else if (affordance.Contains("Light"))
+                    terrainReqs.Add("Supports light structures");
+                    
+                // All terrain affordances implicitly require "not water" unless specifically a water building
+                if (!def.placeWorkers.Any(pw => pw.Name.Contains("Water")))
+                    terrainReqs.Add("Not water");
+            }
+            else
+            {
+                // Default: most buildings need solid ground
+                terrainReqs.Add("Not water");
+            }
+            
+            result["terrainRequirements"] = terrainReqs;
+
+            // Work to build
+            if (def.statBases != null)
+            {
+                var workStat = def.statBases.FirstOrDefault(s => s.stat.defName == "WorkToBuild");
+                if (workStat != null)
+                    result["workToBuild"] = (int)Math.Round(workStat.value);
+            }
+
+            // Resources required
+            var resources = new JSONArray();
+            if (def.MadeFromStuff)
+            {
+                // Stuff-based building (e.g., walls)
+                var resObj = new JSONObject();
+                resObj["thing"] = "Stuff (any material)";
+                resObj["count"] = def.costStuffCount;
+                resources.Add(resObj);
+            }
+            
+            if (def.costList != null && def.costList.Count > 0)
+            {
+                foreach (var cost in def.costList)
+                {
+                    var resObj = new JSONObject();
+                    resObj["thing"] = cost.thingDef.defName;
+                    resObj["count"] = cost.count;
+                    resources.Add(resObj);
+                }
+            }
+            
+            result["resources"] = resources;
+
+            // Research required
+            if (def.researchPrerequisites != null && def.researchPrerequisites.Count > 0)
+            {
+                // Just return the first research requirement for simplicity
+                // (most buildings only have one)
+                result["researchRequired"] = def.researchPrerequisites[0].defName;
+            }
+            else
+            {
+                result["researchRequired"] = "None";
+            }
+
+            // Notes (from PlaceWorker analysis)
+            if (placeWorkerNotes.Count > 0)
+            {
+                result["notes"] = string.Join("; ", placeWorkerNotes);
+            }
+            else
+            {
+                result["notes"] = "";
+            }
+
+            return result.ToString();
+        }
+
         public static string PlaceBuilding(JSONNode args)
         {
             var map = Find.CurrentMap;
