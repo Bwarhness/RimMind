@@ -1722,8 +1722,9 @@ namespace RimMind.Tools
             result["rotation"] = rotation.ToStringHuman().ToLower();
 
             // Size (accounting for rotation)
-            IntVec2 rotatedSize = def.size.RotatedBy(rotation);
-            result["size"] = new JSONArray { rotatedSize.x, rotatedSize.z };
+            int sizeX = rotation.IsHorizontal ? def.size.z : def.size.x;
+            int sizeZ = rotation.IsHorizontal ? def.size.x : def.size.z;
+            result["size"] = new JSONArray { sizeX, sizeZ };
 
             // Checks object
             var checks = new JSONObject();
@@ -1770,8 +1771,8 @@ namespace RimMind.Tools
             var adjacentCheck = CheckAdjacent(map, occupiedCells);
             if (adjacentCheck.Count > 0)
             {
-                foreach (var warning in adjacentCheck.AsArray)
-                    warnings.Add(warning);
+                for (int i = 0; i < adjacentCheck.Count; i++)
+                    warnings.Add(adjacentCheck[i]);
             }
 
             result["valid"] = valid;
