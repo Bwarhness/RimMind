@@ -10,14 +10,9 @@ namespace RimMind.Tools
 {
     public static class SemanticTools
     {
-        // Caching (Option C: time-based refresh with 1-second threshold)
-        private static string _cachedOverview = null;
-        private static int _lastGeneratedTick = 0;
-        private const int REFRESH_THRESHOLD_TICKS = 60; // ~1 second at 60 TPS
-
         /// <summary>
         /// Get a compact semantic overview of the colony layout.
-        /// Uses time-based caching to avoid regeneration on every call.
+        /// Generated fresh on every LLM request to ensure accuracy.
         /// </summary>
         public static string GetSemanticOverview()
         {
@@ -25,16 +20,7 @@ namespace RimMind.Tools
             if (map == null)
                 return ToolExecutor.JsonError("No active map.");
 
-            int now = Find.TickManager.TicksGame;
-
-            // Regenerate if cache is empty or older than threshold
-            if (_cachedOverview == null || (now - _lastGeneratedTick) > REFRESH_THRESHOLD_TICKS)
-            {
-                _cachedOverview = GenerateSemanticOverview(map);
-                _lastGeneratedTick = now;
-            }
-
-            return _cachedOverview;
+            return GenerateSemanticOverview(map);
         }
 
         /// <summary>
