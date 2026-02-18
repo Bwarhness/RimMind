@@ -98,7 +98,7 @@ namespace RimMind.Tools
                 if (powerComp == null) continue;
 
                 // Skip if doesn't need power or is already powered
-                if (powerComp.PowerOn) continue;
+                if (powerComp.PowerOutput > 0) continue;
 
                 var obj = new JSONObject();
                 obj["defName"] = building.def.defName;
@@ -209,7 +209,7 @@ namespace RimMind.Tools
             }
 
             obj["needsPower"] = true;
-            obj["isPowered"] = powerComp.PowerOn;
+            obj["isPowered"] = powerComp.PowerOutput > 0;
 
             // Find which network this belongs to
             if (powerComp.PowerNet != null)
@@ -421,7 +421,7 @@ namespace RimMind.Tools
             if (powerComp == null)
                 return ToolExecutor.JsonError($"Building '{building.LabelCap}' does not require power.");
 
-            if (powerComp.PowerOn)
+            if (powerComp.PowerOutput > 0)
                 return ToolExecutor.JsonError($"Building '{building.LabelCap}' is already powered.");
 
             // Find nearest powered conduit

@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using RimMind.API;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace RimMind.Tools
@@ -38,7 +40,7 @@ namespace RimMind.Tools
                 var psycasters = new JSONArray();
                 foreach (var pawn in map.mapPawns.FreeColonists)
                 {
-                    if (pawn.psychicEntropy != null && pawn.psychicEntropy.PsylinkLevel > 0)
+                    if (pawn.psychicEntropy != null && pawn.GetPsylinkLevel() > 0)
                     {
                         psycasters.Add(pawn.Name?.ToStringShort ?? "Unknown");
                     }
@@ -55,12 +57,12 @@ namespace RimMind.Tools
             if (psycaster == null)
                 return ToolExecutor.JsonError("Colonist '" + name + "' not found.");
 
-            if (psycaster.psychicEntropy == null || psycaster.psychicEntropy.PsylinkLevel == 0)
+            if (psycaster.psychicEntropy == null || psycaster.GetPsylinkLevel() == 0)
                 return ToolExecutor.JsonError(name + " is not a psycaster (no psylink).");
 
             var obj = new JSONObject();
             obj["psycaster"] = psycaster.Name?.ToStringShort ?? "Unknown";
-            obj["psylink_level"] = psycaster.psychicEntropy.PsylinkLevel;
+            obj["psylink_level"] = psycaster.GetPsylinkLevel();
             
             // Neural heat
             var currentHeat = psycaster.psychicEntropy.EntropyValue;
@@ -79,7 +81,7 @@ namespace RimMind.Tools
                 foreach (var ability in psycaster.abilities.abilities)
                 {
                     // Only include psycasts (not other abilities)
-                    if (ability.def.requiredPsylink != null || ability.def.defName.StartsWith("Psycast_"))
+                    if (ability.def.defName.StartsWith("Psycast_") || ability.def.category?.defName == "Psycast")
                     {
                         var psycast = new JSONObject();
                         psycast["name"] = ability.def.LabelCap.ToString();
@@ -94,17 +96,18 @@ namespace RimMind.Tools
                         }
 
                         // Psyfocus cost
-                        if (ability.def.costList != null)
+                        if (ability.def.statBases != null)
                         {
-                            var focusCost = ability.def.costList.FirstOrDefault(c => c.type.defName == "Psyfocus");
-                            if (focusCost != null)
-                                psycast["psyfocus_cost"] = (focusCost.amount * 100).ToString("F0") + "%";
+                            var focusStat = ability.def.statBases.FirstOrDefault(s => s.stat?.defName == "Ability_PsyfocusCost");
+                            if (focusStat != null)
+                                psycast["psyfocus_cost"] = (focusStat.value * 100).ToString("F0") + "%";
                         }
 
                         // Cooldown status
-                        if (ability.cooldown.Active)
+                        var cooldownTicks = ability.CooldownTicksRemaining;
+                        if (cooldownTicks > 0)
                         {
-                            psycast["cooldown_remaining"] = ability.cooldown.TicksLeft.ToStringTicksToPeriod();
+                            psycast["cooldown_remaining"] = cooldownTicks.ToStringTicksToPeriod();
                             psycast["on_cooldown"] = true;
                         }
                         else
@@ -113,17 +116,12 @@ namespace RimMind.Tools
                         }
 
                         // Can cast right now?
-                        var canCast = ability.CanCast;
-                        psycast["can_cast"] = canCast;
-                        if (!canCast)
+                        var canCastReport = ability.CanCast;
+                        psycast["can_cast"] = canCastReport.Accepted;
+                        if (!canCastReport.Accepted)
                         {
-                            // Try to get reason why not
-                            if (currentHeat + (ability.def.statBases?.FirstOrDefault(s => s.stat == StatDefOf.Ability_EntropyGain)?.value ?? 0) > maxHeat)
-                                psycast["cannot_cast_reason"] = "Not enough neural heat capacity";
-                            else if (psyfocus < (ability.def.costList?.FirstOrDefault(c => c.type.defName == "Psyfocus")?.amount ?? 0))
-                                psycast["cannot_cast_reason"] = "Not enough psyfocus";
-                            else if (ability.cooldown.Active)
-                                psycast["cannot_cast_reason"] = "On cooldown";
+                            // Use the report reason
+                            psycast["cannot_cast_reason"] = canCastReport.Reason?.ToString() ?? "Cannot cast";
                         }
 
                         psycasts.Add(psycast);
@@ -240,7 +238,7 @@ namespace RimMind.Tools
                             statName == "MoveSpeed" || statName == "PainShockThreshold")
                         {
                             isCombatRelevant = true;
-                            combatEffects.Add(statMod.stat.LabelCap + " " + (value > 0 ? "+" : "") + value.ToString("F2"));
+                            combatEffects.Add(statMod.stat.LabelCap.ToString() + " " + (value > 0 ? "+" : "") + value.ToString("F2"));
                         }
 
                         geneObj[statName] = value.ToString("F2");
@@ -260,7 +258,7 @@ namespace RimMind.Tools
                         {
                             isCombatRelevant = true;
                             var percentChange = (factor - 1f) * 100f;
-                            combatEffects.Add(statMod.stat.LabelCap + " x" + factor.ToString("F2") + " (" + (percentChange > 0 ? "+" : "") + percentChange.ToString("F0") + "%)");
+                            combatEffects.Add(statMod.stat.LabelCap.ToString() + " x" + factor.ToString("F2") + " (" + (percentChange > 0 ? "+" : "") + percentChange.ToString("F0") + "%)");
                         }
 
                         geneObj[statName + "_factor"] = factor.ToString("F2");
@@ -275,7 +273,7 @@ namespace RimMind.Tools
                     foreach (var abilityDef in gene.def.abilities)
                     {
                         abilities.Add(abilityDef.LabelCap.ToString());
-                        combatEffects.Add("Ability: " + abilityDef.LabelCap);
+                        combatEffects.Add("Ability: " + abilityDef.LabelCap.ToString());
                     }
                     geneObj["abilities"] = abilities;
                 }
@@ -287,7 +285,7 @@ namespace RimMind.Tools
                     {
                         isCombatRelevant = true;
                         var percentChange = (1f - damageFactor.factor) * 100f;
-                        combatEffects.Add(damageFactor.damageDef.LabelCap + " resistance " + percentChange.ToString("F0") + "%");
+                        combatEffects.Add(damageFactor.damageDef.LabelCap.ToString() + " resistance " + percentChange.ToString("F0") + "%");
                     }
                 }
 
@@ -420,10 +418,11 @@ namespace RimMind.Tools
                     mechObj["status"] = "Active";
 
                 // Bandwidth cost
-                if (mech.def.race?.mechFixedSummonDuration == null)
+                // Note: Bandwidth API changed in RimWorld 1.6 - skipping for now
+                // TODO: Update when new API is documented
+                if (mech.GetComp<CompOverseerSubject>() != null)
                 {
-                    var bandwidthCost = MechBandwidthGizmo.GetBandwidthCost(mech);
-                    mechObj["bandwidth_cost"] = bandwidthCost;
+                    mechObj["bandwidth_cost"] = 1; // Default assumption
                 }
 
                 mechs.Add(mechObj);

@@ -416,7 +416,7 @@ namespace RimMind.Tools
         private static System.Tuple<string, IntVec3, float> FindSafeRoom(Map map, FloatRange comfortRange)
         {
             // Find a room within comfortable temperature range
-            foreach (var room in map.regionGrid.allRooms)
+            foreach (var room in map.regionGrid.AllRooms)
             {
                 if (room.PsychoActive || !room.TouchesMapEdge)
                 {

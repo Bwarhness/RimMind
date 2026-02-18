@@ -172,15 +172,15 @@ namespace RimMind.Chat
 
                     var recentLetters = archive.ArchivablesListForReading
                         .OfType<Letter>()
-                        .Where(l => l.CreatedTicksGame > tenMinutesAgo)
+                        .Where(l => l.arrivalTime > tenMinutesAgo)
                         .Where(l => l.def.defName == "ThreatBig" || l.def.defName == "ThreatSmall" || 
                                    l.def.defName == "Death" || l.def.defName == "NegativeEvent")
-                        .OrderByDescending(l => l.CreatedTicksGame)
+                        .OrderByDescending(l => l.arrivalTime)
                         .Take(5);
 
                     foreach (var letter in recentLetters)
                     {
-                        int minutesAgo = (currentTick - letter.CreatedTicksGame) / (60 * 60);
+                        int minutesAgo = (currentTick - letter.arrivalTime) / (60 * 60);
                         events.Add($"{letter.Label} ({minutesAgo}m ago)");
                     }
                 }

@@ -16,7 +16,7 @@ namespace RimMind.Tools
             var result = new JSONObject();
             var rooms = new JSONArray();
 
-            var allRooms = map.regionGrid.allRooms
+            var allRooms = map.regionGrid.AllRooms
                 .Where(r => !r.PsychologicallyOutdoors && !r.TouchesMapEdge)
                 .ToList();
 
@@ -135,7 +135,7 @@ namespace RimMind.Tools
                 int litCells = 0;
                 foreach (var cell in room.Cells)
                 {
-                    float light = map.glowGrid.GameGlowAt(cell, false);
+                    float light = map.glowGrid.GroundGlowAt(cell, false);
                     if (light >= 0.3f) litCells++;
                 }
                 float litPercentage = (float)litCells / room.CellCount;
