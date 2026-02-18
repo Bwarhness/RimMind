@@ -129,6 +129,13 @@ namespace RimMind.Tools
 
             // Map Tools
             tools.Add(MakeTool("get_semantic_overview", "Get a compact text description of the colony layout including rooms, power, and buildable areas. This provides a high-level overview optimized for understanding base structure without loading full grid data. Use this instead of get_map_region when you need to understand colony layout quickly."));
+            tools.Add(MakeTool("find_buildable_area", "Find buildable area candidates for construction. Returns scored candidates with exact positions, sizes, and notes. AI can ask 'where can I build a 5x4 room near the stockpile?' and get actionable results. Scores areas by distance to target, power availability, and terrain quality.",
+                MakeParam("minWidth", "integer", "Minimum width in cells"),
+                MakeParam("minHeight", "integer", "Minimum height in cells"),
+                MakeOptionalParam("near", "string", "Thing or position to be near (e.g., 'stockpile', '50,60', or building name)"),
+                MakeOptionalParam("maxDistance", "integer", "Maximum distance from 'near' target (default: 999)"),
+                MakeOptionalParam("indoor", "boolean", "Must be roofed/indoors (default: false)"),
+                MakeOptionalParam("requirePower", "boolean", "Must have power conduit nearby (default: false)")));
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
@@ -383,6 +390,8 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
             tools.Add(MakeTool("get_building_info", "Get detailed information about a specific building type: description, size, material requirements, available materials, costs, stats, research prerequisites, and passability.",
                 MakeParam("defName", "string", "The building's defName (from list_buildable)")));
+            tools.Add(MakeTool("get_requirements", "Get comprehensive placement requirements for a building. Returns size, power output/consumption, placement rules (special requirements like 'must be on steam geyser'), terrain requirements, resource costs, research prerequisites, and work to build. Use this when you need to know what's required to place a specific building type before attempting placement.",
+                MakeParam("building", "string", "Building defName (e.g., 'ElectricStove', 'GeothermalGenerator', 'Bed')")));
             tools.Add(MakeTool("place_building", "Place building blueprints on the map. Use for individual buildings and furniture. For rooms/walls, prefer place_structure instead.\n\nSINGLE: {defName, x, z, stuff?, rotation?, auto_approve?}\nBATCH: {placements: [{defName, x, z, stuff?, rotation?}, ...], auto_approve?} (max 100)\n\nRotation: 0=North, 1=East, 2=South, 3=West. Stuff examples: WoodLog, BlocksGranite, Steel.\nIf auto_approve is true, colonists start building immediately.",
                 MakeOptionalParam("defName", "string", "Building defName for single placement"),
                 MakeOptionalParam("x", "integer", "X coordinate for single placement"),
