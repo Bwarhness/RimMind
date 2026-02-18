@@ -54,8 +54,13 @@ namespace RimMind.Tools
                 {
                     joyKinds.Add(joyKind.defName);
 
-                    // Check if it's social recreation (multi-user buildings)
-                    if (building.def.building.isSittable && building.def.building.seats > 1)
+                    // Check if it's social recreation
+                    // Social joy kinds: Social, Gaming_Dexterity (poker/billiards), Gaming_Cerebral (chess)
+                    bool isSocial = joyKind.defName == "Social" || 
+                                   joyKind.defName.StartsWith("Gaming") ||
+                                   (building.def.building != null && building.def.building.isSittable);
+                    
+                    if (isSocial)
                         socialJoy++;
                     else
                         soloJoy++;
