@@ -418,7 +418,8 @@ namespace RimMind.Tools
             // Find a room within comfortable temperature range
             foreach (var room in map.regionGrid.AllRooms)
             {
-                if (room.PsychoActive || !room.TouchesMapEdge)
+                // RimWorld 1.6 API change: PsychoActive property removed, using TouchesMapEdge check
+                if (!room.TouchesMapEdge && room.ProperRoom)
                 {
                     float roomTemp = room.Temperature;
                     if (roomTemp >= comfortRange.min && roomTemp <= comfortRange.max)

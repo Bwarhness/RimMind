@@ -180,7 +180,7 @@ namespace RimMind.Chat
 
                     foreach (var letter in recentLetters)
                     {
-                        int minutesAgo = (currentTick - letter.arrivalTime) / (60 * 60);
+                        int minutesAgo = (int)((currentTick - letter.arrivalTime) / (60 * 60));
                         events.Add($"{letter.Label} ({minutesAgo}m ago)");
                     }
                 }

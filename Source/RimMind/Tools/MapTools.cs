@@ -1175,7 +1175,7 @@ namespace RimMind.Tools
                 if (!cell.InBounds(map))
                     return ToolExecutor.JsonError("Coordinates out of bounds. Map size: " + map.Size.x + "x" + map.Size.z);
 
-                float glow = map.glowGrid.GameGlowAt(cell);
+                float glow = map.glowGrid.GroundGlowAt(cell, false);
                 var obj = new JSONObject();
                 obj["cell"] = x + "," + z;
                 obj["glowLevel"] = glow.ToString("F2");
@@ -1214,7 +1214,7 @@ namespace RimMind.Tools
                     var cell = new IntVec3(cx, 0, cz);
                     if (!cell.InBounds(map)) continue;
 
-                    float glow = map.glowGrid.GameGlowAt(cell);
+                    float glow = map.glowGrid.GroundGlowAt(cell, false);
                     totalGlow += glow;
                     if (glow < minGlow) minGlow = glow;
                     if (glow > maxGlow) maxGlow = glow;
@@ -1273,7 +1273,7 @@ namespace RimMind.Tools
                     continue;
 
                 if (filter != null && !building.def.defName.ToLowerInvariant().Contains(filter)
-                    && !building.LabelCap.ToStringFull().ToLowerInvariant().Contains(filter))
+                    && !building.LabelCap.ToString().ToLowerInvariant().Contains(filter))
                     continue;
 
                 totalCount++;
@@ -1423,7 +1423,17 @@ namespace RimMind.Tools
             if (!hasRange)
             {
                 bool isPolluted = map.pollutionGrid.IsPolluted(cell);
-                float nearbyPollution = map.pollutionGrid.GetTotalPercentWithinRadius(cell, 10f);
+                
+                // Calculate nearby pollution manually (RimWorld 1.6 API change)
+                int pollutedCount = 0;
+                int totalCount = 0;
+                foreach (IntVec3 c in GenRadial.RadialCellsAround(cell, 10f, true))
+                {
+                    if (!c.InBounds(map)) continue;
+                    totalCount++;
+                    if (map.pollutionGrid.IsPolluted(c)) pollutedCount++;
+                }
+                float nearbyPollution = totalCount > 0 ? (pollutedCount * 100f / totalCount) : 0f;
 
                 var obj = new JSONObject();
                 obj["biotechActive"] = true;
