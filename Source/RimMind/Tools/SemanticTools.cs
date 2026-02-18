@@ -129,9 +129,23 @@ namespace RimMind.Tools
                 sb.Append($": {contents}");
             }
 
-            // Door count
-            int doorCount = room.Regions.SelectMany(r => r.links)
-                .Count(l => l.portal != null && l.portal is Building_Door);
+            // Door count - find doors on room boundary (RimWorld 1.6 compatible)
+            var doorSet = new HashSet<Building_Door>();
+            foreach (var region in room.Regions)
+            {
+                foreach (var cell in region.Cells)
+                {
+                    foreach (var adj in GenAdj.CardinalDirections)
+                    {
+                        var adjCell = cell + adj;
+                        if (!adjCell.InBounds(map)) continue;
+                        var door = adjCell.GetDoor(map);
+                        if (door != null)
+                            doorSet.Add(door);
+                    }
+                }
+            }
+            int doorCount = doorSet.Count;
             if (doorCount > 0)
             {
                 sb.Append($", {doorCount} door{(doorCount > 1 ? "s" : "")}");
