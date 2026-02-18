@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimMind.API;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace RimMind.Tools
@@ -797,7 +799,7 @@ namespace RimMind.Tools
                 obj["position"] = blueprint.Position.x + "," + blueprint.Position.z;
 
                 // Calculate completion percentage
-                float workDone = blueprint.workDone;
+                float workDone = blueprint.WorkDone;
                 float workTotal = blueprint.def.entityDefToBuild.GetStatValueAbstract(StatDefOf.WorkToBuild);
                 float percentComplete = workTotal > 0 ? (workDone / workTotal * 100f) : 0f;
                 obj["completionPercent"] = Mathf.RoundToInt(percentComplete);
@@ -855,13 +857,13 @@ namespace RimMind.Tools
             if (def == null) return null;
 
             // Map designation defs to work categories
-            if (def == DesignationDefOf.Haul || def == DesignationDefOf.HaulUrgently)
+            if (def == DesignationDefOf.Haul || def.defName == "HaulUrgently")
                 return "hauling";
-            if (def == DesignationDefOf.Build || def == DesignationDefOf.Deconstruct || def == DesignationDefOf.Uninstall)
+            if (def.defName == "Build" || def == DesignationDefOf.Deconstruct || def == DesignationDefOf.Uninstall)
                 return "construction";
             if (def == DesignationDefOf.Mine)
                 return "mining";
-            if (def == DesignationDefOf.CutPlant || def == DesignationDefOf.HarvestPlant || def == DesignationDefOf.Sow)
+            if (def == DesignationDefOf.CutPlant || def == DesignationDefOf.HarvestPlant || def.defName == "Sow")
                 return "planting";
             if (def.defName == "FinishOff" || def.defName == "Repair")
                 return "repair";

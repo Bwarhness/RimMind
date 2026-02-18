@@ -521,10 +521,10 @@ namespace RimMind.Tools
             
             // Add summary counts by severity
             var summary = new JSONObject();
-            summary["critical"] = arr.Count(a => a.AsObject["priority"]?.Value == "Critical");
-            summary["high"] = arr.Count(a => a.AsObject["priority"]?.Value == "High");
-            summary["medium"] = arr.Count(a => a.AsObject["priority"]?.Value == "Medium");
-            summary["low"] = arr.Count(a => a.AsObject["priority"]?.Value == "Low");
+            summary["critical"] = arr.Children.Count(a => a.AsObject["priority"]?.Value == "Critical");
+            summary["high"] = arr.Children.Count(a => a.AsObject["priority"]?.Value == "High");
+            summary["medium"] = arr.Children.Count(a => a.AsObject["priority"]?.Value == "Medium");
+            summary["low"] = arr.Children.Count(a => a.AsObject["priority"]?.Value == "Low");
             result["summary"] = summary;
 
             return result.ToString();

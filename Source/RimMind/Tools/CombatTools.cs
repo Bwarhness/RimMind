@@ -62,9 +62,9 @@ namespace RimMind.Tools
 
                 // Damage stats
                 var verb2 = weapon.GetComp<CompEquippable>()?.AllVerbs?.FirstOrDefault();
-                if (verb2?.verbProps?.projectileDef != null)
+                if (verb2?.verbProps?.defaultProjectile != null)
                 {
-                    var projectile = verb2.verbProps.projectileDef;
+                    var projectile = verb2.verbProps.defaultProjectile;
                     weaponObj["damageType"] = projectile.projectile.damageDef.label;
                     weaponObj["baseDamage"] = projectile.projectile.GetDamageAmount(weapon);
                     weaponObj["armorPenetration"] = projectile.projectile.GetArmorPenetration(weapon);
@@ -87,9 +87,9 @@ namespace RimMind.Tools
                 if (weapon.def.IsRangedWeapon)
                 {
                     var verb3 = weapon.GetComp<CompEquippable>()?.PrimaryVerb;
-                    if (verb3?.verbProps?.projectileDef != null)
+                    if (verb3?.verbProps?.defaultProjectile != null)
                     {
-                        var dmg = verb3.verbProps.projectileDef.projectile.GetDamageAmount(weapon);
+                        var dmg = verb3.verbProps.defaultProjectile.projectile.GetDamageAmount(weapon);
                         var burstCount = verb3.verbProps.burstShotCount;
                         var cooldown = verb3.verbProps.warmupTime + verb3.verbProps.defaultCooldownTime + 
                                        (verb3.verbProps.ticksBetweenBurstShots * (burstCount - 1)) / 60f;
