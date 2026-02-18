@@ -34,6 +34,58 @@ namespace RimMind.Tools
                 .Count(p => p.RaceProps.Humanlike && !p.IsColonist && !p.IsPrisoner
                     && p.HostFaction == Faction.OfPlayer);
 
+            // Recreation analysis (Phase 3 enhancement - Issue #56)
+            var recreation = new JSONObject();
+            var joyBuildings = map.listerBuildings.allBuildingsColonist
+                .Where(b => b.def.building?.joyKind != null)
+                .ToList();
+
+            recreation["joySourceCount"] = joyBuildings.Count;
+
+            // Count distinct joy types for variety analysis
+            var joyKinds = new System.Collections.Generic.HashSet<string>();
+            int socialJoy = 0;
+            int soloJoy = 0;
+
+            foreach (var building in joyBuildings)
+            {
+                var joyKind = building.def.building.joyKind;
+                if (joyKind != null)
+                {
+                    joyKinds.Add(joyKind.defName);
+
+                    // Check if it's social recreation
+                    // Social joy kinds: Social, Gaming_Dexterity (poker/billiards), Gaming_Cerebral (chess)
+                    bool isSocial = joyKind.defName == "Social" || 
+                                   joyKind.defName.StartsWith("Gaming") ||
+                                   (building.def.building != null && building.def.building.isSittable);
+                    
+                    if (isSocial)
+                        socialJoy++;
+                    else
+                        soloJoy++;
+                }
+            }
+
+            recreation["joyVariety"] = joyKinds.Count;
+            recreation["socialJoy"] = socialJoy;
+            recreation["soloJoy"] = soloJoy;
+
+            // Assess adequacy based on colonist count
+            int colonists = map.mapPawns.FreeColonistsCount;
+            string adequacy = "sufficient";
+            if (joyBuildings.Count < colonists / 2)
+                adequacy = "insufficient";
+            else if (joyBuildings.Count < colonists)
+                adequacy = "low";
+
+            recreation["adequacy"] = adequacy;
+
+            if (joyKinds.Count < 3)
+                recreation["varietyWarning"] = "Low joy variety - colonists may get bored with repetitive recreation";
+
+            obj["recreation"] = recreation;
+
             return obj.ToString();
         }
 
