@@ -180,6 +180,7 @@ namespace RimMind.Tools
             { "get_requirements", args => BuildingTools.GetRequirements(args) },
             { "place_building", args => BuildingTools.PlaceBuilding(args) },
             { "place_structure", args => BuildingTools.PlaceStructure(args) },
+            { "check_placement", args => BuildingTools.CheckPlacement(args) },
             { "remove_building", args => BuildingTools.RemoveBuilding(args) },
             { "approve_buildings", args => BuildingTools.ApproveBuildings(args) },
 

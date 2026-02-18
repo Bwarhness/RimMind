@@ -411,6 +411,11 @@ namespace RimMind.Tools
                 MakeOptionalParam("door_offset", "integer", "Door position along wall, 0=leftmost/bottommost inner cell, default=center (room only)"),
                 MakeOptionalParam("door_stuff", "string", "Material for the door, defaults to 'stuff' value (room only)"),
                 MakeOptionalParam("auto_approve", "boolean", "If true, colonists start building immediately. Default: false")));
+            tools.Add(MakeTool("check_placement", "Validate building placement before construction. Returns detailed validation with terrain checks, space checks, power requirements, roof status, and special placement rules. Use this to verify if a building can be placed at a specific location and get actionable feedback if placement fails.",
+                MakeParam("building", "string", "Building defName (e.g., 'ElectricStove', 'Wall', 'Door')"),
+                MakeParam("x", "integer", "X coordinate"),
+                MakeParam("z", "integer", "Z coordinate"),
+                MakeOptionalParam("rotation", "string", "Rotation: 'north', 'south', 'east', 'west' (default: 'north')")));
             tools.Add(MakeTool("remove_building", "Remove AI-proposed building blueprints from the map. Can target specific proposals by ID, an area, or all proposals at once.",
                 MakeStringArrayParam("proposal_ids", "Array of proposal IDs to remove (e.g., ['rm_1', 'rm_2'])", false),
                 MakeOptionalParam("x", "integer", "Start X for area removal"),
