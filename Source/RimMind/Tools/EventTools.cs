@@ -180,12 +180,9 @@ namespace RimMind.Tools
                     }
                 }
                 
-                // Check for active incidents (infestations, raids in progress)
-                var incidentManager = map.Parent?.GetComponent<WorldObjectComp_IncidentTracker>();
-                if (incidentManager != null)
-                {
-                    // Note: Most incidents are one-shot, but infestations persist as map things
-                }
+                // Note: Most incidents (raids, infestations) are one-shot events
+                // Infestations persist as Hive things on the map, raids as hostile pawns
+                // These are already visible via get_hostile_threats tool
             }
             catch (Exception ex)
             {
