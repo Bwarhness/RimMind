@@ -210,9 +210,8 @@ namespace RimMind.Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));
             tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, bonded colonist, carrying capacity (pack animals), and production schedules (shearing, milking, eggs).",
                 MakeParam("name", "string", "The animal's name")));
-            tools.Add(MakeTool("get_animal_stats", "Get comprehensive stats for an animal species: body size, movement speed, carrying capacity (pack animals), combat stats (damage, armor), production abilities (wool, milk, eggs with intervals), wildness level, trainability intelligence, filth rate, manhunter chances, diet type, and lifespan. Use this to understand animal capabilities before taming or to optimize pack animal selection for caravans.",
-                MakeParam("species", "string", "The animal species name (e.g., 'Muffalo', 'Labrador', 'Thrumbo')")));
-            tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map, grouped by species. For each species shows: count, location, tameable status with wildness level and taming difficulty, trainability intelligence, manhunter chances, huntable status with meat/leather yields, value assessment (rare/valuable animals), and recommendations (e.g., 'Rare Thrumbo - worth attempting tame', 'Good hunting target for food'). Use this to identify taming opportunities, hunting targets, and rare animals."));
+            // Note: get_animal_stats and get_wild_animals were never implemented (only defined). Removed to match tool registry.
+            // Use list_animals and get_animal_details for current animal functionality.
 
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
