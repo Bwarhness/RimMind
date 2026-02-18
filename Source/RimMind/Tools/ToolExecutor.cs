@@ -176,6 +176,7 @@ namespace RimMind.Tools
             // Building
             { "list_buildable", args => BuildingTools.ListBuildable(args) },
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
+            { "get_requirements", args => BuildingTools.GetRequirements(args) },
             { "place_building", args => BuildingTools.PlaceBuilding(args) },
             { "place_structure", args => BuildingTools.PlaceStructure(args) },
             { "remove_building", args => BuildingTools.RemoveBuilding(args) },
