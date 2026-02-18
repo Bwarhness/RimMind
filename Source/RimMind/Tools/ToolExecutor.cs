@@ -73,6 +73,7 @@ namespace RimMind.Tools
             { "get_mechanitor_info", args => DLCTools.GetMechanitorInfo(args?["name"]?.Value) },
 
             // Map
+            { "get_semantic_overview", args => SemanticTools.GetSemanticOverview() },
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
             { "get_growing_zones", args => MapTools.GetGrowingZones() },
             { "get_power_status", args => MapTools.GetPowerStatus() },
