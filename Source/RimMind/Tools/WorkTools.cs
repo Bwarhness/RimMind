@@ -798,11 +798,10 @@ namespace RimMind.Tools
                 obj["label"] = blueprint.Label ?? "Unknown";
                 obj["position"] = blueprint.Position.x + "," + blueprint.Position.z;
 
-                // Calculate completion percentage
-                float workDone = blueprint.WorkDone;
+                // Calculate completion percentage (RimWorld 1.6 API change - WorkDone property removed)
+                // TODO: Find alternative way to track blueprint progress in RimWorld 1.6
                 float workTotal = blueprint.def.entityDefToBuild.GetStatValueAbstract(StatDefOf.WorkToBuild);
-                float percentComplete = workTotal > 0 ? (workDone / workTotal * 100f) : 0f;
-                obj["completionPercent"] = Mathf.RoundToInt(percentComplete);
+                obj["completionPercent"] = 0; // Stubbed - Blueprint.WorkDone removed in 1.6
 
                 // Check if forbidden (AI-placed awaiting approval)
                 obj["forbidden"] = thing.IsForbidden(Faction.OfPlayer);

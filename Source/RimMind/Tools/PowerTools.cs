@@ -459,11 +459,14 @@ namespace RimMind.Tools
                 var blueprint = GenConstruct.PlaceBlueprintForBuild(conduitDef, cell, map, Rot4.North, Faction.OfPlayer, null);
                 if (blueprint != null)
                 {
-                    // Forbid it unless auto-approve
-                    if (!autoApprove && blueprint is Building_Blueprint bp)
+                    // Forbid it unless auto-approve (RimWorld 1.6 API change)
+                    if (!autoApprove)
                     {
-                        bp.SetForbidden(true);
-                        ProposalTracker.RegisterProposal(map, bp, "auto_route_power");
+                        var forbidComp = blueprint.GetComp<CompForbiddable>();
+                        if (forbidComp != null)
+                        {
+                            forbidComp.Forbidden = true;
+                        }
                     }
                     placedBlueprints.Add(blueprint);
                 }
