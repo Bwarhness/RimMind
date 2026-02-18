@@ -383,6 +383,8 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
             tools.Add(MakeTool("get_building_info", "Get detailed information about a specific building type: description, size, material requirements, available materials, costs, stats, research prerequisites, and passability.",
                 MakeParam("defName", "string", "The building's defName (from list_buildable)")));
+            tools.Add(MakeTool("get_requirements", "Get comprehensive placement requirements for a building. Returns size, power output/consumption, placement rules (special requirements like 'must be on steam geyser'), terrain requirements, resource costs, research prerequisites, and work to build. Use this when you need to know what's required to place a specific building type before attempting placement.",
+                MakeParam("building", "string", "Building defName (e.g., 'ElectricStove', 'GeothermalGenerator', 'Bed')")));
             tools.Add(MakeTool("place_building", "Place building blueprints on the map. Use for individual buildings and furniture. For rooms/walls, prefer place_structure instead.\n\nSINGLE: {defName, x, z, stuff?, rotation?, auto_approve?}\nBATCH: {placements: [{defName, x, z, stuff?, rotation?}, ...], auto_approve?} (max 100)\n\nRotation: 0=North, 1=East, 2=South, 3=West. Stuff examples: WoodLog, BlocksGranite, Steel.\nIf auto_approve is true, colonists start building immediately.",
                 MakeOptionalParam("defName", "string", "Building defName for single placement"),
                 MakeOptionalParam("x", "integer", "X coordinate for single placement"),
