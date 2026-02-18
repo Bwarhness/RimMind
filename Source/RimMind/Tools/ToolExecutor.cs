@@ -74,6 +74,7 @@ namespace RimMind.Tools
 
             // Map
             { "get_semantic_overview", args => SemanticTools.GetSemanticOverview() },
+            { "find_buildable_area", args => SemanticTools.FindBuildableArea(args) },
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
             { "get_growing_zones", args => MapTools.GetGrowingZones() },
             { "get_power_status", args => MapTools.GetPowerStatus() },
@@ -178,6 +179,7 @@ namespace RimMind.Tools
             { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
             { "place_building", args => BuildingTools.PlaceBuilding(args) },
             { "place_structure", args => BuildingTools.PlaceStructure(args) },
+            { "check_placement", args => BuildingTools.CheckPlacement(args) },
             { "remove_building", args => BuildingTools.RemoveBuilding(args) },
             { "approve_buildings", args => BuildingTools.ApproveBuildings(args) },
 

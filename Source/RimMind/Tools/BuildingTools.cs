@@ -202,6 +202,189 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        /// <summary>
+        /// Get comprehensive placement requirements for a building.
+        /// Returns size, power, placement rules, terrain requirements, resources, research, and build work.
+        /// </summary>
+        public static string GetRequirements(JSONNode args)
+        {
+            if (args == null || string.IsNullOrEmpty(args["building"]?.Value))
+                return ToolExecutor.JsonError("'building' parameter is required.");
+
+            string buildingName = args["building"].Value;
+            var def = ResolveBuildingDef(buildingName);
+            if (def == null)
+            {
+                string suggestions = FindSimilarBuildings(buildingName);
+                string msg = "Building not found: " + buildingName;
+                if (suggestions != null)
+                    msg += ". Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
+            }
+
+            var result = new JSONObject();
+            result["building"] = def.defName;
+            result["label"] = def.label;
+
+            // Size
+            var sizeObj = new JSONObject();
+            sizeObj["width"] = def.size.x;
+            sizeObj["height"] = def.size.z;
+            result["size"] = sizeObj;
+
+            // Power stats
+            var powerComp = def.GetCompProperties<CompProperties_Power>();
+            if (powerComp != null)
+            {
+                result["powerOutput"] = (int)Math.Round(powerComp.PowerConsumption > 0 ? 0 : Math.Abs(powerComp.PowerConsumption));
+                result["powerConsumption"] = (int)Math.Round(powerComp.PowerConsumption > 0 ? powerComp.PowerConsumption : 0);
+            }
+            else
+            {
+                result["powerOutput"] = 0;
+                result["powerConsumption"] = 0;
+            }
+
+            // Placement rules
+            var placementRules = new JSONObject();
+            
+            // Check PlaceWorkers for special placement requirements
+            var placeWorkerNotes = new List<string>();
+            if (def.placeWorkers != null && def.placeWorkers.Count > 0)
+            {
+                foreach (var pwType in def.placeWorkers)
+                {
+                    string pwName = pwType.Name;
+                    
+                    // Detect common special placement requirements
+                    if (pwName.Contains("OnSteamGeyser"))
+                    {
+                        placementRules["mustBeOnSteamGeyser"] = true;
+                        placeWorkerNotes.Add("Must be placed directly on a steam geyser");
+                    }
+                    else if (pwName.Contains("WatchForGrowth"))
+                    {
+                        placementRules["mustWatchGrowingPlants"] = true;
+                        placeWorkerNotes.Add("Must face growing plants (sun lamps, etc.)");
+                    }
+                    else if (pwName.Contains("WaterDepth"))
+                    {
+                        placementRules["mustBeInWater"] = true;
+                        placeWorkerNotes.Add("Must be placed in water");
+                    }
+                    else if (pwName.Contains("NotUnderRoof"))
+                    {
+                        placementRules["mustBeOutdoors"] = true;
+                        placementRules["requiresRoof"] = false;
+                        placeWorkerNotes.Add("Must be outdoors (unroofed)");
+                    }
+                }
+            }
+            
+            // Standard placement flags
+            if (def.building != null)
+            {
+                // Indoors/outdoors requirements (if not already set by PlaceWorkers)
+                if (!placementRules.HasKey("mustBeOutdoors"))
+                {
+                    placementRules["mustBeIndoors"] = false;
+                    placementRules["mustBeOutdoors"] = false;
+                }
+                
+                if (!placementRules.HasKey("requiresRoof"))
+                {
+                    placementRules["requiresRoof"] = false;
+                }
+                
+                // Minifiable (can be uninstalled and moved)
+                placementRules["minifiable"] = def.minifiedDef != null;
+            }
+
+            result["placementRules"] = placementRules;
+
+            // Terrain requirements
+            var terrainReqs = new JSONArray();
+            if (def.terrainAffordanceNeeded != null)
+            {
+                string affordance = def.terrainAffordanceNeeded.defName;
+                
+                // Translate affordance to human-readable requirements
+                if (affordance.Contains("Heavy"))
+                    terrainReqs.Add("Supports heavy structures");
+                else if (affordance.Contains("Medium"))
+                    terrainReqs.Add("Supports medium structures");
+                else if (affordance.Contains("Light"))
+                    terrainReqs.Add("Supports light structures");
+                    
+                // All terrain affordances implicitly require "not water" unless specifically a water building
+                if (!def.placeWorkers.Any(pw => pw.Name.Contains("Water")))
+                    terrainReqs.Add("Not water");
+            }
+            else
+            {
+                // Default: most buildings need solid ground
+                terrainReqs.Add("Not water");
+            }
+            
+            result["terrainRequirements"] = terrainReqs;
+
+            // Work to build
+            if (def.statBases != null)
+            {
+                var workStat = def.statBases.FirstOrDefault(s => s.stat.defName == "WorkToBuild");
+                if (workStat != null)
+                    result["workToBuild"] = (int)Math.Round(workStat.value);
+            }
+
+            // Resources required
+            var resources = new JSONArray();
+            if (def.MadeFromStuff)
+            {
+                // Stuff-based building (e.g., walls)
+                var resObj = new JSONObject();
+                resObj["thing"] = "Stuff (any material)";
+                resObj["count"] = def.costStuffCount;
+                resources.Add(resObj);
+            }
+            
+            if (def.costList != null && def.costList.Count > 0)
+            {
+                foreach (var cost in def.costList)
+                {
+                    var resObj = new JSONObject();
+                    resObj["thing"] = cost.thingDef.defName;
+                    resObj["count"] = cost.count;
+                    resources.Add(resObj);
+                }
+            }
+            
+            result["resources"] = resources;
+
+            // Research required
+            if (def.researchPrerequisites != null && def.researchPrerequisites.Count > 0)
+            {
+                // Just return the first research requirement for simplicity
+                // (most buildings only have one)
+                result["researchRequired"] = def.researchPrerequisites[0].defName;
+            }
+            else
+            {
+                result["researchRequired"] = "None";
+            }
+
+            // Notes (from PlaceWorker analysis)
+            if (placeWorkerNotes.Count > 0)
+            {
+                result["notes"] = string.Join("; ", placeWorkerNotes);
+            }
+            else
+            {
+                result["notes"] = "";
+            }
+
+            return result.ToString();
+        }
+
         public static string PlaceBuilding(JSONNode args)
         {
             var map = Find.CurrentMap;
@@ -1482,6 +1665,439 @@ namespace RimMind.Tools
                 if (e2 < dx) { err += dx; cz += sz; }
             }
             return cells;
+        }
+
+        // --- Placement Validation (Week 2 of #94) ---
+
+        public static string CheckPlacement(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            // Validate required parameters
+            if (string.IsNullOrEmpty(args?["building"]?.Value))
+                return ToolExecutor.JsonError("'building' parameter is required.");
+            if (args?["x"] == null || args?["z"] == null)
+                return ToolExecutor.JsonError("'x' and 'z' coordinates are required.");
+
+            string buildingDefName = args["building"].Value;
+            int x = args["x"].AsInt;
+            int z = args["z"].AsInt;
+            var pos = new IntVec3(x, 0, z);
+
+            // Resolve building def
+            var def = ResolveBuildingDef(buildingDefName);
+            if (def == null)
+            {
+                string suggestions = FindSimilarBuildings(buildingDefName);
+                string msg = "Building not found: " + buildingDefName;
+                if (suggestions != null)
+                    msg += ". Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
+            }
+
+            // Parse rotation (default: north)
+            string rotationStr = args?["rotation"]?.Value?.ToLower();
+            Rot4 rotation = Rot4.North;
+            if (!string.IsNullOrEmpty(rotationStr))
+            {
+                switch (rotationStr)
+                {
+                    case "north": rotation = Rot4.North; break;
+                    case "east": rotation = Rot4.East; break;
+                    case "south": rotation = Rot4.South; break;
+                    case "west": rotation = Rot4.West; break;
+                    default:
+                        return ToolExecutor.JsonError("Invalid rotation: " + rotationStr + ". Valid: north, south, east, west.");
+                }
+            }
+
+            // Calculate occupied cells
+            var occupiedCells = GenAdj.CellsOccupiedBy(pos, rotation, def.size).ToList();
+
+            // Result object
+            var result = new JSONObject();
+            result["building"] = def.defName;
+            result["position"] = new JSONArray { x, z };
+            result["rotation"] = rotation.ToStringHuman().ToLower();
+
+            // Size (accounting for rotation)
+            IntVec2 rotatedSize = def.size.RotatedBy(rotation);
+            result["size"] = new JSONArray { rotatedSize.x, rotatedSize.z };
+
+            // Checks object
+            var checks = new JSONObject();
+            var warnings = new JSONArray();
+            bool valid = true;
+
+            // 1. Check terrain
+            var terrainCheck = CheckTerrain(map, def, occupiedCells);
+            checks["terrain"] = terrainCheck;
+            if (!terrainCheck["ok"].AsBool)
+                valid = false;
+
+            // 2. Check space/conflicts
+            var spaceCheck = CheckSpace(map, occupiedCells);
+            checks["space"] = spaceCheck;
+            if (!spaceCheck["ok"].AsBool)
+                valid = false;
+
+            // 3. Check power (if required)
+            var powerCheck = CheckPower(map, def, pos);
+            checks["power"] = powerCheck;
+            if (powerCheck["ok"] != null && !powerCheck["ok"].AsBool)
+                valid = false;
+
+            // 4. Check roof (for buildings that need it)
+            var roofCheck = CheckRoof(map, def, occupiedCells);
+            checks["roof"] = roofCheck;
+            if (roofCheck["ok"] != null && !roofCheck["ok"].AsBool)
+            {
+                // Roof is often a warning, not always a blocker
+                if (roofCheck["required"]?.AsBool == true)
+                    valid = false;
+                else
+                    warnings.Add(roofCheck["detail"].Value);
+            }
+
+            // 5. Check special placement rules
+            var specialCheck = CheckSpecialRules(map, def, pos, rotation, occupiedCells);
+            checks["special"] = specialCheck;
+            if (!specialCheck["ok"].AsBool)
+                valid = false;
+
+            // 6. Detect adjacent features
+            var adjacentCheck = CheckAdjacent(map, occupiedCells);
+            if (adjacentCheck.Count > 0)
+            {
+                foreach (var warning in adjacentCheck.AsArray)
+                    warnings.Add(warning);
+            }
+
+            result["valid"] = valid;
+            result["checks"] = checks;
+
+            if (warnings.Count > 0)
+                result["warnings"] = warnings;
+
+            // Suggest alternative if invalid
+            if (!valid)
+            {
+                string suggestion = SuggestAlternative(map, def, pos, rotation);
+                if (suggestion != null)
+                    result["suggestion"] = suggestion;
+            }
+
+            return result.ToString();
+        }
+
+        private static JSONObject CheckTerrain(Map map, ThingDef def, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            foreach (var cell in cells)
+            {
+                if (!cell.InBounds(map))
+                {
+                    result["ok"] = false;
+                    result["detail"] = "Position out of map bounds";
+                    return result;
+                }
+
+                var terrain = map.terrainGrid.TerrainAt(cell);
+                
+                // Check terrain affordance
+                if (def.terrainAffordanceNeeded != null)
+                {
+                    if (!terrain.affordances.Contains(def.terrainAffordanceNeeded))
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) has {2} terrain, needs {3}",
+                            cell.x, cell.z, terrain.label, def.terrainAffordanceNeeded.label);
+                        return result;
+                    }
+                }
+
+                // Check for impassable terrain (water, lava, etc.)
+                if (!terrain.passability.Equals(Traversability.Standable))
+                {
+                    result["ok"] = false;
+                    result["detail"] = string.Format("Cell ({0},{1}) is {2} (not buildable)",
+                        cell.x, cell.z, terrain.label);
+                    return result;
+                }
+            }
+
+            result["ok"] = true;
+            result["detail"] = "All cells have suitable terrain";
+            return result;
+        }
+
+        private static JSONObject CheckSpace(Map map, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            foreach (var cell in cells)
+            {
+                var things = cell.GetThingList(map);
+                foreach (var thing in things)
+                {
+                    // Check for existing buildings
+                    if (thing.def.category == ThingCategory.Building)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) occupied by {2}",
+                            cell.x, cell.z, thing.def.label);
+                        return result;
+                    }
+
+                    // Check for blueprints
+                    if (thing is Blueprint)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) has blueprint for {2}",
+                            cell.x, cell.z, thing.def.label);
+                        return result;
+                    }
+
+                    // Check for frames
+                    if (thing is Frame)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) has construction frame",
+                            cell.x, cell.z);
+                        return result;
+                    }
+                }
+            }
+
+            result["ok"] = true;
+            result["detail"] = "All cells are clear";
+            return result;
+        }
+
+        private static JSONObject CheckPower(Map map, ThingDef def, IntVec3 pos)
+        {
+            var result = new JSONObject();
+            
+            // Check if building needs power
+            var powerComp = def.comps?.Find(c => c is CompProperties_Power) as CompProperties_Power;
+            if (powerComp == null || powerComp.basePowerConsumption <= 0)
+            {
+                // Doesn't need power
+                return result;
+            }
+
+            // Find nearest powered conduit
+            var powerNet = map.powerNetManager.AllNetsListForReading;
+            float nearestDistance = float.MaxValue;
+            IntVec3? nearestConduit = null;
+
+            foreach (var net in powerNet)
+            {
+                foreach (var transmitter in net.transmitters)
+                {
+                    float dist = pos.DistanceTo(transmitter.parent.Position);
+                    if (dist < nearestDistance)
+                    {
+                        nearestDistance = dist;
+                        nearestConduit = transmitter.parent.Position;
+                    }
+                }
+            }
+
+            // Power connection range is typically 6 cells
+            int maxRange = 6;
+            if (nearestConduit.HasValue && nearestDistance <= maxRange)
+            {
+                result["ok"] = true;
+                result["detail"] = string.Format("Power conduit {0} cells away at ({1},{2})",
+                    (int)nearestDistance, nearestConduit.Value.x, nearestConduit.Value.z);
+            }
+            else if (nearestConduit.HasValue)
+            {
+                result["ok"] = false;
+                result["detail"] = string.Format("Nearest power conduit is {0} cells away (max range: {1})",
+                    (int)nearestDistance, maxRange);
+            }
+            else
+            {
+                result["ok"] = false;
+                result["detail"] = "No power grid found on map";
+            }
+
+            return result;
+        }
+
+        private static JSONObject CheckRoof(Map map, ThingDef def, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            // Some buildings work better or require roof
+            bool needsRoof = false;
+            string reason = null;
+
+            // Electric stoves, coolers, heaters prefer indoor
+            if (def.defName.Contains("Stove") || def.defName.Contains("Cooler") || 
+                def.defName.Contains("Heater") || def.building?.isEdifice == true)
+            {
+                needsRoof = true;
+                reason = "works best indoors";
+            }
+
+            if (!needsRoof)
+            {
+                return result; // No roof check needed
+            }
+
+            int roofedCells = 0;
+            foreach (var cell in cells)
+            {
+                if (cell.Roofed(map))
+                    roofedCells++;
+            }
+
+            if (roofedCells == cells.Count)
+            {
+                result["ok"] = true;
+                result["detail"] = "Fully roofed (indoor)";
+            }
+            else if (roofedCells > 0)
+            {
+                result["ok"] = false;
+                result["detail"] = string.Format("Partially roofed ({0}/{1} cells) - {2}",
+                    roofedCells, cells.Count, reason);
+            }
+            else
+            {
+                result["ok"] = false;
+                result["detail"] = "Unroofed (outdoor) - " + reason;
+                result["required"] = false; // Warning, not blocker
+            }
+
+            return result;
+        }
+
+        private static JSONObject CheckSpecialRules(Map map, ThingDef def, IntVec3 pos, Rot4 rotation, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            // Check interaction cell (for workbenches, beds, etc.)
+            if (def.hasInteractionCell)
+            {
+                var interactionCell = ThingUtility.InteractionCellWhenAt(def, pos, rotation, map);
+                
+                if (!interactionCell.InBounds(map))
+                {
+                    result["ok"] = false;
+                    result["detail"] = "Interaction cell out of bounds - rotate or move";
+                    return result;
+                }
+
+                if (!interactionCell.Standable(map))
+                {
+                    result["ok"] = false;
+                    result["detail"] = string.Format("Interaction cell ({0},{1}) blocked - pawns cannot access",
+                        interactionCell.x, interactionCell.z);
+                    return result;
+                }
+
+                var things = interactionCell.GetThingList(map);
+                foreach (var thing in things)
+                {
+                    if (thing.def.passability == Traversability.Impassable)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Interaction cell ({0},{1}) blocked by {2}",
+                            interactionCell.x, interactionCell.z, thing.def.label);
+                        return result;
+                    }
+                }
+            }
+
+            // Check for vents (need adjacent wall)
+            if (def.defName.Contains("Vent"))
+            {
+                bool hasAdjacentWall = false;
+                foreach (var cell in cells)
+                {
+                    foreach (var adj in GenAdj.CardinalDirections)
+                    {
+                        var adjCell = cell + adj;
+                        if (!adjCell.InBounds(map)) continue;
+                        
+                        var edifice = adjCell.GetEdifice(map);
+                        if (edifice != null && edifice.def.holdsRoof)
+                        {
+                            hasAdjacentWall = true;
+                            break;
+                        }
+                    }
+                    if (hasAdjacentWall) break;
+                }
+
+                if (!hasAdjacentWall)
+                {
+                    result["ok"] = false;
+                    result["detail"] = "Vents must be placed adjacent to a wall";
+                    return result;
+                }
+            }
+
+            result["ok"] = true;
+            result["detail"] = "No special placement issues";
+            return result;
+        }
+
+        private static JSONArray CheckAdjacent(Map map, List<IntVec3> cells)
+        {
+            var warnings = new JSONArray();
+            
+            // Check for outdoor adjacency (temperature concerns)
+            bool hasOutdoorAdjacent = false;
+            foreach (var cell in cells)
+            {
+                foreach (var adj in GenAdj.CardinalDirections)
+                {
+                    var adjCell = cell + adj;
+                    if (!adjCell.InBounds(map)) continue;
+                    
+                    if (!adjCell.Roofed(map))
+                    {
+                        hasOutdoorAdjacent = true;
+                        break;
+                    }
+                }
+                if (hasOutdoorAdjacent) break;
+            }
+
+            if (hasOutdoorAdjacent)
+            {
+                warnings.Add("Adjacent to outdoor area - may affect temperature");
+            }
+
+            return warnings;
+        }
+
+        private static string SuggestAlternative(Map map, ThingDef def, IntVec3 pos, Rot4 rotation)
+        {
+            // Try nearby cells (simple search within 5 cells)
+            for (int radius = 1; radius <= 5; radius++)
+            {
+                foreach (var offset in GenRadial.RadialCellsAround(pos, radius, true))
+                {
+                    var testPos = pos + offset;
+                    if (!testPos.InBounds(map)) continue;
+
+                    var report = GenConstruct.CanPlaceBlueprintAt(def, testPos, rotation, map, false, null, null, null);
+                    if (report.Accepted)
+                    {
+                        return string.Format("Try position ({0},{1}) instead", testPos.x, testPos.z);
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }
