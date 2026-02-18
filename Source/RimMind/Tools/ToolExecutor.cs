@@ -74,6 +74,7 @@ namespace RimMind.Tools
 
             // Map
             { "get_semantic_overview", args => SemanticTools.GetSemanticOverview() },
+            { "find_buildable_area", args => SemanticTools.FindBuildableArea(args) },
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
             { "get_growing_zones", args => MapTools.GetGrowingZones() },
             { "get_power_status", args => MapTools.GetPowerStatus() },

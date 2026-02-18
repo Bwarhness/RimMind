@@ -376,5 +376,426 @@ namespace RimMind.Tools
 
             return issues.Any() ? string.Join(", ", issues) : "none detected";
         }
+
+        /// <summary>
+        /// Find buildable area candidates matching size and constraints.
+        /// Returns scored candidates with exact positions.
+        /// </summary>
+        public static string FindBuildableArea(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null)
+                return ToolExecutor.JsonError("No active map.");
+
+            // Parse required parameters
+            int minWidth = args?["minWidth"]?.AsInt ?? 0;
+            int minHeight = args?["minHeight"]?.AsInt ?? 0;
+            
+            if (minWidth <= 0 || minHeight <= 0)
+                return ToolExecutor.JsonError("minWidth and minHeight are required and must be positive.");
+
+            // Parse optional parameters
+            string nearRef = args?["near"]?.Value;
+            int maxDistance = args?["maxDistance"]?.AsInt ?? 999;
+            bool indoor = args?["indoor"]?.AsBool ?? false;
+            bool requirePower = args?["requirePower"]?.AsBool ?? false;
+
+            // Find target position if "near" is specified
+            IntVec3 targetPos = IntVec3.Invalid;
+            if (!string.IsNullOrEmpty(nearRef))
+            {
+                targetPos = FindTargetPosition(nearRef, map);
+                if (!targetPos.IsValid)
+                    return ToolExecutor.JsonError($"Could not find target '{nearRef}'");
+            }
+
+            // Scan map for buildable areas
+            var candidates = new List<BuildableAreaCandidate>();
+            
+            // Grid-based sampling to find contiguous buildable areas
+            var checkedCells = new HashSet<IntVec3>();
+            
+            for (int x = 0; x < map.Size.x - minWidth + 1; x++)
+            {
+                for (int z = 0; z < map.Size.z - minHeight + 1; z++)
+                {
+                    var topLeft = new IntVec3(x, 0, z);
+                    
+                    // Skip if we've already checked this area as part of another candidate
+                    if (checkedCells.Contains(topLeft))
+                        continue;
+                    
+                    // Try to find the largest contiguous buildable rectangle starting here
+                    var area = FindLargestBuildableRect(topLeft, minWidth, minHeight, map, indoor, requirePower);
+                    
+                    if (area != null)
+                    {
+                        // Mark cells as checked
+                        for (int cx = area.x; cx < area.x + area.width; cx++)
+                        {
+                            for (int cz = area.z; cz < area.z + area.height; cz++)
+                            {
+                                checkedCells.Add(new IntVec3(cx, 0, cz));
+                            }
+                        }
+                        
+                        // Calculate score
+                        float score = ScoreBuildableArea(area, targetPos, maxDistance, map, requirePower);
+                        
+                        if (score > 0)
+                        {
+                            candidates.Add(new BuildableAreaCandidate
+                            {
+                                area = area,
+                                score = score,
+                                distanceToTarget = targetPos.IsValid ? (int)area.Center.DistanceTo(targetPos) : -1
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Sort by score and take top 5
+            candidates = candidates.OrderByDescending(c => c.score).Take(5).ToList();
+
+            // Build response
+            var result = new JSONObject();
+            var candidatesArray = new JSONArray();
+
+            foreach (var candidate in candidates)
+            {
+                var candObj = new JSONObject();
+                
+                var posArray = new JSONArray();
+                posArray.Add(candidate.area.x);
+                posArray.Add(candidate.area.z);
+                candObj["position"] = posArray;
+                
+                var sizeArray = new JSONArray();
+                sizeArray.Add(candidate.area.width);
+                sizeArray.Add(candidate.area.height);
+                candObj["size"] = sizeArray;
+                
+                candObj["score"] = candidate.score.ToString("F2");
+                
+                if (candidate.distanceToTarget >= 0)
+                    candObj["distanceToTarget"] = candidate.distanceToTarget;
+                
+                candObj["powered"] = candidate.area.hasPower;
+                candObj["roofed"] = candidate.area.isRoofed;
+                candObj["notes"] = candidate.area.notes;
+                
+                candidatesArray.Add(candObj);
+            }
+
+            result["candidates"] = candidatesArray;
+            result["totalFound"] = candidates.Count;
+
+            if (targetPos.IsValid)
+            {
+                result["targetPosition"] = $"({targetPos.x}, {targetPos.z})";
+            }
+
+            return result.ToString();
+        }
+
+        private class BuildableAreaInfo
+        {
+            public int x;
+            public int z;
+            public int width;
+            public int height;
+            public bool hasPower;
+            public bool isRoofed;
+            public string notes;
+            
+            public IntVec3 Center => new IntVec3(x + width / 2, 0, z + height / 2);
+        }
+
+        private class BuildableAreaCandidate
+        {
+            public BuildableAreaInfo area;
+            public float score;
+            public int distanceToTarget;
+        }
+
+        /// <summary>
+        /// Find target position from a reference string (coordinates or thing name)
+        /// </summary>
+        private static IntVec3 FindTargetPosition(string nearRef, Map map)
+        {
+            // Try parsing as coordinates: "x,z" or "(x,z)"
+            var coordPattern = nearRef.Replace("(", "").Replace(")", "").Trim();
+            var parts = coordPattern.Split(',');
+            if (parts.Length == 2)
+            {
+                if (int.TryParse(parts[0].Trim(), out int x) && int.TryParse(parts[1].Trim(), out int z))
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    if (cell.InBounds(map))
+                        return cell;
+                }
+            }
+
+            // Try finding by thing name (stockpile, building, etc.)
+            // Search stockpiles
+            foreach (var zone in map.zoneManager.AllZones)
+            {
+                if (zone is Zone_Stockpile stockpile)
+                {
+                    if (stockpile.label.ToLower().Contains(nearRef.ToLower()) || 
+                        nearRef.ToLower().Contains("stockpile"))
+                    {
+                        return stockpile.Cells.FirstOrDefault();
+                    }
+                }
+            }
+
+            // Search buildings
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (building.Label.ToLower().Contains(nearRef.ToLower()))
+                {
+                    return building.Position;
+                }
+            }
+
+            return IntVec3.Invalid;
+        }
+
+        /// <summary>
+        /// Find the largest buildable rectangle starting from a top-left position
+        /// </summary>
+        private static BuildableAreaInfo FindLargestBuildableRect(IntVec3 topLeft, int minWidth, int minHeight, 
+            Map map, bool mustBeIndoor, bool requirePower)
+        {
+            // Find maximum width at this row
+            int maxWidth = 0;
+            for (int w = 0; w < map.Size.x - topLeft.x; w++)
+            {
+                var cell = new IntVec3(topLeft.x + w, 0, topLeft.z);
+                if (IsCellBuildable(cell, map, mustBeIndoor, requirePower))
+                    maxWidth = w + 1;
+                else
+                    break;
+            }
+
+            if (maxWidth < minWidth)
+                return null;
+
+            // Find maximum height with this width
+            int maxHeight = 0;
+            for (int h = 0; h < map.Size.z - topLeft.z; h++)
+            {
+                bool rowValid = true;
+                for (int w = 0; w < maxWidth; w++)
+                {
+                    var cell = new IntVec3(topLeft.x + w, 0, topLeft.z + h);
+                    if (!IsCellBuildable(cell, map, mustBeIndoor, requirePower))
+                    {
+                        rowValid = false;
+                        break;
+                    }
+                }
+                
+                if (rowValid)
+                    maxHeight = h + 1;
+                else
+                    break;
+            }
+
+            if (maxHeight < minHeight)
+                return null;
+
+            // Check properties of the area
+            bool hasPower = CheckAreaHasPower(topLeft, maxWidth, maxHeight, map);
+            bool isRoofed = CheckAreaIsRoofed(topLeft, maxWidth, maxHeight, map);
+            string notes = GenerateAreaNotes(topLeft, maxWidth, maxHeight, map);
+
+            return new BuildableAreaInfo
+            {
+                x = topLeft.x,
+                z = topLeft.z,
+                width = maxWidth,
+                height = maxHeight,
+                hasPower = hasPower,
+                isRoofed = isRoofed,
+                notes = notes
+            };
+        }
+
+        /// <summary>
+        /// Check if a cell is buildable according to criteria
+        /// </summary>
+        private static bool IsCellBuildable(IntVec3 cell, Map map, bool mustBeIndoor, bool requirePower)
+        {
+            if (!cell.InBounds(map))
+                return false;
+
+            // Check overhead mountain (thick roof)
+            var roof = map.roofGrid.RoofAt(cell);
+            if (roof != null && roof.isThickRoof)
+                return false;
+
+            // Check if indoor requirement is met
+            if (mustBeIndoor && (roof == null || !cell.Roofed(map)))
+                return false;
+
+            var terrain = map.terrainGrid.TerrainAt(cell);
+            
+            // Check terrain passability
+            if (terrain.passability == Traversability.Impassable)
+                return false;
+
+            // Check for existing buildings/blueprints
+            var things = cell.GetThingList(map);
+            foreach (var thing in things)
+            {
+                if (thing is Building || thing is Blueprint)
+                    return false;
+            }
+
+            // Check if blueprint can be placed (RimWorld's own check)
+            if (!GenConstruct.CanPlaceBlueprintAt(ThingDefOf.Wall, cell, Rot4.North, map).Accepted)
+                return false;
+
+            // Check power requirement
+            if (requirePower && !IsPowerNearby(cell, map))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Check if power conduit is nearby
+        /// </summary>
+        private static bool IsPowerNearby(IntVec3 cell, Map map)
+        {
+            // Check within 6 tiles for power conduit
+            foreach (var c in GenRadial.RadialCellsAround(cell, 6f, true))
+            {
+                if (!c.InBounds(map))
+                    continue;
+
+                var things = c.GetThingList(map);
+                foreach (var thing in things)
+                {
+                    if (thing.def.defName.Contains("Conduit") || 
+                        (thing.TryGetComp<CompPowerTransmitter>() != null))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Check if an area has power nearby
+        /// </summary>
+        private static bool CheckAreaHasPower(IntVec3 topLeft, int width, int height, Map map)
+        {
+            var center = new IntVec3(topLeft.x + width / 2, 0, topLeft.z + height / 2);
+            return IsPowerNearby(center, map);
+        }
+
+        /// <summary>
+        /// Check if an area is roofed
+        /// </summary>
+        private static bool CheckAreaIsRoofed(IntVec3 topLeft, int width, int height, Map map)
+        {
+            int roofedCells = 0;
+            int totalCells = width * height;
+            
+            for (int x = topLeft.x; x < topLeft.x + width; x++)
+            {
+                for (int z = topLeft.z; z < topLeft.z + height; z++)
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    if (cell.Roofed(map))
+                        roofedCells++;
+                }
+            }
+            
+            // Consider roofed if >80% of cells are roofed
+            return roofedCells > (totalCells * 0.8);
+        }
+
+        /// <summary>
+        /// Generate descriptive notes about the area
+        /// </summary>
+        private static string GenerateAreaNotes(IntVec3 topLeft, int width, int height, Map map)
+        {
+            var notes = new List<string>();
+            
+            // Check terrain quality
+            var terrainTypes = new Dictionary<string, int>();
+            for (int x = topLeft.x; x < topLeft.x + width; x++)
+            {
+                for (int z = topLeft.z; z < topLeft.z + height; z++)
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    var terrain = map.terrainGrid.TerrainAt(cell);
+                    var terrainLabel = terrain.label ?? "unknown";
+                    
+                    if (!terrainTypes.ContainsKey(terrainLabel))
+                        terrainTypes[terrainLabel] = 0;
+                    terrainTypes[terrainLabel]++;
+                }
+            }
+            
+            // Get dominant terrain
+            var dominantTerrain = terrainTypes.OrderByDescending(kvp => kvp.Value).First();
+            if (dominantTerrain.Value > (width * height * 0.7))
+            {
+                notes.Add($"{dominantTerrain.Key} terrain");
+            }
+            else
+            {
+                notes.Add("mixed terrain");
+            }
+            
+            // Check if flat (no hills/elevation changes in RimWorld context)
+            notes.Add("flat");
+            
+            return string.Join(", ", notes);
+        }
+
+        /// <summary>
+        /// Score a buildable area based on criteria
+        /// </summary>
+        private static float ScoreBuildableArea(BuildableAreaInfo area, IntVec3 targetPos, int maxDistance, 
+            Map map, bool requirePower)
+        {
+            float score = 1.0f;
+            
+            // Distance scoring (if target specified)
+            if (targetPos.IsValid)
+            {
+                float distance = area.Center.DistanceTo(targetPos);
+                
+                if (distance > maxDistance)
+                    return 0; // Outside max distance
+                
+                // Score decreases with distance (closer is better)
+                float distanceScore = 1.0f - (distance / maxDistance);
+                score *= (0.5f + distanceScore * 0.5f); // Weight: 0.5 to 1.0
+            }
+            
+            // Size bonus (larger is slightly better, but not too much weight)
+            float sizeBonus = Math.Min((area.width * area.height) / 100.0f, 0.2f);
+            score += sizeBonus;
+            
+            // Power bonus
+            if (area.hasPower)
+                score *= 1.15f;
+            
+            // Roofed bonus
+            if (area.isRoofed)
+                score *= 1.1f;
+            
+            // Clamp score to 0-1 range
+            return Math.Min(score, 1.0f);
+        }
     }
 }

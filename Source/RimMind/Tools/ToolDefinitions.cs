@@ -129,6 +129,13 @@ namespace RimMind.Tools
 
             // Map Tools
             tools.Add(MakeTool("get_semantic_overview", "Get a compact text description of the colony layout including rooms, power, and buildable areas. This provides a high-level overview optimized for understanding base structure without loading full grid data. Use this instead of get_map_region when you need to understand colony layout quickly."));
+            tools.Add(MakeTool("find_buildable_area", "Find buildable area candidates for construction. Returns scored candidates with exact positions, sizes, and notes. AI can ask 'where can I build a 5x4 room near the stockpile?' and get actionable results. Scores areas by distance to target, power availability, and terrain quality.",
+                MakeParam("minWidth", "integer", "Minimum width in cells"),
+                MakeParam("minHeight", "integer", "Minimum height in cells"),
+                MakeOptionalParam("near", "string", "Thing or position to be near (e.g., 'stockpile', '50,60', or building name)"),
+                MakeOptionalParam("maxDistance", "integer", "Maximum distance from 'near' target (default: 999)"),
+                MakeOptionalParam("indoor", "boolean", "Must be roofed/indoors (default: false)"),
+                MakeOptionalParam("requirePower", "boolean", "Must have power conduit nearby (default: false)")));
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
