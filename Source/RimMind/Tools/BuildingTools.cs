@@ -1882,7 +1882,7 @@ namespace RimMind.Tools
             
             // Check if building needs power
             var powerComp = def.comps?.Find(c => c is CompProperties_Power) as CompProperties_Power;
-            if (powerComp == null || powerComp.basePowerConsumption <= 0)
+            if (powerComp == null || powerComp.PowerConsumption <= 0)
             {
                 // Doesn't need power
                 return result;
