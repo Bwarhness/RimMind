@@ -26,6 +26,49 @@ namespace RimMind.Tools
             // Growing season info
             obj["growingSeasonActive"] = map.mapTemperature.OutdoorTemp > 0f;
 
+            // Active events summary (Phase 7)
+            try
+            {
+                var activeEventsArr = new JSONArray();
+                var gameConditions = map.gameConditionManager?.ActiveConditions;
+                
+                if (gameConditions != null && gameConditions.Count > 0)
+                {
+                    foreach (var condition in gameConditions)
+                    {
+                        var eventObj = new JSONObject();
+                        eventObj["type"] = condition.def.defName;
+                        eventObj["label"] = condition.LabelCap;
+                        
+                        int ticksRemaining = condition.TicksLeft;
+                        if (ticksRemaining > 0)
+                        {
+                            float daysRemaining = ticksRemaining / 60000f;
+                            eventObj["duration_remaining_days"] = daysRemaining.ToString("F1");
+                        }
+                        else
+                        {
+                            eventObj["duration_remaining_days"] = "unknown";
+                        }
+                        
+                        activeEventsArr.Add(eventObj);
+                    }
+                    
+                    obj["active_events"] = activeEventsArr;
+                    obj["active_event_count"] = activeEventsArr.Count;
+                    obj["note"] = "Use get_active_events for detailed event information, risks, and recommendations";
+                }
+                else
+                {
+                    obj["active_events"] = activeEventsArr;
+                    obj["active_event_count"] = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                obj["events_error"] = "Could not read active events: " + ex.Message;
+            }
+
             return obj.ToString();
         }
 
