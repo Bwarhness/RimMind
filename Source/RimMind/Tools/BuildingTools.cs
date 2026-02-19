@@ -304,7 +304,7 @@ namespace RimMind.Tools
 
             // Terrain requirements
             var terrainReqs = new JSONArray();
-            if (def.terrainAffordanceNeeded != null)
+            if (def.terrainAffordanceNeeded != null && !string.IsNullOrEmpty(def.terrainAffordanceNeeded.defName))
             {
                 string affordance = def.terrainAffordanceNeeded.defName;
                 
@@ -317,7 +317,7 @@ namespace RimMind.Tools
                     terrainReqs.Add("Supports light structures");
                     
                 // All terrain affordances implicitly require "not water" unless specifically a water building
-                if (!def.placeWorkers.Any(pw => pw.Name.Contains("Water")))
+                if (def.placeWorkers == null || !def.placeWorkers.Any(pw => pw.Name.Contains("Water")))
                     terrainReqs.Add("Not water");
             }
             else
@@ -1720,6 +1720,11 @@ namespace RimMind.Tools
 
             // Calculate occupied cells
             var occupiedCells = GenAdj.CellsOccupiedBy(pos, rotation, def.size).ToList();
+            
+            if (occupiedCells == null || occupiedCells.Count == 0)
+            {
+                return ToolExecutor.JsonError("Building size is invalid or position cannot be calculated");
+            }
 
             // Result object
             var result = new JSONObject();
@@ -1802,6 +1807,13 @@ namespace RimMind.Tools
         {
             var result = new JSONObject();
             
+            if (map == null || def == null || cells == null || cells.Count == 0)
+            {
+                result["ok"] = false;
+                result["detail"] = "Invalid parameters for terrain check";
+                return result;
+            }
+            
             foreach (var cell in cells)
             {
                 if (!cell.InBounds(map))
@@ -1826,7 +1838,7 @@ namespace RimMind.Tools
                 }
 
                 // Check for impassable terrain (water, lava, etc.)
-                if (!terrain.passability.Equals(Traversability.Standable))
+                if (terrain.passability != Traversability.Standable)
                 {
                     result["ok"] = false;
                     result["detail"] = string.Format("Cell ({0},{1}) is {2} (not buildable)",
@@ -1843,6 +1855,13 @@ namespace RimMind.Tools
         private static JSONObject CheckSpace(Map map, List<IntVec3> cells)
         {
             var result = new JSONObject();
+            
+            if (map == null || cells == null || cells.Count == 0)
+            {
+                result["ok"] = false;
+                result["detail"] = "Invalid parameters for space check";
+                return result;
+            }
             
             foreach (var cell in cells)
             {
@@ -1887,6 +1906,9 @@ namespace RimMind.Tools
         {
             var result = new JSONObject();
             
+            if (map == null || def == null)
+                return result;
+            
             // Check if building needs power
             var powerComp = def.comps?.Find(c => c is CompProperties_Power) as CompProperties_Power;
             if (powerComp == null || powerComp.PowerConsumption <= 0)
@@ -1896,7 +1918,14 @@ namespace RimMind.Tools
             }
 
             // Find nearest powered conduit
-            var powerNet = map.powerNetManager.AllNetsListForReading;
+            var powerNet = map.powerNetManager?.AllNetsListForReading;
+            if (powerNet == null || powerNet.Count == 0)
+            {
+                result["ok"] = false;
+                result["detail"] = "No power grid found on map";
+                return result;
+            }
+            
             float nearestDistance = float.MaxValue;
             IntVec3? nearestConduit = null;
 
@@ -1929,8 +1958,9 @@ namespace RimMind.Tools
             }
             else
             {
+                // This case is now handled earlier, but keep as fallback
                 result["ok"] = false;
-                result["detail"] = "No power grid found on map";
+                result["detail"] = "No powered conduits found on map";
             }
 
             return result;
@@ -1939,6 +1969,9 @@ namespace RimMind.Tools
         private static JSONObject CheckRoof(Map map, ThingDef def, List<IntVec3> cells)
         {
             var result = new JSONObject();
+            
+            if (map == null || def == null || cells == null || cells.Count == 0)
+                return result; // No roof check if invalid params
             
             // Some buildings work better or require roof
             bool needsRoof = false;
@@ -1989,12 +2022,19 @@ namespace RimMind.Tools
         {
             var result = new JSONObject();
             
+            if (map == null || def == null || cells == null)
+            {
+                result["ok"] = false;
+                result["detail"] = "Invalid parameters for special rules check";
+                return result;
+            }
+            
             // Check interaction cell (for workbenches, beds, etc.)
             if (def.hasInteractionCell)
             {
                 var interactionCell = ThingUtility.InteractionCellWhenAt(def, pos, rotation, map);
                 
-                if (!interactionCell.InBounds(map))
+                if (!interactionCell.IsValid || !interactionCell.InBounds(map))
                 {
                     result["ok"] = false;
                     result["detail"] = "Interaction cell out of bounds - rotate or move";
@@ -2059,6 +2099,9 @@ namespace RimMind.Tools
         private static JSONArray CheckAdjacent(Map map, List<IntVec3> cells)
         {
             var warnings = new JSONArray();
+            
+            if (map == null || cells == null || cells.Count == 0)
+                return warnings;
             
             // Check for outdoor adjacency (temperature concerns)
             bool hasOutdoorAdjacent = false;
