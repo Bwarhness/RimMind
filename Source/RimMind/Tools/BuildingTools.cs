@@ -1684,6 +1684,12 @@ namespace RimMind.Tools
             int x = args["x"].AsInt;
             int z = args["z"].AsInt;
             var pos = new IntVec3(x, 0, z);
+            
+            // Validate position is in bounds
+            if (!pos.InBounds(map))
+            {
+                return ToolExecutor.JsonError($"Position ({x}, {z}) is outside map bounds (map size: {map.Size.x}x{map.Size.z})");
+            }
 
             // Resolve building def
             var def = ResolveBuildingDef(buildingDefName);
