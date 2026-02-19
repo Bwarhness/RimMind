@@ -817,7 +817,7 @@ namespace RimMind.Tools
 
                 // Get material requirements
                 var materialsObj = new JSONObject();
-                if (blueprint.def.entityDefToBuild is ThingDef thingDef)
+                if (blueprint.def.entityDefToBuild is ThingDef thingDef && blueprint.Stuff != null)
                 {
                     // Get cost list
                     var costList = thingDef.CostListAdjusted(blueprint.Stuff);

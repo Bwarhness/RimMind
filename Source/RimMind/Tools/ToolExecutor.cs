@@ -94,12 +94,6 @@ namespace RimMind.Tools
             { "suggest_power_route", args => PowerTools.SuggestPowerRoute(args) },
             { "auto_route_power", args => PowerTools.AutoRoutePower(args) },
 
-            // Power Management
-            { "analyze_power_grid", args => PowerTools.AnalyzePowerGrid() },
-            { "check_power_connection", args => PowerTools.CheckPowerConnection(args) },
-            { "suggest_power_route", args => PowerTools.SuggestPowerRoute(args) },
-            { "auto_route_power", args => PowerTools.AutoRoutePower(args) },
-
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
