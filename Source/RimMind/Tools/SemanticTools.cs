@@ -87,6 +87,9 @@ namespace RimMind.Tools
         /// </summary>
         private static string DescribeRoom(Room room, Map map)
         {
+            if (room == null)
+                return "Unknown room";
+
             var sb = new StringBuilder();
 
             // Room type
