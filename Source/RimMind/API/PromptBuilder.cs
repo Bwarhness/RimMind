@@ -1,5 +1,6 @@
 using RimMind.Chat;
 using RimMind.Core;
+using RimMind.Tools;
 
 namespace RimMind.API
 {
