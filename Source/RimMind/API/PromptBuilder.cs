@@ -122,6 +122,15 @@ OTHER RULES:
                 sb.Append("\n\n");
             }
 
+            // Semantic overview - generated fresh on every request
+            string semanticOverview = SemanticTools.GetSemanticOverview();
+            if (!string.IsNullOrEmpty(semanticOverview))
+            {
+                sb.Append("## Colony Layout\n\n");
+                sb.Append(semanticOverview);
+                sb.Append("\n");
+            }
+
             // Colony context
             if (!string.IsNullOrEmpty(colonyContext))
             {
