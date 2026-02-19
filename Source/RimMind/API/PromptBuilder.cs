@@ -1,5 +1,6 @@
 using RimMind.Chat;
 using RimMind.Core;
+using RimMind.Tools;
 
 namespace RimMind.API
 {
@@ -120,6 +121,15 @@ OTHER RULES:
                 sb.Append("PLAYER DIRECTIVES:\nThe player has defined the following rules and preferences for this colony. Follow these as closely as possible:\n\n");
                 sb.Append(playerDirectives.Trim());
                 sb.Append("\n\n");
+            }
+
+            // Semantic overview - generated fresh on every request
+            string semanticOverview = SemanticTools.GetSemanticOverview();
+            if (!string.IsNullOrEmpty(semanticOverview))
+            {
+                sb.Append("## Colony Layout\n\n");
+                sb.Append(semanticOverview);
+                sb.Append("\n");
             }
 
             // Colony context

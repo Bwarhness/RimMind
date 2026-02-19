@@ -460,6 +460,17 @@ namespace RimMind.Tools
 
             // Build response
             var result = new JSONObject();
+            
+            if (candidates.Count == 0)
+            {
+                result["totalFound"] = 0;
+                result["candidates"] = new JSONArray();
+                result["message"] = "No buildable areas found matching criteria. Try reducing minWidth/minHeight or increasing maxDistance.";
+                if (targetPos.IsValid)
+                    result["targetPosition"] = $"({targetPos.x}, {targetPos.z})";
+                return result.ToString();
+            }
+
             var candidatesArray = new JSONArray();
 
             foreach (var candidate in candidates)
@@ -524,6 +535,9 @@ namespace RimMind.Tools
         /// </summary>
         private static IntVec3 FindTargetPosition(string nearRef, Map map)
         {
+            if (map == null || string.IsNullOrEmpty(nearRef))
+                return IntVec3.Invalid;
+
             // Try parsing as coordinates: "x,z" or "(x,z)"
             var coordPattern = nearRef.Replace("(", "").Replace(")", "").Trim();
             var parts = coordPattern.Split(',');
@@ -534,6 +548,8 @@ namespace RimMind.Tools
                     var cell = new IntVec3(x, 0, z);
                     if (cell.InBounds(map))
                         return cell;
+                    // Coordinates out of bounds - return invalid
+                    return IntVec3.Invalid;
                 }
             }
 

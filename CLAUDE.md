@@ -249,6 +249,35 @@ RimMind/
 - **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
 
+## Building & Spatial Planning
+
+For building tasks, use these query tools instead of parsing grids:
+
+### find_buildable_area
+Find where to place new structures.
+- **Parameters**: minWidth, minHeight, near (optional), maxDistance (optional)
+- **Returns**: Scored candidates with positions
+- **Purpose**: Identifies suitable building locations based on size requirements and proximity constraints
+
+### check_placement
+Validate a specific placement before building.
+- **Parameters**: building, x, z, rotation (optional)
+- **Returns**: Valid/invalid with detailed checks
+- **Purpose**: Pre-validates building placement to avoid placement failures
+
+### get_requirements
+Get building specifications.
+- **Parameters**: building (defName)
+- **Returns**: Size, power needs, resources, placement rules
+- **Purpose**: Query building metadata before placement decisions
+
+### Workflow
+1. Use `find_buildable_area` to get placement candidates
+2. Use `check_placement` to validate your choice
+3. Place blueprints with confidence using `place_building` or `place_structure`
+
+**Why use these tools?** They provide direct spatial queries instead of requiring manual grid parsing. This reduces errors, improves placement accuracy, and handles complex validation logic (terrain, existing structures, power requirements) automatically.
+
 ## Event-Driven Automation System
 
 RimMind includes a user-scriptable event automation system that allows players to configure custom AI responses to specific game events (raids, fires, mental breaks, etc.).
