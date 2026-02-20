@@ -138,15 +138,19 @@ namespace RimMind.Tools
             }
 
             // Precept comforts
+            var pawnIdeo = pawn.ideos?.Ideo;
             var preceptComfort = new JSONArray();
-            foreach (var p in pawn.ideos.PrimaryIdeo.PreceptsListForReading)
+            if (pawnIdeo != null)
             {
+                foreach (var p in pawnIdeo.PreceptsListForReading)
+                {
                 if (p.def.comfort != null)
                 {
                     var pc = new JSONObject();
                     pc["precept"] = p.def.LabelCap;
                     pc["comfort"] = p.def.comfort.Value.ToString("P0");
                     preceptComfort.Add(pc);
+                }
                 }
             }
             if (preceptComfort.Count > 0)
