@@ -141,6 +141,7 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
+            tools.Add(MakeTool("get_temperature_risks", "Check each colonist's current position temperature and compare to their comfortable range. Flag overheating or freezing risks, suggest safe locations to move to. Use this to prevent heatstroke, hypothermia, and keep colonists in safe temperature zones."));
             tools.Add(MakeTool("get_map_region", "Get a character-based grid view of the map showing buildings, pawns, zones, and terrain. Each cell is one character. Use this to understand the colony layout, analyze base design, and identify construction opportunities. Returns a legend of character codes used.",
                 MakeOptionalParam("x", "integer", "Start X coordinate (default: 0)"),
                 MakeOptionalParam("z", "integer", "Start Z coordinate (default: 0)"),

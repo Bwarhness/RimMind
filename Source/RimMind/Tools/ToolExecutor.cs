@@ -80,6 +80,7 @@ namespace RimMind.Tools
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
             { "get_growing_zones", args => MapTools.GetGrowingZones() },
             { "get_power_status", args => MapTools.GetPowerStatus() },
+            { "get_temperature_risks", args => MapTools.GetTemperatureRisks() },
             { "get_map_region", args => MapTools.GetMapRegion(args) },
             { "get_cell_details", args => MapTools.GetCellDetails(args) },
             { "get_blueprints", args => MapTools.GetBlueprints(args) },
