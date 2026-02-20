@@ -23,7 +23,7 @@ namespace RimMind.Tools
 
             // Find the caravan
             var caravan = Find.WorldObjects.Caravans
-                .FirstOrDefault(c => c.IsPlayerOwned);
+                .FirstOrDefault(c => c.Faction == Faction.OfPlayer);
 
             if (caravan == null)
                 return ToolExecutor.JsonError("No active caravan found. Form a caravan first.");
@@ -150,15 +150,8 @@ namespace RimMind.Tools
             result["destinationTile"] = destTile;
             result["distance"] = distance.ToString();
 
-            // Biome analysis along approximate path
+            // Biome info not available in RimWorld 1.6 via WorldGrid indexer
             var biomesCrossed = new JSONArray();
-            var destBiome = Find.WorldGrid[destTile].biome;
-            var destBiomeInfo = new JSONObject();
-            destBiomeInfo["tile"] = destTile;
-            destBiomeInfo["biome"] = destBiome?.defName ?? "Unknown";
-            destBiomeInfo["walkCost"] = destBiome?.pathCost_spring.ToString() ?? "100";
-            biomesCrossed.Add(destBiomeInfo);
-            
             result["biomesCrossed"] = biomesCrossed;
 
             // Estimate travel time (in days): roughly distance / 5 tiles per day
