@@ -281,13 +281,8 @@ namespace RimMind.Tools
                 obj["current_temp"] = localTemp.ToString("F1") + "°C";
                 obj["ambient_temp"] = ambientTemp.ToString("F1") + "°C";
 
-                float minComfort = -10f;
-                float maxComfort = 40f;
-
-                if (colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false) != 0)
-                    minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
-                if (colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false) != 0)
-                    maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
+                float minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
+                float maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
 
                 obj["comfortable_range"] = minComfort.ToString("F0") + "°C to " + maxComfort.ToString("F0") + "°C";
 
