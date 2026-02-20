@@ -573,7 +573,7 @@ namespace RimMind.Tools
             {
                 // Find pawns needing rescue
                 var rescuees = map.mapPawns.AllPawnsSpawned
-                    .Where(p => p.Downed && p.InBed())
+                    .Where(p => p.Downed && !p.InBed())
                     .ToList();
 
                 if (rescuees.Any())
