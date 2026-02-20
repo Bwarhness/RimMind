@@ -226,8 +226,10 @@ namespace RimMind.Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));
             tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, bonded colonist, carrying capacity (pack animals), and production schedules (shearing, milking, eggs).",
                 MakeParam("name", "string", "The animal's name")));
-            // Note: get_animal_stats and get_wild_animals were never implemented (only defined). Removed to match tool registry.
-            // Use list_animals and get_animal_details for current animal functionality.
+            tools.Add(MakeTool("get_animal_stats", "Get detailed statistics for an animal species: carrying capacity (pack animals), movement speed, combat stats (melee damage, armor, DPS), abilities (wool, milk, eggs), wildness level, trainability, filth rate, and market value. Use this to compare animal species for taming, pack use, or combat.",
+                MakeParam("speciesName", "string", "The animal species name (e.g., 'Muffalo', 'Thrumbo', 'Dromedary'). Partial names work.")));
+            tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map: species, location, health, taming difficulty, and value rating. Returns recommendations for taming opportunities (easy/hard/very hard) and hunting targets. Use this to identify rare animals like Thrumbos or plan hunting expeditions.",
+                MakeOptionalParam("speciesFilter", "string", "Optional filter by species name")));
 
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
