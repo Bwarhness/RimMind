@@ -156,14 +156,9 @@ namespace RimMind.Tools
             if (preceptComfort.Count > 0)
                 result["precept_comfort"] = preceptComfort;
 
-            // Certainty change reasons
-            var certaintyFactors = new JSONArray();
-            foreach (var cf in pawn.ideos.CertaintyReasons())
-            {
-                certaintyFactors.Add(cf);
-            }
-            if (certaintyFactors.Count > 0)
-                result["certainty_factors"] = certaintyFactors;
+            // Certainty change reasons - Removed as CertaintyReasons() API is unverified
+            // The Certainty property gives the current certainty level
+            // but there is no direct API to get certainty change reasons in RimWorld
 
             return result.ToString();
         }
@@ -292,18 +287,15 @@ namespace RimMind.Tools
                 if (p.ideos == null) continue;
                 
                 // Check recent certainty change
-                // This is simplified - full implementation would track actual changes
+                // Check for low certainty - could be precept-related
+                // Note: CertaintyReasons() API is unverified, so we use certainty value directly
                 if (p.ideos.Certainty < 0.7f)
                 {
-                    // Could be precept-related
-                    var issues = p.ideos.CertaintyReasons();
-                    if (issues != null && issues.Count > 0)
-                    {
-                        var pi = new JSONObject();
-                        pi["name"] = p.Name?.ToStringShort ?? p.LabelShort;
-                        pi["reasons"] = issues;
-                        preceptIssues.Add(pi);
-                    }
+                    var pi = new JSONObject();
+                    pi["name"] = p.Name?.ToStringShort ?? p.LabelShort;
+                    pi["certainty"] = p.ideos.Certainty.ToString("P0");
+                    pi["note"] = "Low certainty - may need precept review";
+                    preceptIssues.Add(pi);
                 }
             }
             result["precept_related_issues"] = preceptIssues;
