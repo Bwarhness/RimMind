@@ -365,7 +365,7 @@ namespace RimMind.Tools
                 if (colonist.Drafted)
                 {
                     var obj = new JSONObject();
-                    obj["name"] = colonist.Name.ToStringShort();
+                    obj["name"] = colonist.Name.ToStringShort;
                     obj["position"] = $"({colonist.Position.x}, {colonist.Position.z})";
 
                     var weapon = colonist.equipment?.Primary;
@@ -381,9 +381,9 @@ namespace RimMind.Tools
             }
 
             // Get turrets
-            foreach (var building in map.listerBuildings.allBuildingsConcrete)
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
             {
-                if (building is Building_Turret turret && turret.Spawned)
+                if (building is Building_TurretGun turret && turret.Spawned)
                 {
                     var obj = new JSONObject();
                     obj["name"] = building.LabelCap;
@@ -448,7 +448,7 @@ namespace RimMind.Tools
                         var injuriesArr = new JSONArray();
                         foreach (var hediff in colonist.health.hediffSet.hediffs)
                         {
-                            if (!hediff.IsOld)
+                            if (hediff.Severity > 0)
                                 injuriesArr.Add(hediff.def.label);
                         }
                         if (injuriesArr.Count > 0)
@@ -456,8 +456,8 @@ namespace RimMind.Tools
                     }
 
                     // Find nearest bed
-                    var beds = map.listerBuildings.allBuildingsConcrete
-                        .Where(b => b is Building_Bed bed && bed.Medical && bed.ForColonistUse)
+                    var beds = map.listerBuildings.allBuildingsColonist
+                        .Where(b => b is Building_Bed bed && bed.Medical && !bed.ForPrisoners)
                         .OrderBy(b => b.Position.DistanceTo(colonist.Position))
                         .FirstOrDefault();
 
@@ -469,7 +469,7 @@ namespace RimMind.Tools
 
                     downed.Add(obj);
                 }
-                else if (colonist.health?.hediffSet?.GetHediffsNeedingTend().Any() == true)
+                else if (colonist.health?.hediffSet?.HasTendableHediff() == true)
                 {
                     var obj = new JSONObject();
                     obj["name"] = colonist.Name.ToStringShort;
@@ -477,7 +477,7 @@ namespace RimMind.Tools
                     obj["status"] = "injured";
 
                     var injuriesArr = new JSONArray();
-                    foreach (var hediff in colonist.health.hediffSet.GetHediffsNeedingTend())
+                    foreach (var hediff in colonist.health.hediffSet.hediffs.Where(h => h.TendableNow()))
                     {
                         injuriesArr.Add(hediff.def.label);
                     }
