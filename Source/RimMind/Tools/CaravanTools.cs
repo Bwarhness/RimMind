@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using RimMind.API;
 using RimWorld;
+using RimWorld.Planet;
 using Verse;
 using Verse.AI;
 
@@ -21,7 +22,7 @@ namespace RimMind.Tools
             if (map == null) return ToolExecutor.JsonError("No active map.");
 
             // Find the caravan
-            var caravan = Find.WorldObjects.PlayerCaravans
+            var caravan = Find.WorldObjects.Caravans
                 .FirstOrDefault(c => c.IsPlayerOwned);
 
             if (caravan == null)
@@ -82,12 +83,11 @@ namespace RimMind.Tools
             result["items"] = items;
 
             // Calculate overload
-            float overloadPercent = currentMass / totalCapacity;
+            float overloadPercent = totalCapacity > 0 ? currentMass / totalCapacity : 0f;
             result["loadPercentage"] = overloadPercent.ToString("P0");
             result["isOverloaded"] = overloadPercent > 1.0f;
 
             // Travel speed impact
-            float baseSpeed = 1.0f; // Base movement speed
             float speedMultiplier = 1.0f;
             if (overloadPercent > 1.0f)
             {
@@ -134,67 +134,49 @@ namespace RimMind.Tools
                 var settlement = Find.WorldObjects.Settlements
                     .FirstOrDefault(s => s.Name?.ToString().Contains(destinationName) == true);
                 if (settlement != null)
-                    destTile = settlement.Tile;
+                    destTile = (int)settlement.Tile;
             }
 
             if (destTile < 0)
                 return ToolExecutor.JsonError("Could not find destination. Provide tile ID or settlement name.");
 
-            var currentTile = map.Tile;
+            int currentTile = (int)map.Tile;
             
             // Calculate distance
-            var distance = Find.WorldGrid.ApproxDistanceInTiles(currentTile, destTile);
+            int distance = Find.WorldGrid.TraversalDistanceBetween(currentTile, destTile);
             
             var result = new JSONObject();
             result["startingTile"] = currentTile;
             result["destinationTile"] = destTile;
-            result["distance"] = distance.ToString("0.0");
+            result["distance"] = distance.ToString();
 
-            // Biome analysis
-            var path = RimWorld.WorldPathFinder.Get().FindPath(currentTile, destTile, null);
-            
+            // Biome analysis along approximate path
             var biomesCrossed = new JSONArray();
-            var totalPathCost = 0f;
-            
-            if (path.Nodes.Count > 0)
-            {
-                foreach (var tile in path.Nodes)
-                {
-                    var biome = Find.WorldGrid[tile].biome;
-                    var biomeInfo = new JSONObject();
-                    biomeInfo["tile"] = tile;
-                    biomeInfo["biome"] = biome.defName;
-                    biomeInfo["walkCost"] = biome.pathCost_spring.ToString();
-                    biomesCrossed.Add(biomeInfo);
-                    
-                    totalPathCost += biome.pathCost_spring;
-                }
-            }
+            var destBiome = Find.WorldGrid[destTile].biome;
+            var destBiomeInfo = new JSONObject();
+            destBiomeInfo["tile"] = destTile;
+            destBiomeInfo["biome"] = destBiome?.defName ?? "Unknown";
+            destBiomeInfo["walkCost"] = destBiome?.pathCost_spring.ToString() ?? "100";
+            biomesCrossed.Add(destBiomeInfo);
             
             result["biomesCrossed"] = biomesCrossed;
-            result["totalPathCost"] = totalPathCost.ToString("0");
 
-            // Estimate travel time
-            // Base: tiles / (movement speed * day length)
-            float avgSpeed = 1.0f; // Base pawn speed
-            float baseTimePerTile = 1.0f; // 1 hour per tile base
-            float adjustedTime = baseTimePerTile * (totalPathCost / 100f); // Adjust for terrain
-            
-            float daysEstimate = (distance * adjustedTime) / 24f; // 24 hours per day
+            // Estimate travel time (in days): roughly distance / 5 tiles per day
+            float daysEstimate = distance / 5f;
             result["estimatedDays"] = daysEstimate.ToString("0.0");
-            result["estimatedHours"] = (daysEstimate * 24).ToString("0");
+            result["estimatedHours"] = (daysEstimate * 24f).ToString("0");
 
-            // Encounter risk based on distance and terrain
+            // Encounter risk based on distance
             float encounterProbability = Math.Min(distance / 100f, 0.8f);
             result["encounterProbability"] = encounterProbability.ToString("P0");
 
-            // Ambush risk (more likely on certain biomes)
+            // Ambush risk
             float ambushRisk = encounterProbability * 0.5f;
             result["ambushRisk"] = ambushRisk.ToString("P0");
 
             // Season/weather effects
             var season = GenLocalDate.Season(map);
-            result["currentSeason"] = season?.defName ?? "Unknown";
+            result["currentSeason"] = season.LabelCap().ToString();
 
             return result.ToString();
         }
@@ -219,15 +201,15 @@ namespace RimMind.Tools
                 .FirstOrDefault(s => s.Name?.ToString().Contains(destination) == true);
             if (settlement != null)
             {
-                destTile = settlement.Tile;
+                destTile = (int)settlement.Tile;
                 result["destinationTile"] = destTile;
             }
 
             // Calculate distance
             if (destTile >= 0)
             {
-                var distance = Find.WorldGrid.ApproxDistanceInTiles(map.Tile, destTile);
-                result["distance"] = distance.ToString("0.0");
+                int distance = Find.WorldGrid.TraversalDistanceBetween((int)map.Tile, destTile);
+                result["distance"] = distance.ToString();
 
                 // Calculate recommended mass based on purpose
                 float recommendedMass;
@@ -293,7 +275,7 @@ namespace RimMind.Tools
             var availableColonists = new JSONArray();
             foreach (var pawn in map.mapPawns.FreeColonists)
             {
-                if (!pawn.Drafted && !pawn.Downed && pawn.health?.summaryHealth > 0.5f)
+                if (!pawn.Drafted && !pawn.Downed && pawn.health != null)
                 {
                     var colonist = new JSONObject();
                     colonist["name"] = pawn.Name?.ToStringShort ?? "Unknown";
@@ -334,50 +316,49 @@ namespace RimMind.Tools
             var result = new JSONObject();
             result["searchRadius"] = maxDistanceTiles;
 
-            var currentTile = map.Tile;
-            var settlements = new JSONArray();
+            int currentTile = (int)map.Tile;
+            
+            // Collect settlements with their distances for sorting
+            var settlementList = new List<KeyValuePair<int, JSONObject>>();
 
             foreach (var settlement in Find.WorldObjects.Settlements)
             {
                 if (settlement.Faction == null || settlement.Faction == Faction.OfPlayer)
                     continue;
 
-                var distance = Find.WorldGrid.ApproxDistanceInTiles(currentTile, settlement.Tile);
+                int distance = Find.WorldGrid.TraversalDistanceBetween(currentTile, (int)settlement.Tile);
                 if (distance > maxDistanceTiles)
                     continue;
 
                 var settlementInfo = new JSONObject();
                 settlementInfo["name"] = settlement.Name?.ToString() ?? "Unknown";
                 settlementInfo["faction"] = settlement.Faction.Name?.ToString() ?? "Unknown";
-                settlementInfo["tile"] = settlement.Tile;
-                settlementInfo["distance"] = distance.ToString("0.0");
+                settlementInfo["tile"] = (int)settlement.Tile;
+                settlementInfo["distance"] = distance.ToString();
 
-                // Get faction relations
-                var playerFaction = Faction.OfPlayer;
-                if (playerFaction != null && settlement.Faction != null)
-                {
-                    var relations = settlement.Faction.GetRelation(playerFaction);
-                    settlementInfo["goodwill"] = relations?.Goodwill.ToString() ?? "N/A";
-                    settlementInfo["hostile"] = relations?.Hostile ?? false;
-                }
+                // Get faction relations using the working RimWorld 1.6 API
+                settlementInfo["goodwill"] = settlement.Faction.PlayerGoodwill.ToString();
+                settlementInfo["relationKind"] = settlement.Faction.PlayerRelationKind.ToString();
+                settlementInfo["hostile"] = settlement.Faction.PlayerRelationKind == FactionRelationKind.Hostile;
 
-                // Trade options (simplified)
+                // Trade options
                 var tradeOptions = new JSONArray();
-                if (settlement.Faction.def?.baseGoodwill != null)
-                {
-                    // Add potential trade types
-                    tradeOptions.Add("buyer"); // Can sell to them
-                    tradeOptions.Add("seller"); // Can buy from them
-                }
+                tradeOptions.Add("buyer"); // Can sell to them
+                tradeOptions.Add("seller"); // Can buy from them
                 settlementInfo["tradeOptions"] = tradeOptions;
 
-                settlements.Add(settlementInfo);
+                settlementList.Add(new KeyValuePair<int, JSONObject>(distance, settlementInfo));
             }
 
             // Sort by distance
-            var sortedSettlements = settlements.OrderBy(s => float.Parse(s["distance"].Value)).ToList();
-            result["settlements"] = sortedSettlements;
-            result["count"] = sortedSettlements.Count;
+            settlementList.Sort((a, b) => a.Key.CompareTo(b.Key));
+
+            var settlements = new JSONArray();
+            foreach (var kvp in settlementList)
+                settlements.Add(kvp.Value);
+
+            result["settlements"] = settlements;
+            result["count"] = settlements.Count;
 
             return result.ToString();
         }
