@@ -252,6 +252,78 @@ namespace RimMind.Tools
             return obj.ToString();
         }
 
+        public static string GetTemperatureRisks()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var atRisk = new JSONArray();
+            var safe = new JSONArray();
+
+            var colonists = map.mapPawns.FreeColonistsSpawned;
+            if (colonists == null || colonists.Count == 0)
+            {
+                result["message"] = "No colonists on the map";
+                return result.ToString();
+            }
+
+            float ambientTemp = map.mapTemperature.OutdoorTemp;
+
+            foreach (var colonist in colonists)
+            {
+                var obj = new JSONObject();
+                obj["name"] = colonist.Name.ToStringShort();
+
+                var position = colonist.Position;
+                float localTemp = map.mapTemperature.GetCellTemp(position);
+
+                obj["current_temp"] = localTemp.ToString("F1") + "°C";
+                obj["ambient_temp"] = ambientTemp.ToString("F1") + "°C";
+
+                float minComfort = -10f;
+                float maxComfort = 40f;
+
+                if (colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false) != 0)
+                    minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
+                if (colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false) != 0)
+                    maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
+
+                obj["comfortable_range"] = minComfort.ToString("F0") + "°C to " + maxComfort.ToString("F0") + "°C";
+
+                if (localTemp < minComfort - 5f)
+                {
+                    obj["risk"] = "freezing";
+                    obj["severity"] = (minComfort - localTemp > 15f) ? "critical" : "warning";
+                    obj["action"] = "Move to heated area";
+                    atRisk.Add(obj);
+                }
+                else if (localTemp > maxComfort + 5f)
+                {
+                    obj["risk"] = "overheating";
+                    obj["severity"] = (localTemp - maxComfort > 15f) ? "critical" : "warning";
+                    obj["action"] = "Move to cooled area";
+                    atRisk.Add(obj);
+                }
+                else
+                {
+                    obj["risk"] = "safe";
+                    safe.Add(obj);
+                }
+            }
+
+            result["at_risk"] = atRisk;
+            result["safe"] = safe;
+            result["total_checked"] = colonists.Count;
+
+            if (atRisk.Count > 0)
+                result["overall_status"] = "warning";
+            else
+                result["overall_status"] = "safe";
+
+            return result.ToString();
+        }
+
         public static string GetMapRegion(JSONNode args)
         {
             var map = Find.CurrentMap;
