@@ -273,10 +273,11 @@ namespace RimMind.Tools
             foreach (var colonist in colonists)
             {
                 var obj = new JSONObject();
-                obj["name"] = colonist.Name.ToStringShort();
+                obj["name"] = colonist.Name.ToStringShort;
 
                 var position = colonist.Position;
-                float localTemp = map.mapTemperature.GetCellTemp(position);
+                var room = position.GetRoom(map);
+                float localTemp = room != null ? room.Temperature : ambientTemp;
 
                 obj["current_temp"] = localTemp.ToString("F1") + "°C";
                 obj["ambient_temp"] = ambientTemp.ToString("F1") + "°C";
