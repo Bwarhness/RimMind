@@ -151,8 +151,7 @@ namespace RimMind.Tools
             result["distance"] = distance.ToString("0.0");
 
             // Biome analysis
-            var pathPlanner = new RimWorld.WorldPathFinder();
-            var path = pathPlanner.FindPath(currentTile, destTile, null);
+            var path = RimWorld.WorldPathFinder.Get().FindPath(currentTile, destTile, null);
             
             var biomesCrossed = new JSONArray();
             var totalPathCost = 0f;
@@ -194,7 +193,7 @@ namespace RimMind.Tools
             result["ambushRisk"] = ambushRisk.ToString("P0");
 
             // Season/weather effects
-            var season = Find.World.vecy ? Season.GetSeason(Find.WorldRenderedCamera.x) : Season.Winter;
+            var season = GenLocalDate.Season(map);
             result["currentSeason"] = season?.defName ?? "Unknown";
 
             return result.ToString();
