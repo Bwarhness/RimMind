@@ -109,6 +109,8 @@ namespace RimMind.Tools
 
             // Military Tools
             tools.Add(MakeTool("get_threats", "Get active threats on the map with detailed combat analysis: hostile pawns with raid composition breakdown (melee/ranged/grenadiers/special units), weapon and armor analysis for each enemy, dangerous unit identification (centipedes, scythers, sappers, breachers), automatic raid strategy detection (assault/siege/sapper/breach/drop pod) with counter-tactics suggestions, manhunter animals, and active game conditions."));
+            tools.Add(MakeTool("get_fire_support", "Get fire support analysis: colonists and turrets that can provide covering fire, line of fire analysis, recommended firing positions, and suppression opportunities. Use this for coordinating multi-colonist engagements."));
+            tools.Add(MakeTool("get_casualties", "Get combat casualties and medical status: colonists who are downed, dead, or injured. Returns position, injury type, medical priority, and nearest medical station for evacuation. Use this for triage and medical extraction planning."));
             tools.Add(MakeTool("get_defenses", "Get defensive structures: turrets (type, status, ammo), traps, and sandbags/barricades with their locations."));
             tools.Add(MakeTool("get_combat_readiness", "Get combat readiness for each colonist: equipped weapon, armor pieces, shooting skill, melee skill, and any combat-relevant traits."));
             
