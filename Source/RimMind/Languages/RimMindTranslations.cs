@@ -19,8 +19,9 @@ namespace RimMind.Languages
 
         /// <summary>
         /// Get a translated string with format args.
+        /// Use NamedArgument for RimWorld 1.5+ compatibility.
         /// </summary>
-        public static string Get(string key, params object[] args)
+        public static string Get(string key, params NamedArgument[] args)
         {
             var translated = key.Translate(args);
             return translated.ToString();
@@ -36,8 +37,9 @@ namespace RimMind.Languages
 
         /// <summary>
         /// Get a translated TaggedString with format args.
+        /// Use NamedArgument for RimWorld 1.5+ compatibility.
         /// </summary>
-        public static TaggedString GetTagged(string key, params object[] args)
+        public static TaggedString GetTagged(string key, params NamedArgument[] args)
         {
             return key.Translate(args);
         }
