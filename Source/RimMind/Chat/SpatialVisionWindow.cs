@@ -15,6 +15,10 @@ namespace RimMind.Chat
     /// <summary>
     /// Debug window showing what the AI "sees" when querying map data.
     /// Visualizes the text grid that MapTools generates for AI spatial decisions.
+    /// 
+    /// Related Issues:
+    /// - #92: Debug UI - Spatial Vision Window
+    /// - #93: Debug UI - AI Vision Visualization Tab (implemented via this window)
     /// </summary>
     public class SpatialVisionWindow : Window
     {
