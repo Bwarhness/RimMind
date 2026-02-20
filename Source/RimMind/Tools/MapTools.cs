@@ -274,25 +274,19 @@ namespace RimMind.Tools
             foreach (var colonist in colonists)
             {
                 var obj = new JSONObject();
-                obj["name"] = colonist.Name.ToStringShort();
+                obj["name"] = colonist.Name.ToStringShort;
 
                 // Get position temperature at colonist's location
                 var position = colonist.Position;
-                float localTemp = map.mapTemperature.GetCellTemp(position);
+                var room = position.GetRoom(map);
+                float localTemp = room != null ? room.Temperature : ambientTemp;
 
                 obj["current_temp"] = localTemp.ToString("F1") + "°C";
                 obj["ambient_temp"] = ambientTemp.ToString("F1") + "°C";
 
-                // Check climate preferences if available
-                var stats = colonist.def?.statOffsets;
-                float minComfort = -10f; // Default cold tolerance
-                float maxComfort = 40f;  // Default heat tolerance
-
-                // Try to get actual comfortable range from climate tolerance
-                if (colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false) != 0)
-                    minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
-                if (colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false) != 0)
-                    maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
+                // Get comfortable temperature range
+                float minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
+                float maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
 
                 obj["comfortable_range"] = minComfort.ToString("F0") + "°C to " + maxComfort.ToString("F0") + "°C";
 

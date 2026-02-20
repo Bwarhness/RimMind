@@ -579,7 +579,7 @@ namespace RimMind.Tools
                 if (rescuees.Any())
                 {
                     // Get the most critical one (lowest health)
-                    var worst = rescuees.OrderBy(p => p.health?.hediffSet?.GetHediffsNeedingTend().Count()).FirstOrDefault();
+                    var worst = rescuees.OrderBy(p => p.health?.summaryHealth?.SummaryHealthPercent ?? 1f).FirstOrDefault();
                     if (worst != null)
                     {
                         // Estimate time until death from bleeding
