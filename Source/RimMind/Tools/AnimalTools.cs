@@ -106,7 +106,183 @@ namespace RimMind.Tools
             obj["hunger"] = animal.needs?.food?.CurLevelPercentage.ToString("P0") ?? "N/A";
             obj["diet"] = animal.RaceProps.foodType.ToString();
 
+            // Production schedules (Phase 8 enhancement)
+            var production = new JSONObject();
+            
+            // Shearable animals
+            var shearable = animal.TryGetComp<CompShearable>();
+            if (shearable != null)
+            {
+                production["shearable"] = true;
+            }
+            
+            // Milkable
+            var milkable = animal.TryGetComp<CompMilkable>();
+            if (milkable != null)
+            {
+                production["milkable"] = true;
+                var props = milkable.Props;
+                if (props != null)
+                {
+                    production["milk_interval_days"] = props.milkIntervalDays.ToString("F0");
+                }
+            }
+            
+            // Egg layer
+            var eggLayer = animal.TryGetComp<CompEggLayer>();
+            if (eggLayer != null)
+            {
+                production["egg_layer"] = true;
+                production["fertilized"] = eggLayer.FullyFertilized;
+            }
+
+            if (production.Count > 0)
+                obj["production"] = production;
+
             return obj.ToString();
+        }
+
+        public static string GetAnimalStats(string speciesName)
+        {
+            if (string.IsNullOrEmpty(speciesName)) return ToolExecutor.JsonError("Species name parameter required.");
+
+            // Try to find the animal kind
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            // Search for matching species
+            PawnKindDef animalKind = DefDatabase<PawnKindDef>.AllDefsListForReading
+                .FirstOrDefault(k => k.RaceProps?.Animal == true && 
+                    (k.defName.ToLower().Contains(speciesName.ToLower()) ||
+                     (k.label != null && k.label.ToLower().Contains(speciesName.ToLower()))));
+            
+            if (animalKind == null)
+                return ToolExecutor.JsonError("Animal species '" + speciesName + "' not found.");
+
+            var race = animalKind.race;
+            if (race?.race?.Animal != true)
+                return ToolExecutor.JsonError("Species '" + speciesName + "' is not an animal.");
+
+            var obj = new JSONObject();
+            obj["species"] = animalKind.label ?? animalKind.defName;
+            obj["defName"] = animalKind.defName;
+
+            // Carrying capacity - estimate from body size
+            var raceProps = animalKind.RaceProps;
+            var bodySize = raceProps.baseBodySize;
+            obj["pack_animal"] = raceProps.packAnimal;
+            if (raceProps.packAnimal)
+            {
+                float estimatedCapacity = bodySize * 25f;
+                obj["carrying_capacity"] = estimatedCapacity.ToString("F1") + " kg (estimated)";
+            }
+
+            // Movement speed
+            obj["body_size"] = bodySize.ToString("F2");
+            obj["move_speed_base"] = raceProps.baseBodySize.ToString("F2"); // Approximate
+
+            // Combat stats
+            var combat = new JSONObject();
+            combat["body_size"] = bodySize.ToString("F2");
+            obj["combat"] = combat;
+
+            // Abilities
+            var abilities = new JSONObject();
+            
+            var shearable = race.GetCompProperties<CompProperties_Shearable>();
+            if (shearable != null)
+            {
+                abilities["shearable"] = true;
+                abilities["shear_interval_days"] = shearable.shearIntervalDays.ToString("F0");
+            }
+            
+            var milkable = race.GetCompProperties<CompProperties_Milkable>();
+            if (milkable != null)
+            {
+                abilities["milkable"] = true;
+                abilities["milk_interval_days"] = milkable.milkIntervalDays.ToString("F0");
+            }
+            
+            var eggLayer = race.GetCompProperties<CompProperties_EggLayer>();
+            if (eggLayer != null)
+            {
+                abilities["egg_layer"] = true;
+                abilities["egg_interval_days"] = eggLayer.eggLayIntervalDays.ToString("F0");
+            }
+
+            if (abilities.Count > 0)
+                obj["abilities"] = abilities;
+
+            // Temperament (stats require pawn instance, not available from def)
+            // obj["wildness"] = ...
+            // obj["trainability"] = ...
+
+            return obj.ToString();
+        }
+
+        public static string GetWildAnimals()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var animals = new List<JSONObject>();
+
+            foreach (var animal in map.mapPawns.AllPawns.Where(p => 
+                p.RaceProps.Animal && 
+                p.Faction != Faction.OfPlayer &&
+                p.Spawned))
+            {
+                var kind = animal.kindDef;
+                if (kind == null) continue;
+
+                var obj = new JSONObject();
+                obj["species"] = kind.label ?? kind.defName;
+                obj["defName"] = kind.defName;
+                obj["location"] = animal.Position.ToString();
+                obj["gender"] = animal.gender.ToString();
+                obj["health_percent"] = animal.health.summaryHealth.SummaryHealthPercent.ToString("P0");
+                obj["downed"] = animal.Downed;
+                
+                // Get wildness from stat (requires pawn instance)
+                float wildness = animal.GetStatValue(StatDefOf.Wildness);
+                obj["wildness"] = wildness.ToString("P0");
+                obj["tameable"] = wildness < 1.0f;
+                obj["trainability"] = animal.training?.CanAssignToTrain(TrainableDefOf.Obedience) == true ? "Trainable" : "None";
+
+                var recommendations = new JSONArray();
+                if (wildness < 0.5f) recommendations.Add("Easy to tame - good candidate");
+                else if (wildness > 0.9f) recommendations.Add("Very difficult to tame");
+                
+                if (recommendations.Count > 0)
+                    obj["recommendations"] = recommendations;
+
+                animals.Add(obj);
+            }
+
+            // Group by species
+            var grouped = new JSONObject();
+            foreach (var animal in animals)
+            {
+                var species = animal["species"]?.Value ?? "Unknown";
+                if (!grouped.HasKey(species))
+                {
+                    grouped[species] = new JSONObject();
+                    grouped[species]["species"] = species;
+                    grouped[species]["defName"] = animal["defName"]?.Value;
+                    grouped[species]["count"] = 0;
+                    grouped[species]["tameable"] = animal["tameable"]?.Value ?? "false";
+                    grouped[species]["value_rating"] = animal["value_rating"]?.Value ?? "low";
+                    grouped[species]["locations"] = new JSONArray();
+                }
+                grouped[species]["count"] = (grouped[species]["count"].AsInt) + 1;
+                grouped[species]["locations"].Add(animal["location"]?.Value);
+            }
+
+            var result = new JSONObject();
+            result["wild_animals"] = grouped;
+            result["total_animals"] = animals.Count;
+            result["species_count"] = grouped.Count;
+            return result.ToString();
         }
     }
 }
