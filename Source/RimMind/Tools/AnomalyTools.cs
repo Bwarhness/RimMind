@@ -45,7 +45,7 @@ namespace RimMind.Tools
                 entity["defName"] = thing.def.defName;
                 entity["label"] = thing.LabelCap ?? thing.def.label;
                 entity["position"] = $"{thing.Position.x}, {thing.Position.z}";
-                entity["tile"] = map.WorldGrid[thing.Position].index;
+                entity["tile"] = map.Tile;
 
                 // Entity type classification
                 entity["entityType"] = ClassifyEntityType(thing.def.defName);
@@ -108,21 +108,35 @@ namespace RimMind.Tools
                         b["containmentStrength"] = comp.ContainmentStrength.ToString("0");
                         b["occupied"] = comp.Occupied;
                     }
+                    else
+                    {
+                        // Fallback: check if building has any pawns inside
+                        b["occupied"] = building.HasAnyDynamicPawn();
+                    }
                 }
 
                 // Try to get capacity from def
                 b["capacity"] = "1"; // Each containment building holds 1
                 totalCapacity++;
 
-                // Check if occupied
-                if (!building.HasAnyDynamicPawn())
+                // Check if occupied (if not already set by comp)
+                if (!b.ContainsKey("occupied"))
                 {
-                    b["occupied"] = false;
+                    if (!building.HasAnyDynamicPawn())
+                    {
+                        b["occupied"] = false;
+                    }
+                    else
+                    {
+                        b["occupied"] = true;
+                        currentOccupancy++;
+                    }
                 }
                 else
                 {
-                    b["occupied"] = true;
-                    currentOccupancy++;
+                    // Already set by comp, count it
+                    if (b["occupied"] == true)
+                        currentOccupancy++;
                 }
 
                 buildings.Add(b);
