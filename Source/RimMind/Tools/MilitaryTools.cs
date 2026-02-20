@@ -390,10 +390,10 @@ namespace RimMind.Tools
                     obj["position"] = $"({building.Position.x}, {building.Position.z})";
                     obj["type"] = "turret";
 
-                    var gun = turret.Gun;
-                    if (gun != null)
+                    var gunDef = building.def.building?.turretGunDef;
+                    if (gunDef != null)
                     {
-                        obj["weapon"] = gun.def.label;
+                        obj["weapon"] = gunDef.label;
                     }
 
                     turrets.Add(obj);
