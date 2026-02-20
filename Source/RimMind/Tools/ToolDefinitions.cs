@@ -24,6 +24,7 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name")));
             tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
             tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));
+            tools.Add(MakeTool("get_colonist_locations", "Get real-time positions (x, z coordinates) for all colonists. Returns drafted status, downed status, current job, distance from home area, and flags temperature risks. Use this for tactical awareness and locating specific colonists quickly."));
 
             // Social Tools
             tools.Add(MakeTool("get_relationships", "Get a colonist's social relationships: opinions of and from other colonists, relationship types (lover, spouse, rival, friend, etc).",
@@ -101,6 +102,7 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by category: 'food', 'materials', 'weapons', 'apparel', 'medicine', or 'all'. Defaults to 'all'.")));
             tools.Add(MakeTool("get_rooms", "Get info about all rooms: type/role, impressiveness, beauty, cleanliness, space, and owner if applicable."));
             tools.Add(MakeTool("get_stockpiles", "Get all stockpile zones: name, priority level, number of cells, and configured item filters."));
+            tools.Add(MakeTool("get_resource_trends", "Track resource consumption trends over time. Returns 'days until depleted' for food, medicine, wood, and steel based on current consumption rate. Calculates burn rates, flags 'running low' vs 'critically low' thresholds, and shows historical trends (last 7 days). Use this for predictive planning and early warning of shortages."));
 
             // Research Tools
             tools.Add(MakeTool("get_research_status", "Get current research status: active project name and progress percentage, colony tech level, and available research benches."));
@@ -139,6 +141,7 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
+            tools.Add(MakeTool("get_temperature_risks", "Check each colonist's current position temperature and compare to their comfortable range. Flag overheating or freezing risks, suggest safe locations to move to. Use this to prevent heatstroke, hypothermia, and keep colonists in safe temperature zones."));
             tools.Add(MakeTool("get_map_region", "Get a character-based grid view of the map showing buildings, pawns, zones, and terrain. Each cell is one character. Use this to understand the colony layout, analyze base design, and identify construction opportunities. Returns a legend of character codes used.",
                 MakeOptionalParam("x", "integer", "Start X coordinate (default: 0)"),
                 MakeOptionalParam("z", "integer", "Start Z coordinate (default: 0)"),

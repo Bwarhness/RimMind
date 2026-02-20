@@ -252,6 +252,166 @@ namespace RimMind.Tools
             return obj.ToString();
         }
 
+        public static string GetTemperatureRisks()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var atRisk = new JSONArray();
+            var safe = new JSONArray();
+
+            var colonists = map.mapPawns.FreeColonistsSpawned;
+            if (colonists == null || colonists.Count == 0)
+            {
+                result["message"] = "No colonists on the map";
+                return result.ToString();
+            }
+
+            // Get ambient temperature
+            float ambientTemp = map.mapTemperature.OutdoorTemp;
+
+            foreach (var colonist in colonists)
+            {
+                var obj = new JSONObject();
+                obj["name"] = colonist.Name.ToStringShort;
+
+                // Get position temperature at colonist's location
+                var position = colonist.Position;
+                var room = position.GetRoom(map);
+                float localTemp = room != null ? room.Temperature : ambientTemp;
+
+                obj["current_temp"] = localTemp.ToString("F1") + "°C";
+                obj["ambient_temp"] = ambientTemp.ToString("F1") + "°C";
+
+                // Get comfortable temperature range
+                float minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
+                float maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
+
+                obj["comfortable_range"] = minComfort.ToString("F0") + "°C to " + maxComfort.ToString("F0") + "°C";
+
+                // Check for risk
+                if (localTemp < minComfort - 5f)
+                {
+                    obj["risk"] = "freezing";
+                    obj["severity"] = (minComfort - localTemp > 15f) ? "critical" : "warning";
+                    obj["action"] = "Move to heated area";
+                    atRisk.Add(obj);
+                }
+                else if (localTemp > maxComfort + 5f)
+                {
+                    obj["risk"] = "overheating";
+                    obj["severity"] = (localTemp - maxComfort > 15f) ? "critical" : "warning";
+                    obj["action"] = "Move to cooled area";
+                    atRisk.Add(obj);
+                }
+                else
+                {
+                    obj["risk"] = "safe";
+                    obj["status"] = "OK";
+                    safe.Add(obj);
+                }
+            }
+
+            result["at_risk"] = atRisk;
+            result["safe"] = safe;
+            result["total_checked"] = colonists.Count;
+
+            // Set overall status
+            if (atRisk.Count > 0)
+            {
+                result["overall_status"] = "warning";
+                result["message"] = atRisk.Count + " colonists at risk from temperature";
+            }
+            else
+            {
+                result["overall_status"] = "safe";
+                result["message"] = "All colonists in safe temperature range";
+            }
+
+            return result.ToString();
+        }
+
+//         private static JSONObject FindWarmRoom(Map map)
+//         {
+//             // Find a room with heating (heater, fireplace, etc.)
+//             var roomList = map.regionManager.AllRooms;
+//             foreach (var room in roomList)
+//             {
+//                 if (!room.RegionType.RoomType.GetName().Equals("Bedroom") && 
+//                     !room.RegionType.RoomType.GetName().Equals("Dining room") &&
+//                     !room.RegionType.RoomType.GetName().Equals("Common room"))
+//                     continue;
+// 
+//                 float temp = room.Temperature;
+//                 if (temp > 20f) // Warm enough
+//                 {
+//                     var obj = new JSONObject();
+//                     obj["label"] = room.RegionType.RoomType.GetName();
+//                     var center = room.Cells.FirstOrDefault();
+//                     obj["position"] = center.x + "," + center.z;
+//                     obj["temperature"] = temp.ToString("F1") + "°C";
+//                     return obj;
+//                 }
+//             }
+// 
+//             // Fallback: any room with temperature > 15
+//             foreach (var room in roomList)
+//             {
+//                 if (room.Temperature > 15f)
+//                 {
+//                     var obj = new JSONObject();
+//                     obj["label"] = room.RegionType.RoomType.GetName();
+//                     var center = room.Cells.FirstOrDefault();
+//                     obj["position"] = center.x + "," + center.z;
+//                     obj["temperature"] = room.Temperature.ToString("F1") + "°C";
+//                     return obj;
+//                 }
+//             }
+// 
+//             return null;
+//         }
+
+//         private static JSONObject FindCoolRoom(Map map)
+//         {
+//             // Find a room with cooling
+//             var roomList = map.regionManager.AllRooms;
+//             foreach (var room in roomList)
+//             {
+//                 if (!room.RegionType.RoomType.GetName().Equals("Bedroom") && 
+//                     !room.RegionType.RoomType.GetName().Equals("Dining room") &&
+//                     !room.RegionType.RoomType.GetName().Equals("Common room"))
+//                     continue;
+// 
+//                 float temp = room.Temperature;
+//                 if (temp < 25f) // Cool enough
+//                 {
+//                     var obj = new JSONObject();
+//                     obj["label"] = room.RegionType.RoomType.GetName();
+//                     var center = room.Cells.FirstOrDefault();
+//                     obj["position"] = center.x + "," + center.z;
+//                     obj["temperature"] = temp.ToString("F1") + "°C";
+//                     return obj;
+//                 }
+//             }
+// 
+//             // Fallback: any room with temperature < 30
+//             foreach (var room in roomList)
+//             {
+//                 if (room.Temperature < 30f)
+//                 {
+//                     var obj = new JSONObject();
+//                     obj["label"] = room.RegionType.RoomType.GetName();
+//                     var center = room.Cells.FirstOrDefault();
+//                     obj["position"] = center.x + "," + center.z;
+//                     obj["temperature"] = room.Temperature.ToString("F1") + "°C";
+//                     return obj;
+//                 }
+//             }
+// 
+//             return null;
+//         }
+
         public static string GetMapRegion(JSONNode args)
         {
             var map = Find.CurrentMap;
