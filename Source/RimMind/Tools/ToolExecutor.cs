@@ -116,6 +116,11 @@ namespace RimMind.Tools
             // Mood
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
             { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
+            { "get_mood_trends", args => MoodTools.GetMoodTrends() },
+            { "get_environment_quality", args => EnvironmentTools.GetEnvironmentQuality() },
+
+            // Social
+            { "get_social_risks", args => SocialTools.GetSocialRisks() },
 
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
