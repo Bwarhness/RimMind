@@ -46,7 +46,7 @@ namespace RimMind.Tools
                 // Rough estimate: resistance / (warden_social * 0.3 + 1)
                 var wardens = GetAvailableWardens();
                 float bestWarden = wardens.Count > 0 ? wardens[0].socialSkill : 0f;
-                float daysToRecruit = prisoner.guest?.Resistance ?? 0 / (bestWarden * 0.3f + 1f);
+                float daysToRecruit = (prisoner.guest?.Resistance ?? 0) / (bestWarden * 0.3f + 1f);
                 p["estimated_days_to_recruit"] = daysToRecruit.ToString("F1");
 
                 // Health status
