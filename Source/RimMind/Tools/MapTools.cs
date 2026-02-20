@@ -296,10 +296,6 @@ namespace RimMind.Tools
                     obj["risk"] = "freezing";
                     obj["severity"] = (minComfort - localTemp > 15f) ? "critical" : "warning";
                     obj["action"] = "Move to heated area";
-
-                    // Try to find a warm room
-                    {
-
                     atRisk.Add(obj);
                 }
                 else if (localTemp > maxComfort + 5f)
@@ -307,10 +303,6 @@ namespace RimMind.Tools
                     obj["risk"] = "overheating";
                     obj["severity"] = (localTemp - maxComfort > 15f) ? "critical" : "warning";
                     obj["action"] = "Move to cooled area";
-
-                    // Try to find a cool room
-                    {
-
                     atRisk.Add(obj);
                 }
                 else
