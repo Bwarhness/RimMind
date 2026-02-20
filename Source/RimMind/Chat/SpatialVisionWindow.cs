@@ -213,7 +213,7 @@ namespace RimMind.Chat
             {
                 if (Find.CurrentMap != null)
                 {
-                    var camPos = Find.CameraDriver.Position;
+                    var camPos = Find.CameraDriver.MapPosition.ToIntVec3();
                     regionX = Math.Max(0, (int)camPos.x - regionW / 2);
                     regionZ = Math.Max(0, (int)camPos.z - regionH / 2);
                     RefreshGrid();
@@ -275,7 +275,7 @@ namespace RimMind.Chat
             // Parse the JSON grid
             try
             {
-                var json = SimpleJSON.JSON.Parse(cachedGrid);
+                var json = JSON.Parse(cachedGrid);
                 var gridNode = json["grid"];
                 if (gridNode == null || !gridNode.AsArray)
                 {
@@ -314,7 +314,7 @@ namespace RimMind.Chat
                         Widgets.DrawBoxSolid(cellRect, cellColor);
                         
                         // Draw cell border
-                        Widgets.DrawBox(cellRect, 1f, Color.black);
+                        Widgets.DrawBox(cellRect, 1);
                         
                         x += cellSize;
                     }
