@@ -230,6 +230,13 @@ namespace RimMind.Tools
 
             // Medical Tools
             tools.Add(MakeTool("get_medical_overview", "Get medical overview: patients needing treatment, medicine supply by type, available medical beds, and doctors with their medical skill level."));
+            tools.Add(MakeTool("get_disease_immunity_status", "Get disease immunity progress for all colonists. Returns active diseases, immunity progress (0-100%), time to immunity, severity level, and whether diseases can be tended. Use this to track colony health and predict recovery times.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results.")));
+            tools.Add(MakeTool("get_drug_tolerance", "Get colonist drug tolerances and addiction risks. Returns current addictions, chemical dependency levels, addiction-prone traits, and risk assessment. Use this to identify addiction risks and monitor recovery.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results.")));
+            tools.Add(MakeTool("predict_surgery_success", "Predict surgery success probability for a patient. Returns success probability based on doctor skill, patient health, medicine quality, and risk factors. Use this to determine if surgery is safe and what preparations are needed.",
+                MakeParam("patient_name", "string", "The colonist's name who needs surgery"),
+                MakeOptionalParam("surgery_def", "string", "Optional specific surgery defName. If omitted, analyzes most critical needed surgery.")));
 
             // Health Check Tools
             tools.Add(MakeTool("colony_health_check", "Perform a comprehensive colony diagnostic check. This is the 'doctor's checkup' for your entire colony - a single tool that analyzes all critical systems and returns actionable insights. Use this when asked 'How is my colony doing?' or when you need a complete status overview. Analyzes: Food Security (days remaining, growing capacity), Power Grid (generation vs consumption, battery reserves), Defense Readiness (turrets, armed colonists, weapons), Colonist Wellbeing (injuries, mood risks, needs), Resource Bottlenecks (medicine, steel, components), Research Progress, Housing Quality (bedroom quality, bed assignments), and Production Issues (stalled bills, missing workers). Returns overall status (healthy/stable/warning/critical), per-system breakdowns with issues and recommendations, critical alerts requiring immediate action, and top 5 priority recommendations."));
