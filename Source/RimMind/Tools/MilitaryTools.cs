@@ -349,5 +349,158 @@ namespace RimMind.Tools
             result["combatReadiness"] = arr;
             return result.ToString();
         }
+
+        public static string GetFireSupport()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var fireSupport = new JSONArray();
+            var turrets = new JSONArray();
+
+            // Get drafted colonists who can provide fire support
+            foreach (var colonist in map.mapPawns.FreeColonistsSpawned)
+            {
+                if (colonist.Drafted)
+                {
+                    var obj = new JSONObject();
+                    obj["name"] = colonist.Name.ToStringShort;
+                    obj["position"] = $"({colonist.Position.x}, {colonist.Position.z})";
+
+                    var weapon = colonist.equipment?.Primary;
+                    if (weapon != null)
+                    {
+                        obj["weapon"] = weapon.def.label;
+                        obj["weaponType"] = weapon.def.IsRangedWeapon ? "ranged" : "melee";
+                    }
+
+                    obj["shootingSkill"] = colonist.skills?.GetSkill(SkillDefOf.Shooting)?.Level ?? 0;
+                    fireSupport.Add(obj);
+                }
+            }
+
+            // Get turrets
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (building is Building_TurretGun turret && turret.Spawned)
+                {
+                    var obj = new JSONObject();
+                    obj["name"] = building.LabelCap;
+                    obj["position"] = $"({building.Position.x}, {building.Position.z})";
+                    obj["type"] = "turret";
+
+                    var gunDef = building.def.building?.turretGunDef;
+                    if (gunDef != null)
+                    {
+                        obj["weapon"] = gunDef.label;
+                    }
+
+                    turrets.Add(obj);
+                }
+            }
+
+            result["colonistFireSupport"] = fireSupport;
+            result["turrets"] = turrets;
+            result["totalFireSupport"] = fireSupport.Count + turrets.Count;
+
+            // Analyze threats that could be engaged
+            var hostiles = map.mapPawns.AllPawnsSpawned
+                .Where(p => p.Faction != null && p.Faction.HostileTo(Faction.OfPlayer) && !p.Dead && !p.Downed)
+                .ToList();
+
+            result["hostileCount"] = hostiles.Count;
+            result["message"] = $"Found {fireSupport.Count} colonists and {turrets.Count} turrets providing fire support against {hostiles.Count} hostiles";
+
+            return result.ToString();
+        }
+
+        public static string GetCasualties()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var downed = new JSONArray();
+            var dead = new JSONArray();
+            var injured = new JSONArray();
+
+            foreach (var colonist in map.mapPawns.FreeColonistsAndPrisoners)
+            {
+                if (colonist.Dead)
+                {
+                    var obj = new JSONObject();
+                    obj["name"] = colonist.Name.ToStringShort;
+                    obj["position"] = $"({colonist.Position.x}, {colonist.Position.z})";
+                    obj["status"] = "dead";
+                    dead.Add(obj);
+                }
+                else if (colonist.Downed)
+                {
+                    var obj = new JSONObject();
+                    obj["name"] = colonist.Name.ToStringShort;
+                    obj["position"] = $"({colonist.Position.x}, {colonist.Position.z})";
+                    obj["status"] = "downed";
+
+                    // Get injuries
+                    if (colonist.health?.hediffSet != null)
+                    {
+                        var injuriesArr = new JSONArray();
+                        foreach (var hediff in colonist.health.hediffSet.hediffs)
+                        {
+                            if (hediff.Severity > 0)
+                                injuriesArr.Add(hediff.def.label);
+                        }
+                        if (injuriesArr.Count > 0)
+                            obj["injuries"] = injuriesArr;
+                    }
+
+                    // Find nearest bed
+                    var beds = map.listerBuildings.allBuildingsColonist
+                        .Where(b => b is Building_Bed bed && bed.Medical && !bed.ForPrisoners)
+                        .OrderBy(b => b.Position.DistanceTo(colonist.Position))
+                        .FirstOrDefault();
+
+                    if (beds != null)
+                    {
+                        obj["nearestMedical"] = $"({beds.Position.x}, {beds.Position.z})";
+                        obj["distance"] = beds.Position.DistanceTo(colonist.Position);
+                    }
+
+                    downed.Add(obj);
+                }
+                else if (colonist.health?.hediffSet?.HasTendableHediff() == true)
+                {
+                    var obj = new JSONObject();
+                    obj["name"] = colonist.Name.ToStringShort;
+                    obj["position"] = $"({colonist.Position.x}, {colonist.Position.z})";
+                    obj["status"] = "injured";
+
+                    var injuriesArr = new JSONArray();
+                    foreach (var hediff in colonist.health.hediffSet.hediffs.Where(h => h.TendableNow()))
+                    {
+                        injuriesArr.Add(hediff.def.label);
+                    }
+                    obj["injuriesNeedingTreatment"] = injuriesArr;
+
+                    injured.Add(obj);
+                }
+            }
+
+            result["downed"] = downed;
+            result["dead"] = dead;
+            result["injured"] = injured;
+            result["totalCasualties"] = downed.Count + dead.Count;
+            result["totalInjured"] = injured.Count;
+
+            if (downed.Count > 0)
+                result["message"] = $"{downed.Count} colonists downed, {injured.Count} injured, {dead.Count} dead";
+            else if (injured.Count > 0)
+                result["message"] = $"{injured.Count} colonists injured";
+            else
+                result["message"] = "No casualties";
+
+            return result.ToString();
+        }
     }
 }

@@ -56,6 +56,8 @@ namespace RimMind.Tools
 
             // Military
             { "get_threats", args => MilitaryTools.GetThreats() },
+            { "get_fire_support", args => MilitaryTools.GetFireSupport() },
+            { "get_casualties", args => MilitaryTools.GetCasualties() },
             { "get_defenses", args => MilitaryTools.GetDefenses() },
             { "get_combat_readiness", args => MilitaryTools.GetCombatReadiness() },
             
@@ -78,6 +80,7 @@ namespace RimMind.Tools
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
             { "get_growing_zones", args => MapTools.GetGrowingZones() },
             { "get_power_status", args => MapTools.GetPowerStatus() },
+            { "get_temperature_risks", args => MapTools.GetTemperatureRisks() },
             { "get_map_region", args => MapTools.GetMapRegion(args) },
             { "get_cell_details", args => MapTools.GetCellDetails(args) },
             { "get_blueprints", args => MapTools.GetBlueprints(args) },

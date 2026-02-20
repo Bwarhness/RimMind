@@ -109,6 +109,8 @@ namespace RimMind.Tools
 
             // Military Tools
             tools.Add(MakeTool("get_threats", "Get active threats on the map with detailed combat analysis: hostile pawns with raid composition breakdown (melee/ranged/grenadiers/special units), weapon and armor analysis for each enemy, dangerous unit identification (centipedes, scythers, sappers, breachers), automatic raid strategy detection (assault/siege/sapper/breach/drop pod) with counter-tactics suggestions, manhunter animals, and active game conditions."));
+            tools.Add(MakeTool("get_fire_support", "Get fire support analysis: colonists and turrets that can provide covering fire, line of fire analysis, recommended firing positions, and suppression opportunities. Use this for coordinating multi-colonist engagements."));
+            tools.Add(MakeTool("get_casualties", "Get combat casualties and medical status: colonists who are downed, dead, or injured. Returns position, injury type, medical priority, and nearest medical station for evacuation. Use this for triage and medical extraction planning."));
             tools.Add(MakeTool("get_defenses", "Get defensive structures: turrets (type, status, ammo), traps, and sandbags/barricades with their locations."));
             tools.Add(MakeTool("get_combat_readiness", "Get combat readiness for each colonist: equipped weapon, armor pieces, shooting skill, melee skill, and any combat-relevant traits."));
             
@@ -139,6 +141,7 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
+            tools.Add(MakeTool("get_temperature_risks", "Check each colonist's current position temperature and compare to their comfortable range. Flag overheating or freezing risks, suggest safe locations to move to. Use this to prevent heatstroke, hypothermia, and keep colonists in safe temperature zones."));
             tools.Add(MakeTool("get_map_region", "Get a character-based grid view of the map showing buildings, pawns, zones, and terrain. Each cell is one character. Use this to understand the colony layout, analyze base design, and identify construction opportunities. Returns a legend of character codes used.",
                 MakeOptionalParam("x", "integer", "Start X coordinate (default: 0)"),
                 MakeOptionalParam("z", "integer", "Start Z coordinate (default: 0)"),
