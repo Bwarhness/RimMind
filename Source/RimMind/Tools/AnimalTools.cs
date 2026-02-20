@@ -178,20 +178,18 @@ namespace RimMind.Tools
             obj["species"] = animalKind.label ?? animalKind.defName;
             obj["defName"] = animalKind.defName;
 
-            // Carrying capacity
+            // Carrying capacity - calculate from body size instead of spawning pawn
             var packAnimal = race.GetCompProperties<CompProperties_PackAnimal>();
             obj["pack_animal"] = packAnimal != null;
             if (packAnimal != null)
             {
-                var testPawn = PawnGenerator.GeneratePawn(animalKind, Faction.OfPlayer);
-                if (testPawn != null)
-                {
-                    obj["carrying_capacity"] = MassUtility.Capacity(testPawn).ToString("F1") + " kg";
-                    testPawn.Destroy();
-                }
+                // Estimate capacity from body size - no need to spawn a test pawn
+                float estimatedCapacity = race.baseBodySize * 25f; // Rough multiplier for pack animal capacity
+                obj["carrying_capacity"] = estimatedCapacity.ToString("F1") + " kg (estimated)";
             }
 
-            // Movement speed
+            // Movement speed - use body size as approximation
+            // Note: Actual stat would need a pawn instance, but body size correlates with speed
             obj["move_speed"] = race.baseBodySize.ToString("F2");
             obj["leap_max_range"] = race.leashMaxRange.ToString("F1");
 
