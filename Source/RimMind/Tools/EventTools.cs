@@ -582,14 +582,6 @@ namespace RimMind.Tools
                     var worst = rescuees.OrderBy(p => p.health?.summaryHealth?.SummaryHealthPercent ?? 1f).FirstOrDefault();
                     if (worst != null)
                     {
-                        // Estimate time until death from bleeding
-                        float bleedRate = worst.health?.hediffSet?.BleedRate ?? 0;
-                        if (bleedRate > 0)
-                        {
-                            float blood = worst.health?.hediffSet?.BloodLoss ?? 0;
-                            float hoursLeft = (1f - blood) / (bleedRate * 24f); // Convert to hours
-                            return $"~{hoursLeft.ToString("F1")} hours until death from bleeding";
-                        }
                         return "Critical - needs immediate medical attention";
                     }
                 }
