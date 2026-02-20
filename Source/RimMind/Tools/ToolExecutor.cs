@@ -97,7 +97,20 @@ namespace RimMind.Tools
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
-            // Note: GetAnimalStats and GetWildAnimals removed - use list_animals with filters instead
+            { "get_animal_stats", args => AnimalTools.GetAnimalStats(args?["speciesName"]?.Value) },
+            { "get_wild_animals", args => AnimalTools.GetWildAnimals() },
+
+            // Ideology DLC
+            { "get_ideology_info", args => IdeologyTools.GetIdeologyInfo() },
+            { "get_pawn_ideology_status", args => IdeologyTools.GetPawnIdeologyStatus(args?["name"]?.Value) },
+            { "get_ritual_status", args => IdeologyTools.GetRitualStatus() },
+            { "analyze_ideology_conflicts", args => IdeologyTools.AnalyzeIdeologyConflicts() },
+
+            // Prisoner & Slave Management
+            { "get_prisoner_status", args => PrisonerSlaveTools.GetPrisonerStatus() },
+            { "get_slave_status", args => PrisonerSlaveTools.GetSlaveStatus() },
+            { "analyze_prison_risks", args => PrisonerSlaveTools.AnalyzePrisonRisks() },
+            { "get_recruitment_forecast", args => PrisonerSlaveTools.GetRecruitmentForecast(args?["name"]?.Value) },
 
             // Events
             { "get_recent_events", args => EventTools.GetRecentEvents(args?["count"]?.AsInt ?? 5) },
