@@ -503,6 +503,13 @@ namespace RimMind.Tools
                             // Add alert-specific metadata
                             obj["alert_type"] = alert.GetType().Name;
 
+                            // Add countdown timers for specific alert types
+                            var timerInfo = GetAlertTimerInfo(alert, explanationStr);
+                            if (!string.IsNullOrEmpty(timerInfo))
+                            {
+                                obj["countdown"] = timerInfo;
+                            }
+
                             arr.Add(obj);
                         }
                     }
@@ -551,6 +558,83 @@ namespace RimMind.Tools
             }
 
             return names;
+        }
+
+        private static string GetAlertTimerInfo(Alert alert, string explanation)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return null;
+
+            string alertType = alert.GetType().Name;
+            string label = alert.GetLabel().ToString();
+
+            // Check for rescueable pawns (death timer)
+            if (label.Contains("needs rescue"))
+            {
+                // Find pawns needing rescue
+                var rescuees = map.mapPawns.AllPawnsSpawned
+                    .Where(p => p.Downed && !p.InBed())
+                    .ToList();
+
+                if (rescuees.Any())
+                {
+                    // Get the most critical one (lowest health)
+                    var worst = rescuees.OrderBy(p => p.health?.summaryHealth?.SummaryHealthPercent ?? 1f).FirstOrDefault();
+                    if (worst != null)
+                    {
+                        return "Critical - needs immediate medical attention";
+                    }
+                }
+            }
+
+            // Check for starving colonists
+            if (label.Contains("starving") || label.Contains("needs food"))
+            {
+                var starving = map.mapPawns.AllPawnsSpawned
+                    .Where(p => p.needs?.food?.CurLevelPercentage < 0.1f)
+                    .FirstOrDefault();
+
+                if (starving != null)
+                {
+                    return "Critical - will die from starvation soon";
+                }
+            }
+
+            // Check for draft animals that need tending
+            if (label.Contains("injured animal") || label.Contains("wounded animal"))
+            {
+                var injuredAnimals = map.mapPawns.AllPawnsSpawned
+                    .Where(p => p.RaceProps.Animal && p.Downed)
+                    .ToList();
+
+                if (injuredAnimals.Any())
+                {
+                    return $"{injuredAnimals.Count} animal(s) need rescue/tending";
+                }
+            }
+
+            // Check for colonists with infections
+            if (label.Contains("infection") || explanation?.Contains("infection") == true)
+            {
+                return "Monitor immunity - seek medical treatment";
+            }
+
+            // Check for idle colonist
+            if (label.Contains("idle"))
+            {
+                return "Assign a job to this colonist";
+            }
+
+            // Check for prisoners needing attention
+            if (label.Contains("prisoner"))
+            {
+                if (label.Contains("recruitment"))
+                    return "Colonist ready for recruitment check";
+                if (label.Contains("execution"))
+                    return "Warning - execution pending";
+            }
+
+            return null;
         }
     }
 }

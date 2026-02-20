@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using RimMind.API;
 using RimWorld;
@@ -227,6 +228,238 @@ namespace RimMind.Tools
             var result = new JSONObject();
             result["stockpiles"] = arr;
             return result.ToString();
+        }
+
+        public static string GetResourceTrends()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var resourceTracker = Core.ResourceTracker.Instance;
+
+            try
+            {
+                // Get current resource counts
+                var currentFood = GetFoodNutrition(map);
+                var currentMedicine = CountItems(map, ThingDefOf.MedicineIndustrial) + CountItems(map, ThingDefOf.MedicineHerbal) + CountItems(map, ThingDefOf.MedicineUltratech);
+                var currentWood = CountItems(map, ThingDefOf.WoodLog);
+                var currentSteel = CountItems(map, ThingDefOf.Steel);
+
+                // Calculate burn rates using snapshots from ResourceTracker
+                var foodBurnRate = CalculateBurnRate(resourceTracker, "food");
+                var medicineBurnRate = CalculateBurnRate(resourceTracker, "medicine");
+                var woodBurnRate = CalculateBurnRate(resourceTracker, "wood");
+                var steelBurnRate = CalculateBurnRate(resourceTracker, "steel");
+
+                // Food analysis
+                var food = new JSONObject();
+                food["current"] = currentFood;
+                food["burn_rate_per_day"] = foodBurnRate;
+                if (foodBurnRate > 0 && currentFood > 0)
+                {
+                    float daysRemaining = currentFood / foodBurnRate;
+                    food["days_remaining"] = daysRemaining.ToString("F1");
+                    food["status"] = GetResourceStatus(daysRemaining);
+                }
+                else if (currentFood > 0)
+                {
+                    food["days_remaining"] = "unknown";
+                    food["status"] = "unknown";
+                }
+                else
+                {
+                    food["days_remaining"] = "0";
+                    food["status"] = "critical";
+                }
+                result["food"] = food;
+
+                // Medicine analysis
+                var medicine = new JSONObject();
+                medicine["current"] = currentMedicine;
+                medicine["burn_rate_per_day"] = medicineBurnRate;
+                if (medicineBurnRate > 0 && currentMedicine > 0)
+                {
+                    float daysRemaining = currentMedicine / medicineBurnRate;
+                    medicine["days_remaining"] = daysRemaining.ToString("F1");
+                    medicine["status"] = GetResourceStatus(daysRemaining);
+                }
+                else if (currentMedicine > 0)
+                {
+                    medicine["days_remaining"] = "unknown";
+                    medicine["status"] = "unknown";
+                }
+                else
+                {
+                    medicine["days_remaining"] = "0";
+                    medicine["status"] = "critical";
+                }
+                result["medicine"] = medicine;
+
+                // Wood analysis
+                var wood = new JSONObject();
+                wood["current"] = currentWood;
+                wood["burn_rate_per_day"] = woodBurnRate;
+                if (woodBurnRate > 0 && currentWood > 0)
+                {
+                    float daysRemaining = currentWood / woodBurnRate;
+                    wood["days_remaining"] = daysRemaining.ToString("F1");
+                    wood["status"] = GetResourceStatus(daysRemaining);
+                }
+                else if (currentWood > 0)
+                {
+                    wood["days_remaining"] = "unknown";
+                    wood["status"] = "unknown";
+                }
+                else
+                {
+                    wood["days_remaining"] = "0";
+                    wood["status"] = "critical";
+                }
+                result["wood"] = wood;
+
+                // Steel analysis
+                var steel = new JSONObject();
+                steel["current"] = currentSteel;
+                steel["burn_rate_per_day"] = steelBurnRate;
+                if (steelBurnRate > 0 && currentSteel > 0)
+                {
+                    float daysRemaining = currentSteel / steelBurnRate;
+                    steel["days_remaining"] = daysRemaining.ToString("F1");
+                    steel["status"] = GetResourceStatus(daysRemaining);
+                }
+                else if (currentSteel > 0)
+                {
+                    steel["days_remaining"] = "unknown";
+                    steel["status"] = "unknown";
+                }
+                else
+                {
+                    steel["days_remaining"] = "0";
+                    steel["status"] = "critical";
+                }
+                result["steel"] = steel;
+
+                // Summary with overall assessment
+                var summary = new JSONObject();
+                var criticalResources = new JSONArray();
+                var lowResources = new JSONArray();
+                var warningResources = new JSONArray();
+
+                CheckResourceStatus(food, "food", criticalResources, lowResources, warningResources);
+                CheckResourceStatus(medicine, "medicine", criticalResources, lowResources, warningResources);
+                CheckResourceStatus(wood, "wood", criticalResources, lowResources, warningResources);
+                CheckResourceStatus(steel, "steel", criticalResources, lowResources, warningResources);
+
+                summary["critical"] = criticalResources;
+                summary["low"] = lowResources;
+                summary["warning"] = warningResources;
+
+                if (criticalResources.Count > 0)
+                    summary["overall_status"] = "critical";
+                else if (lowResources.Count > 0)
+                    summary["overall_status"] = "low";
+                else if (warningResources.Count > 0)
+                    summary["overall_status"] = "warning";
+                else
+                    summary["overall_status"] = "stable";
+
+                result["summary"] = summary;
+
+                // Historical snapshot data if available
+                var history = new JSONObject();
+                if (resourceTracker != null)
+                {
+                    int day0 = resourceTracker.GetSnapshot("food", 0);
+                    int day1 = resourceTracker.GetSnapshot("food", 1);
+                    int day2 = resourceTracker.GetSnapshot("food", 2);
+                    int day3 = resourceTracker.GetSnapshot("food", 3);
+
+                    if (day0 >= 0) history["today"] = day0;
+                    if (day1 >= 0) history["1_day_ago"] = day1;
+                    if (day2 >= 0) history["2_days_ago"] = day2;
+                    if (day3 >= 0) history["3_days_ago"] = day3;
+                }
+                result["food_history"] = history;
+
+            }
+            catch (Exception ex)
+            {
+                result["error"] = "Could not analyze resource trends: " + ex.Message;
+            }
+
+            return result.ToString();
+        }
+
+        private static int GetFoodNutrition(Map map)
+        {
+            int total = 0;
+            foreach (var thing in map.listerThings.AllThings)
+            {
+                if (thing.def.IsNutritionGivingIngestible)
+                {
+                    total += thing.stackCount;
+                }
+            }
+            return total;
+        }
+
+        private static float CalculateBurnRate(Core.ResourceTracker tracker, string resource)
+        {
+            if (tracker == null)
+            {
+                // Fallback: estimate from current consumption if no tracker
+                return EstimateCurrentBurnRate(resource);
+            }
+
+            int day0 = tracker.GetSnapshot(resource, 0);
+            int day1 = tracker.GetSnapshot(resource, 1);
+
+            if (day0 < 0 || day1 < 0)
+            {
+                return EstimateCurrentBurnRate(resource);
+            }
+
+            float diff = day0 - day1;
+            if (diff < 0) diff = 0;
+            return diff;
+        }
+
+        private static float EstimateCurrentBurnRate(string resource)
+        {
+            // Fallback estimate based on typical consumption
+            // These are rough estimates that get refined by actual data
+            switch (resource)
+            {
+                case "food": return 10f;    // ~10 nutrition/day average
+                case "medicine": return 0.5f; // ~0.5 medicine/day average
+                case "wood": return 5f;    // ~5 wood/day average
+                case "steel": return 3f;   // ~3 steel/day average
+                default: return 1f;
+            }
+        }
+
+        private static string GetResourceStatus(float daysRemaining)
+        {
+            if (daysRemaining <= 3)
+                return "critical";
+            else if (daysRemaining <= 7)
+                return "low";
+            else if (daysRemaining <= 14)
+                return "warning";
+            else
+                return "stable";
+        }
+
+        private static void CheckResourceStatus(JSONObject resourceObj, string name, JSONArray critical, JSONArray low, JSONArray warning)
+        {
+            var status = resourceObj["status"]?.Value;
+            if (status == "critical")
+                critical.Add(name);
+            else if (status == "low")
+                low.Add(name);
+            else if (status == "warning")
+                warning.Add(name);
         }
 
         private static int CountItems(Map map, ThingDef def)

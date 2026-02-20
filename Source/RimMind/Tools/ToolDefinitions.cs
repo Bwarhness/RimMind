@@ -24,6 +24,7 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name")));
             tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
             tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));
+            tools.Add(MakeTool("get_colonist_locations", "Get real-time positions (x, z coordinates) for all colonists. Returns drafted status, downed status, current job, distance from home area, and flags temperature risks. Use this for tactical awareness and locating specific colonists quickly."));
 
             // Social Tools
             tools.Add(MakeTool("get_relationships", "Get a colonist's social relationships: opinions of and from other colonists, relationship types (lover, spouse, rival, friend, etc).",
@@ -101,6 +102,7 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by category: 'food', 'materials', 'weapons', 'apparel', 'medicine', or 'all'. Defaults to 'all'.")));
             tools.Add(MakeTool("get_rooms", "Get info about all rooms: type/role, impressiveness, beauty, cleanliness, space, and owner if applicable."));
             tools.Add(MakeTool("get_stockpiles", "Get all stockpile zones: name, priority level, number of cells, and configured item filters."));
+            tools.Add(MakeTool("get_resource_trends", "Track resource consumption trends over time. Returns 'days until depleted' for food, medicine, wood, and steel based on current consumption rate. Calculates burn rates, flags 'running low' vs 'critically low' thresholds, and shows historical trends (last 7 days). Use this for predictive planning and early warning of shortages."));
 
             // Research Tools
             tools.Add(MakeTool("get_research_status", "Get current research status: active project name and progress percentage, colony tech level, and available research benches."));

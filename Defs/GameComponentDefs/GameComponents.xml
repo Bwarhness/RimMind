@@ -6,4 +6,11 @@
         <label>event automation manager</label>
         <gameComponentClass>RimMind.Automation.EventAutomationManager</gameComponentClass>
     </GameComponentDef>
+
+    <!-- ResourceTracker - tracks resource consumption over time -->
+    <GameComponentDef>
+        <defName>ResourceTracker</defName>
+        <label>resource tracker</label>
+        <gameComponentClass>RimMind.Core.ResourceTracker</gameComponentClass>
+    </GameComponentDef>
 </Defs>
