@@ -115,6 +115,11 @@ namespace RimMind.Tools
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
             { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
 
+            // Joy & Recreation
+            { "get_joy_saturation", args => JoyTools.GetJoySaturation(args?["pawn_name"]?.Value) },
+            { "analyze_recreation_diversity", args => JoyTools.AnalyzeRecreationDiversity() },
+            { "recommend_joy_activities", args => JoyTools.RecommendJoyActivities(args?["pawn_name"]?.Value) },
+
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
             { "remove_plans", args => PlanTools.RemovePlans(args) },
