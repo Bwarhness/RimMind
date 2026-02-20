@@ -330,6 +330,18 @@ namespace RimMind.Tools
             // World & Diplomacy Tools
             tools.Add(MakeTool("list_world_destinations", "List all world settlements that can be visited by caravan, with distances and faction relations."));
             tools.Add(MakeTool("get_caravan_info", "Get info about available colonists and animals for caravan formation. Note: Actual caravan formation requires manual player action."));
+            tools.Add(MakeTool("analyze_caravan_capacity", "Calculate caravan carrying capacity and current load. Returns total capacity, current mass, overload percentage, travel speed impact, and recommendations. Use this to diagnose why caravans are slow or can't carry more.",
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID (defaults to active caravan)")));
+            tools.Add(MakeTool("predict_caravan_travel", "Predict travel time and encounter risks for a caravan route. Returns estimated days, biomes crossed, encounter probability, and ambush risk. Use this to plan safe caravan trips.",
+                MakeOptionalParam("destination_tile", "string", "Destination tile ID"),
+                MakeOptionalParam("destination_name", "string", "Destination settlement name (alternative to tile)"),
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID")));
+            tools.Add(MakeTool("optimize_caravan_composition", "Suggest optimal caravan composition for a destination based on purpose. Returns recommended colonists, pack animals, supplies, and mass budget. Use this to plan efficient caravans.",
+                MakeParam("destination", "string", "Destination settlement name or tile"),
+                MakeOptionalParam("purpose", "string", "Purpose: 'trade', 'rescue', or 'raid'. Default: 'trade'"),
+                MakeOptionalParam("max_colonists", "integer", "Maximum colonists to include (optional)")));
+            tools.Add(MakeTool("get_trade_settlement_info", "Get detailed info on nearby tradeable settlements. Returns settlement names, factions, distances, trade inventory potential, and faction relations. Use this to find trade partners.",
+                MakeOptionalParam("max_distance_tiles", "integer", "Maximum search radius in tiles (default: 20)")));
             tools.Add(MakeTool("get_trade_status", "Check if a trade session is currently active with a visiting trader."));
             tools.Add(MakeTool("list_trader_inventory", "List items available from current visiting trader. Requires active trade session."));
             tools.Add(MakeTool("list_factions", "List all known factions with their relation status and goodwill."));
