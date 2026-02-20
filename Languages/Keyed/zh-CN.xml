@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- RimMind Mod Settings -->
+    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <RimMind_AIProvider>AI 提供商:</RimMind_AIProvider>
+    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <RimMind_AnthropicDirect>Anthropic (直接 API 密钥)</RimMind_AnthropicDirect>
+    <RimMind_ClaudeCode>Claude Code (Max/Pro 订阅)</RimMind_ClaudeCode>
+    <RimMind_CustomProvider>自定义提供商 (OpenAI 兼容)</RimMind_CustomProvider>
+    <RimMind_CustomProviderSettings>自定义提供商设置</RimMind_CustomProviderSettings>
+    <RimMind_CustomProviderDesc>支持 OpenAI 兼容 API (Ollama, LM Studio, Groq, Together 等)</RimMind_CustomProviderDesc>
+    <RimMind_EndpointURL>端点 URL:</RimMind_EndpointURL>
+    <RimMind_EndpointURLExamples>示例: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <RimMind_APIKeyOptional>API 密钥 (本地 LLM 可选):</RimMind_APIKeyOptional>
+    <RimMind_ModelName>模型名称:</RimMind_ModelName>
+    <RimMind_ModelNameExamples>示例: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_ClaudeCodeAvailable>检测到 Claude Code 凭据。您的订阅将被自动使用。</RimMind_ClaudeCodeAvailable>
+    <RimMind_ClaudeCodeNotAvailable>Claude Code 未登录。在终端中运行 'claude login'。</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_AnthropicAPIKey>Anthropic API 密钥:</RimMind_AnthropicAPIKey>
+    <RimMind_GetAPIKeyAnthropic>在 console.anthropic.com 获取 API 密钥</RimMind_GetAPIKeyAnthropic>
+    <RimMind_OpenRouterAPIKey>OpenRouter API 密钥:</RimMind_OpenRouterAPIKey>
+    <RimMind_GetAPIKeyOpenRouter>在 openrouter.ai 获取 API 密钥</RimMind_GetAPIKeyOpenRouter>
+    <RimMind_ModelID>模型 ID (例如 anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <RimMind_ModelIDAnthropic>模型 ID (例如 claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <RimMind_Temperature>温度: {0}</RimMind_Temperature>
+    <RimMind_MaxTokens>最大令牌: {0}</RimMind_MaxTokens>
+    <RimMind_EnableChatCompanion>启用聊天伴侣</RimMind_EnableChatCompanion>
+    <RimMind_AutoDetectDirectives>自动检测指令</RimMind_AutoDetectDirectives>
+    <RimMind_AutoDetectDirectivesDesc>启用后，AI 将在对话中检测游戏风格偏好并提议将其保存为殖民地指令。</RimMind_AutoDetectDirectivesDesc>
+    
+    <!-- Event Automation -->
+    <RimMind_EventAutomation>事件自动化</RimMind_EventAutomation>
+    <RimMind_EnableEventAutomation>启用事件自动化</RimMind_EnableEventAutomation>
+    <RimMind_EnableEventAutomationDesc>启用后，RimMind 可以自动响应游戏事件并发送配置的提示。</RimMind_EnableEventAutomationDesc>
+    <RimMind_ConfigureAutomationRules>配置自动化规则...</RimMind_ConfigureAutomationRules>
+    <RimMind_EventAutomationEnabled>事件自动化已启用。在下方配置规则。</RimMind_EventAutomationEnabled>
+    <RimMind_EventAutomationDesc>启用后，RimMind 将在特定游戏事件发生时自动向 AI 发送配置的提示。每个事件都可以有自定义提示和冷却时间以防止刷屏。</RimMind_EventAutomationDesc>
+    <RimMind_SelectEventToConfigure>← 选择事件类型以配置自动化</RimMind_SelectEventToConfigure>
+    <RimMind_UseDefault>使用默认</RimMind_UseDefault>
+    <RimMind_Clear>清除</RimMind_Clear>
+    <RimMind_SaveChanges>保存更改</RimMind_SaveChanges>
+    <RimMind_SavedAutomationRule>已保存 {0} 的自动化规则</RimMind_SavedAutomationRule>
+    <RimMind_Enabled>启用</RimMind_Enabled>
+    <RimMind_Cooldown>冷却时间: {0} 秒</RimMind_Cooldown>
+    <RimMind_CustomPrompt>自定义提示:</RimMind_CustomPrompt>
+    <RimMind_EventActive>活跃</RimMind_EventActive>
+    <RimMind_EventNoPrompt>无提示</RimMind_EventNoPrompt>
+    
+    <!-- Automation Categories -->
+    <RimMind_CategoryCombat>战斗与威胁</RimMind_CategoryCombat>
+    <RimMind_CategoryEmergencies>紧急情况</RimMind_CategoryEmergencies>
+    <RimMind_CategoryMedical>医疗与心理</RimMind_CategoryMedical>
+    <RimMind_CategorySocial>社交与事件</RimMind_CategorySocial>
+    <RimMind_CategoryTrade>贸易与外交</RimMind_CategoryTrade>
+    <RimMind_CategoryResources>资源</RimMind_CategoryResources>
+    <RimMind_CategoryOther>其他</RimMind_CategoryOther>
+    
+    <!-- Chat Window -->
+    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <RimMind_ChatClear>清除</RimMind_ChatClear>
+    <RimMind_ChatPrompts>提示</RimMind_ChatPrompts>
+    <RimMind_ChatAuto>自动</RimMind_ChatAuto>
+    <RimMind_ChatDirectives>指令</RimMind_ChatDirectives>
+    <RimMind_ChatContext>上下文</RimMind_ChatContext>
+    <RimMind_ChatTokensIn>令牌: {0} 输入 / {1} 输出 ({2} 总计)</RimMind_ChatTokensIn>
+    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <RimMind_ChatQuickPrompts>快速提示 (点击插入):</RimMind_ChatQuickPrompts>
+    <RimMind_ChatSend>发送</RimMind_ChatSend>
+    <RimMind_ChatYou>你: {0}</RimMind_ChatYou>
+    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <RimMind_ChatErrorPrefix>[错误]</RimMind_ChatErrorPrefix>
+    
+    <!-- Directives Window -->
+    <RimMind_DirectivesTitle>殖民地指令</RimMind_DirectivesTitle>
+    <RimMind_DirectivesDesc>告诉 AI 您的游戏风格、规则和偏好。这些将包含在每次 AI 交互中。</RimMind_DirectivesDesc>
+    <RimMind_DirectivesChars>字符数: {0}</RimMind_DirectivesChars>
+    <RimMind_DirectivesCharsLarge>字符数: {0} (大型指令文本可能会增加响应时间)</RimMind_DirectivesCharsLarge>
+    <RimMind_DirectivesSave>保存</RimMind_DirectivesSave>
+    <RimMind_DirectivesCancel>取消</RimMind_DirectivesCancel>
+    
+    <!-- Context Window -->
+    <RimMind_ContextTitle>上下文检查器</RimMind_ContextTitle>
+    <RimMind_ContextRefresh>刷新</RimMind_ContextRefresh>
+    <RimMind_ContextTotal>总计: {0} (约 {1} 令牌)</RimMind_ContextTotal>
+    <RimMind_ContextLastAPI>上次 API: {0} 输入 + {1} 输出 = {2} 实际</RimMind_ContextLastAPI>
+    <RimMind_ContextTabSystem>系统 ({0})</RimMind_ContextTabSystem>
+    <RimMind_ContextTabTools>工具 ({0}, {1})</RimMind_ContextTabTools>
+    <RimMind_ContextTabChat>聊天 ({0} 条消息, {1})</RimMind_ContextTabChat>
+    <RimMind_ContextEmpty>(空)</RimMind_ContextEmpty>
+    
+    <!-- Main Button -->
+    <RimMind_MainButton>RimMind</RimMind_MainButton>
+</LanguageData>

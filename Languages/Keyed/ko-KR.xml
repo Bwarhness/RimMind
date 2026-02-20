@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- RimMind Mod Settings -->
+    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <RimMind_AIProvider>AI 제공자:</RimMind_AIProvider>
+    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <RimMind_AnthropicDirect>Anthropic (직접 API 키)</RimMind_AnthropicDirect>
+    <RimMind_ClaudeCode>Claude Code (Max/Pro 구독)</RimMind_ClaudeCode>
+    <RimMind_CustomProvider>사용자 지정 제공자 (OpenAI 호환)</RimMind_CustomProvider>
+    <RimMind_CustomProviderSettings>사용자 지정 제공자 설정</RimMind_CustomProviderSettings>
+    <RimMind_CustomProviderDesc>OpenAI 호환 API 지원 (Ollama, LM Studio, Groq, Together 등)</RimMind_CustomProviderDesc>
+    <RimMind_EndpointURL>엔드포인트 URL:</RimMind_EndpointURL>
+    <RimMind_EndpointURLExamples>예: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <RimMind_APIKeyOptional>API 키 (로컬 LLM은 선택사항):</RimMind_APIKeyOptional>
+    <RimMind_ModelName>모델 이름:</RimMind_ModelName>
+    <RimMind_ModelNameExamples>예: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_ClaudeCodeAvailable>Claude Code 자격 증명이 감지되었습니다. 구독이 자동으로 사용됩니다.</RimMind_ClaudeCodeAvailable>
+    <RimMind_ClaudeCodeNotAvailable>Claude Code에 로그인되지 않았습니다. 터미널에서 'claude login'을 실행하세요.</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_AnthropicAPIKey>Anthropic API 키:</RimMind_AnthropicAPIKey>
+    <RimMind_GetAPIKeyAnthropic>console.anthropic.com에서 API 키 받기</RimMind_GetAPIKeyAnthropic>
+    <RimMind_OpenRouterAPIKey>OpenRouter API 키:</RimMind_OpenRouterAPIKey>
+    <RimMind_GetAPIKeyOpenRouter>openrouter.ai에서 API 키 받기</RimMind_GetAPIKeyOpenRouter>
+    <RimMind_ModelID>모델 ID (예: anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <RimMind_ModelIDAnthropic>모델 ID (예: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <RimMind_Temperature>온도: {0}</RimMind_Temperature>
+    <RimMind_MaxTokens>최대 토큰: {0}</RimMind_MaxTokens>
+    <RimMind_EnableChatCompanion>채팅 동반자 활성화</RimMind_EnableChatCompanion>
+    <RimMind_AutoDetectDirectives>지시문 자동 감지</RimMind_AutoDetectDirectives>
+    <RimMind_AutoDetectDirectivesDesc>활성화하면 AI가 대화 중 플레이 스타일 선호도를 감지하고 colony 지시문으로 저장할 것을 제안합니다.</RimMind_AutoDetectDirectivesDesc>
+    
+    <!-- Event Automation -->
+    <RimMind_EventAutomation>이벤트 자동화</RimMind_EventAutomation>
+    <RimMind_EnableEventAutomation>이벤트 자동화 활성화</RimMind_EnableEventAutomation>
+    <RimMind_EnableEventAutomationDesc>활성화하면 RimMind가 게임 이벤트에 구성된 프롬프트로 자동으로 응답할 수 있습니다.</RimMind_EnableEventAutomationDesc>
+    <RimMind_ConfigureAutomationRules>자동화 규칙 구성...</RimMind_ConfigureAutomationRules>
+    <RimMind_EventAutomationEnabled>이벤트 자동화 활성화됨. 아래에서 규칙을 구성하세요.</RimMind_EventAutomationEnabled>
+    <RimMind_EventAutomationDesc>활성화하면 RimMind가 특정 게임 이벤트가 발생하면 구성된 프롬프트를 AI에게 자동으로 보냅니다. 각 이벤트에는 스팸 방지를 위한 사용자 정의 프롬프트와 쿨다운 기간이 있을 수 있습니다.</RimMind_EventAutomationDesc>
+    <RimMind_SelectEventToConfigure>← 자동화를 구성할 이벤트 유형을 선택하세요</RimMind_SelectEventToConfigure>
+    <RimMind_UseDefault>기본 사용</RimMind_UseDefault>
+    <RimMind_Clear>지우기</RimMind_Clear>
+    <RimMind_SaveChanges>변경 사항 저장</RimMind_SaveChanges>
+    <RimMind_SavedAutomationRule>{0}에 대한 자동화 규칙이 저장되었습니다</RimMind_SavedAutomationRule>
+    <RimMind_Enabled>활성화</RimMind_Enabled>
+    <RimMind_Cooldown>쿨다운: {0}초</RimMind_Cooldown>
+    <RimMind_CustomPrompt>사용자 정의 프롬프트:</RimMind_CustomPrompt>
+    <RimMind_EventActive>활성</RimMind_EventActive>
+    <RimMind_EventNoPrompt>프롬프트 없음</RimMind_EventNoPrompt>
+    
+    <!-- Automation Categories -->
+    <RimMind_CategoryCombat>전투 및 위협</RimMind_CategoryCombat>
+    <RimMind_CategoryEmergencies>긴급 상황</RimMind_CategoryEmergencies>
+    <RimMind_CategoryMedical>의료 및 정신</RimMind_CategoryMedical>
+    <RimMind_CategorySocial>사회 및 이벤트</RimMind_CategorySocial>
+    <RimMind_CategoryTrade>무역 및 외교</RimMind_CategoryTrade>
+    <RimMind_CategoryResources>자원</RimMind_CategoryResources>
+    <RimMind_CategoryOther>기타</RimMind_CategoryOther>
+    
+    <!-- Chat Window -->
+    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <RimMind_ChatClear>지우기</RimMind_ChatClear>
+    <RimMind_ChatPrompts>프롬프트</RimMind_ChatPrompts>
+    <RimMind_ChatAuto>자동</RimMind_ChatAuto>
+    <RimMind_ChatDirectives>지시문</RimMind_ChatDirectives>
+    <RimMind_ChatContext>컨텍스트</RimMind_ChatContext>
+    <RimMind_ChatTokensIn>토큰: {0} 입력 / {1} 출력 ({2} 총계)</RimMind_ChatTokensIn>
+    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <RimMind_ChatQuickPrompts>빠른 프롬프트 (클릭하여 삽입):</RimMind_ChatQuickPrompts>
+    <RimMind_ChatSend>보내기</RimMind_ChatSend>
+    <RimMind_ChatYou>당신: {0}</RimMind_ChatYou>
+    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <RimMind_ChatErrorPrefix>[오류]</RimMind_ChatErrorPrefix>
+    
+    <!-- Directives Window -->
+    <RimMind_DirectivesTitle> Colony 지시문</RimMind_DirectivesTitle>
+    <RimMind_DirectivesDesc>AI에게 플레이 스타일, 규칙 및 선호도를 알려주세요. 이것들은 모든 AI 상호작용에 포함됩니다.</RimMind_DirectivesDesc>
+    <RimMind_DirectivesChars>문자: {0}</RimMind_DirectivesChars>
+    <RimMind_DirectivesCharsLarge>문자: {0} (큰 지시문 텍스트는 응답 시간이 증가할 수 있습니다)</RimMind_DirectivesCharsLarge>
+    <RimMind_DirectivesSave>저장</RimMind_DirectivesSave>
+    <RimMind_DirectivesCancel>취소</RimMind_DirectivesCancel>
+    
+    <!-- Context Window -->
+    <RimMind_ContextTitle>컨텍스트 검사기</RimMind_ContextTitle>
+    <RimMind_ContextRefresh>새로고침</RimMind_ContextRefresh>
+    <RimMind_ContextTotal>총계: {0} (약 {1} 토큰)</RimMind_ContextTotal>
+    <RimMind_ContextLastAPI>마지막 API: {0} 입력 + {1} 출력 = {2} 실제</RimMind_ContextLastAPI>
+    <RimMind_ContextTabSystem>시스템 ({0})</RimMind_ContextTabSystem>
+    <RimMind_ContextTabTools>도구 ({0}, {1})</RimMind_ContextTabTools>
+    <RimMind_ContextTabChat>채팅 ({0} 메시지, {1})</RimMind_ContextTabChat>
+    <RimMind_ContextEmpty>(비어 있음)</RimMind_ContextEmpty>
+    
+    <!-- Main Button -->
+    <RimMind_MainButton>RimMind</RimMind_MainButton>
+</LanguageData>

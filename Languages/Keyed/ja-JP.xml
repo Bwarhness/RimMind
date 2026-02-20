@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- RimMind Mod Settings -->
+    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <RimMind_AIProvider>AI プロバイダー:</RimMind_AIProvider>
+    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <RimMind_AnthropicDirect>Anthropic (直接 API キー)</RimMind_AnthropicDirect>
+    <RimMind_ClaudeCode>Claude Code (Max/Pro サブスクリプション)</RimMind_ClaudeCode>
+    <RimMind_CustomProvider>カスタムプロバイダー (OpenAI 互換)</RimMind_CustomProvider>
+    <RimMind_CustomProviderSettings>カスタムプロバイダー設定</RimMind_CustomProviderSettings>
+    <RimMind_CustomProviderDesc>OpenAI 互換 API をサポート (Ollama, LM Studio, Groq, Together など)</RimMind_CustomProviderDesc>
+    <RimMind_EndpointURL>エンドポイント URL:</RimMind_EndpointURL>
+    <RimMind_EndpointURLExamples>例: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <RimMind_APIKeyOptional>API キー (ローカル LLM は任意):</RimMind_APIKeyOptional>
+    <RimMind_ModelName>モデル名:</RimMind_ModelName>
+    <RimMind_ModelNameExamples>例: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_ClaudeCodeAvailable>Claude Code の認証情報が検出されました。サブスクリプションが自動的に使用されます。</RimMind_ClaudeCodeAvailable>
+    <RimMind_ClaudeCodeNotAvailable>Claude Code にログインしていません。ターミナルで 'claude login' を実行してください。</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_AnthropicAPIKey>Anthropic API キー:</RimMind_AnthropicAPIKey>
+    <RimMind_GetAPIKeyAnthropic>console.anthropic.com で API キーを取得</RimMind_GetAPIKeyAnthropic>
+    <RimMind_OpenRouterAPIKey>OpenRouter API キー:</RimMind_OpenRouterAPIKey>
+    <RimMind_GetAPIKeyOpenRouter>openrouter.ai で API キーを取得</RimMind_GetAPIKeyOpenRouter>
+    <RimMind_ModelID>モデル ID (例: anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <RimMind_ModelIDAnthropic>モデル ID (例: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <RimMind_Temperature>温度: {0}</RimMind_Temperature>
+    <RimMind_MaxTokens>最大トークン: {0}</RimMind_MaxTokens>
+    <RimMind_EnableChatCompanion>チャットコンパニオンを有効化</RimMind_EnableChatCompanion>
+    <RimMind_AutoDetectDirectives>ディレクティブを自動検出</RimMind_AutoDetectDirectives>
+    <RimMind_AutoDetectDirectivesDesc>有効にすると、AI は会話中にプレイスタイルの好みを検出し、殖民地ディレクティブとして保存を提案します。</RimMind_AutoDetectDirectivesDesc>
+    
+    <!-- Event Automation -->
+    <RimMind_EventAutomation>イベント自動化</RimMind_EventAutomation>
+    <RimMind_EnableEventAutomation>イベント自動化を有効化</RimMind_EnableEventAutomation>
+    <RimMind_EnableEventAutomationDesc>有効にすると、RimMind はゲームイベントに 구성된プロンプトで自動的に応答できます。</RimMind_EnableEventAutomationDesc>
+    <RimMind_ConfigureAutomationRules>自動化ルールを設定...</RimMind_ConfigureAutomationRules>
+    <RimMind_EventAutomationEnabled>イベント自動化が有効。下でルールを設定してください。</RimMind_EventAutomationEnabled>
+    <RimMind_EventAutomationDesc>有効にすると、RimMind は特定のゲームイベントが発生した場合、構成されたプロンプトを AI に自動的に送信します。各イベントにはカスタムプロンプトとクールダウン期間を設定できます。</RimMind_EventAutomationDesc>
+    <RimMind_SelectEventToConfigure>← 自動化を設定するイベントタイプを選択</RimMind_SelectEventToConfigure>
+    <RimMind_UseDefault>デフォルトを使用</RimMind_UseDefault>
+    <RimMind_Clear>クリア</RimMind_Clear>
+    <RimMind_SaveChanges>変更を保存</RimMind_SaveChanges>
+    <RimMind_SavedAutomationRule>{0} の自動化ルールを保存しました</RimMind_SavedAutomationRule>
+    <RimMind_Enabled>有効</RimMind_Enabled>
+    <RimMind_Cooldown>クールダウン: {0} 秒</RimMind_Cooldown>
+    <RimMind_CustomPrompt>カスタムプロンプト:</RimMind_CustomPrompt>
+    <RimMind_EventActive>アクティブ</RimMind_EventActive>
+    <RimMind_EventNoPrompt>プロンプトなし</RimMind_EventNoPrompt>
+    
+    <!-- Automation Categories -->
+    <RimMind_CategoryCombat>戦闘と脅威</RimMind_CategoryCombat>
+    <RimMind_CategoryEmergencies>緊急時</RimMind_CategoryEmergencies>
+    <RimMind_CategoryMedical>医療と精神</RimMind_CategoryMedical>
+    <RimMind_CategorySocial>社交とイベント</RimMind_CategorySocial>
+    <RimMind_CategoryTrade>貿易と外交</RimMind_CategoryTrade>
+    <RimMind_CategoryResources>資源</RimMind_CategoryResources>
+    <RimMind_CategoryOther>その他</RimMind_CategoryOther>
+    
+    <!-- Chat Window -->
+    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <RimMind_ChatClear>クリア</RimMind_ChatClear>
+    <RimMind_ChatPrompts>プロンプト</RimMind_ChatPrompts>
+    <RimMind_ChatAuto>自動</RimMind_ChatAuto>
+    <RimMind_ChatDirectives>ディレクティブ</RimMind_ChatDirectives>
+    <RimMind_ChatContext>コンテキスト</RimMind_ChatContext>
+    <RimMind_ChatTokensIn>トークン: {0} 入力 / {1} 出力 ({2} 合計)</RimMind_ChatTokensIn>
+    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <RimMind_ChatQuickPrompts>クイックプロンプト (クリックで挿入):</RimMind_ChatQuickPrompts>
+    <RimMind_ChatSend>送信</RimMind_ChatSend>
+    <RimMind_ChatYou>あなた: {0}</RimMind_ChatYou>
+    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <RimMind_ChatErrorPrefix>[エラー]</RimMind_ChatErrorPrefix>
+    
+    <!-- Directives Window -->
+    <RimMind_DirectivesTitle>殖民地ディレクティブ</RimMind_DirectivesTitle>
+    <RimMind_DirectivesDesc>AI にプレイスタイル、ルール、偏好を教えてください。これらはすべての AI インタラクションに含まれます。</RimMind_DirectivesDesc>
+    <RimMind_DirectivesChars>文字数: {0}</RimMind_DirectivesChars>
+    <RimMind_DirectivesCharsLarge>文字数: {0} (大きなディレクティブテキストは応答時間を遅くする可能性があります)</RimMind_DirectivesCharsLarge>
+    <RimMind_DirectivesSave>保存</RimMind_DirectivesSave>
+    <RimMind_DirectivesCancel>キャンセル</RimMind_DirectivesCancel>
+    
+    <!-- Context Window -->
+    <RimMind_ContextTitle>コンテキストインスペクター</RimMind_ContextTitle>
+    <RimMind_ContextRefresh>更新</RimMind_ContextRefresh>
+    <RimMind_ContextTotal>合計: {0} (約 {1} トークン)</RimMind_ContextTotal>
+    <RimMind_ContextLastAPI>最終 API: {0} 入力 + {1} 出力 = {2} 実際</RimMind_ContextLastAPI>
+    <RimMind_ContextTabSystem>システム ({0})</RimMind_ContextTabSystem>
+    <RimMind_ContextTabTools>ツール ({0}, {1})</RimMind_ContextTabTools>
+    <RimMind_ContextTabChat>チャット ({0} メッセージ, {1})</RimMind_ContextTabChat>
+    <RimMind_ContextEmpty>(空)</RimMind_ContextEmpty>
+    
+    <!-- Main Button -->
+    <RimMind_MainButton>RimMind</RimMind_MainButton>
+</LanguageData>

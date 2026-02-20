@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- RimMind Mod Settings -->
+    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <RimMind_AIProvider>AI Sağlayıcı:</RimMind_AIProvider>
+    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <RimMind_AnthropicDirect>Anthropic (Direkt API anahtarı)</RimMind_AnthropicDirect>
+    <RimMind_ClaudeCode>Claude Code (Max/Pro Abonelik)</RimMind_ClaudeCode>
+    <RimMind_CustomProvider>Özel Sağlayıcı (OpenAI Uyumlu)</RimMind_CustomProvider>
+    <RimMind_CustomProviderSettings>Özel Sağlayıcı Ayarları</RimMind_CustomProviderSettings>
+    <RimMind_CustomProviderDesc>OpenAI uyumlu API'leri destekler (Ollama, LM Studio, Groq, Together, vb.)</RimMind_CustomProviderDesc>
+    <RimMind_EndpointURL>Uç nokta URL'si:</RimMind_EndpointURL>
+    <RimMind_EndpointURLExamples>Örnekler: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <RimMind_APIKeyOptional>API anahtarı (yerel LLM'ler için opsiyonel):</RimMind_APIKeyOptional>
+    <RimMind_ModelName>Model adı:</RimMind_ModelName>
+    <RimMind_ModelNameExamples>Örnekler: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_ClaudeCodeAvailable>Claude Code kimlik bilgileri tespit edildi. Aboneliğiniz otomatik kullanılacaktır.</RimMind_ClaudeCodeAvailable>
+    <RimMind_ClaudeCodeNotAvailable>Claude Code giriş yapmamış. Bir terminalde 'claude login' komutunu çalıştırın.</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_AnthropicAPIKey>Anthropic API anahtarı:</RimMind_AnthropicAPIKey>
+    <RimMind_GetAPIKeyAnthropic>console.anthropic.com adresinden API anahtarı alın</RimMind_GetAPIKeyAnthropic>
+    <RimMind_OpenRouterAPIKey>OpenRouter API anahtarı:</RimMind_OpenRouterAPIKey>
+    <RimMind_GetAPIKeyOpenRouter>openrouter.ai adresinden API anahtarı alın</RimMind_GetAPIKeyOpenRouter>
+    <RimMind_ModelID>Model ID (örn. anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <RimMind_ModelIDAnthropic>Model ID (örn. claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <RimMind_Temperature>Sıcaklık: {0}</RimMind_Temperature>
+    <RimMind_MaxTokens>Max. token: {0}</RimMind_MaxTokens>
+    <RimMind_EnableChatCompanion>Sohbet arkadaşını etkinleştir</RimMind_EnableChatCompanion>
+    <RimMind_AutoDetectDirectives>Direktifleri otomatik algıla</RimMind_AutoDetectDirectives>
+    <RimMind_AutoDetectDirectivesDesc>Etkinleştirildiğinde, AI sohbet sırasında oyun stili tercihlerini algılayacak ve bunları koloni direktifleri olarak kaydetmeyi önerecektir.</RimMind_AutoDetectDirectivesDesc>
+    
+    <!-- Event Automation -->
+    <RimMind_EventAutomation>Olay Otomasyonu</RimMind_EventAutomation>
+    <RimMind_EnableEventAutomation>Olay otomasyonunu etkinleştir</RimMind_EnableEventAutomation>
+    <RimMind_EnableEventAutomationDesc>Etkinleştirildiğinde, RimMind yapılandırılmış istemlerle oyun olaylarına otomatik olarak yanıt verebilir.</RimMind_EnableEventAutomationDesc>
+    <RimMind_ConfigureAutomationRules>Otomasyon kurallarını yapılandır...</RimMind_ConfigureAutomationRules>
+    <RimMind_EventAutomationEnabled>Olay otomasyonu etkinleştirildi. Kuralları aşağıda yapılandırın.</RimMind_EventAutomationEnabled>
+    <RimMind_EventAutomationDesc>Etkinleştirildiğinde, RimMind belirli oyun olayları gerçekleştiğinde yapılandırılmış istemleri AI'ya otomatik olarak gönderir. Her olay özelleştirilmiş bir istem ve spam'ı önlemek için bir soğuma süresi olabilir.</RimMind_EventAutomationDesc>
+    <RimMind_SelectEventToConfigure>← Otomasyonu yapılandırmak için bir olay türü seçin</RimMind_SelectEventToConfigure>
+    <RimMind_UseDefault>Varsayılanı kullan</RimMind_UseDefault>
+    <RimMind_Clear>Temizle</RimMind_Clear>
+    <RimMind_SaveChanges>Değişiklikleri kaydet</RimMind_SaveChanges>
+    <RimMind_SavedAutomationRule>{0} için otomasyon kuralı kaydedildi</RimMind_SavedAutomationRule>
+    <RimMind_Enabled>Etkin</RimMind_Enabled>
+    <RimMind_Cooldown>Soğuma: {0} saniye</RimMind_Cooldown>
+    <RimMind_CustomPrompt>Özel istem:</RimMind_CustomPrompt>
+    <RimMind_EventActive>Aktif</RimMind_EventActive>
+    <RimMind_EventNoPrompt>İstem yok</RimMind_EventNoPrompt>
+    
+    <!-- Automation Categories -->
+    <RimMind_CategoryCombat>Savaş ve tehditler</RimMind_CategoryCombat>
+    <RimMind_CategoryEmergencies>Acil durumlar</RimMind_CategoryEmergencies>
+    <RimMind_CategoryMedical>Tıbbi ve zihinsel</RimMind_CategoryMedical>
+    <RimMind_CategorySocial>Sosyal ve olaylar</RimMind_CategorySocial>
+    <RimMind_CategoryTrade>Ticaret ve diplomasi</RimMind_CategoryTrade>
+    <RimMind_CategoryResources>Kaynaklar</RimMind_CategoryResources>
+    <RimMind_CategoryOther>Diğer</RimMind_CategoryOther>
+    
+    <!-- Chat Window -->
+    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <RimMind_ChatClear>Temizle</RimMind_ChatClear>
+    <RimMind_ChatPrompts>İstemler</RimMind_ChatPrompts>
+    <RimMind_ChatAuto>Otomatik</RimMind_ChatAuto>
+    <RimMind_ChatDirectives>Direktifler</RimMind_ChatDirectives>
+    <RimMind_ChatContext>Bağlam</RimMind_ChatContext>
+    <RimMind_ChatTokensIn>Token: {0} gir / {1} çık ({2} toplam)</RimMind_ChatTokensIn>
+    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <RimMind_ChatQuickPrompts>Hızlı istemler (eklemek için tıklayın):</RimMind_ChatQuickPrompts>
+    <RimMind_ChatSend>Gönder</RimMind_ChatSend>
+    <RimMind_ChatYou>Siz: {0}</RimMind_ChatYou>
+    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <RimMind_ChatErrorPrefix>[Hata]</RimMind_ChatErrorPrefix>
+    
+    <!-- Directives Window -->
+    <RimMind_DirectivesTitle>Koloni Direktifleri</RimMind_DirectivesTitle>
+    <RimMind_DirectivesDesc>AI'ya oyun stili, kurallar ve tercihlerinizi söyleyin. Bunlar her AI etkileşimine dahil edilecektir.</RimMind_DirectivesDesc>
+    <RimMind_DirectivesChars>Karakter: {0}</RimMind_DirectivesChars>
+    <RimMind_DirectivesCharsLarge>Karakter: {0} (büyük direktif metni yanıt süresini artırabilir)</RimMind_DirectivesCharsLarge>
+    <RimMind_DirectivesSave>Kaydet</RimMind_DirectivesSave>
+    <RimMind_DirectivesCancel>İptal</RimMind_DirectivesCancel>
+    
+    <!-- Context Window -->
+    <RimMind_ContextTitle>Bağlam İnpektörü</RimMind_ContextTitle>
+    <RimMind_ContextRefresh>Yenile</RimMind_ContextRefresh>
+    <RimMind_ContextToplam>Toplam: {0} (~{1} token tahmini)</RimMind_ContextTotal>
+    <RimMind_ContextLastAPI>Son API: {0} gir + {1} çık = {2} gerçek</RimMind_ContextLastAPI>
+    <RimMind_ContextTabSystem>Sistem ({0})</RimMind_ContextTabSystem>
+    <RimMind_ContextTabTools>Araçlar ({0}, {1})</RimMind_ContextTabTools>
+    <RimMind_ContextTabChat>Sohbet ({0} msj, {1})</RimMind_ContextTabChat>
+    <RimMind_ContextEmpty>(boş)</RimMind_ContextEmpty>
+    
+    <!-- Main Button -->
+    <RimMind_MainButton>RimMind</RimMind_MainButton>
+</LanguageData>

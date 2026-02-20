@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- RimMind Mod Settings -->
+    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <RimMind_AIProvider>AI-провайдер:</RimMind_AIProvider>
+    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <RimMind_AnthropicDirect>Anthropic (прямой API-ключ)</RimMind_AnthropicDirect>
+    <RimMind_ClaudeCode>Claude Code (подписка Max/Pro)</RimMind_ClaudeCode>
+    <RimMind_CustomProvider>Пользовательский провайдер (OpenAI-совместимый)</RimMind_CustomProvider>
+    <RimMind_CustomProviderSettings>Настройки пользовательского провайдера</RimMind_CustomProviderSettings>
+    <RimMind_CustomProviderDesc>Поддерживает OpenAI-совместимые API (Ollama, LM Studio, Groq, Together и др.)</RimMind_CustomProviderDesc>
+    <RimMind_EndpointURL>URL-адрес endpoint:</RimMind_EndpointURL>
+    <RimMind_EndpointURLExamples>Примеры: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <RimMind_APIKeyOptional>API-ключ (опционально для локальных LLM):</RimMind_APIKeyOptional>
+    <RimMind_ModelName>Имя модели:</RimMind_ModelName>
+    <RimMind_ModelNameExamples>Примеры: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_ClaudeCodeAvailable>Обнаружены учётные данные Claude Code. Ваша подписка будет использована автоматически.</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_ClaudeCodeNotAvailable>Claude Code не авторизован. Выполните 'claude login' в терминале.</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_AnthropicAPIKey>API-ключ Anthropic:</RimMind_AnthropicAPIKey>
+    <RimMind_GetAPIKeyAnthropic>Получить API-ключ на console.anthropic.com</RimMind_GetAPIKeyAnthropic>
+    <RimMind_OpenRouterAPIKey>API-ключ OpenRouter:</RimMind_OpenRouterAPIKey>
+    <RimMind_GetAPIKeyOpenRouter>Получить API-ключ на openrouter.ai</RimMind_GetAPIKeyOpenRouter>
+    <RimMind_ModelID>ID модели (напр. anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <RimMind_ModelIDAnthropic>ID модели (напр. claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <RimMind_Temperature>Температура: {0}</RimMind_Temperature>
+    <RimMind_MaxTokens>Макс. токенов: {0}</RimMind_MaxTokens>
+    <RimMind_EnableChatCompanion>Включить чат-компаньона</RimMind_EnableChatCompanion>
+    <RimMind_AutoDetectDirectives>Автоопределение директив</RimMind_AutoDetectDirectives>
+    <RimMind_AutoDetectDirectivesDesc>Когда включено, AI будет определять предпочтения стиля игры в разговоре и предлагать сохранить их как директивы колонии.</RimMind_AutoDetectDirectivesDesc>
+    
+    <!-- Event Automation -->
+    <RimMind_EventAutomation>Автоматизация событий</RimMind_EventAutomation>
+    <RimMind_EnableEventAutomation>Включить автоматизацию событий</RimMind_EnableEventAutomation>
+    <RimMind_EnableEventAutomationDesc>Когда включено, RimMind может автоматически отвечать на игровые события с настроенными промптами.</RimMind_EnableEventAutomationDesc>
+    <RimMind_ConfigureAutomationRules>Настроить правила автоматизации...</RimMind_ConfigureAutomationRules>
+    <RimMind_EventAutomationEnabled>Автоматизация событий включена. Настройте правила ниже.</RimMind_EventAutomationEnabled>
+    <RimMind_EventAutomationDesc>Когда включено, RimMind будет автоматически отправлять настроенные промпты AI при наступлении определённых игровых событий. Каждое событие может иметь свой промпт и период охлаждения.</RimMind_EventAutomationDesc>
+    <RimMind_SelectEventToConfigure>← Выберите тип события для настройки автоматизации</RimMind_SelectEventToConfigure>
+    <RimMind_UseDefault>По умолчанию</RimMind_UseDefault>
+    <RimMind_Clear>Очистить</RimMind_Clear>
+    <RimMind_SaveChanges>Сохранить изменения</RimMind_SaveChanges>
+    <RimMind_SavedAutomationRule>Правило автоматизации сохранено для {0}</RimMind_SavedAutomationRule>
+    <RimMind_Enabled>Включено</RimMind_Enabled>
+    <RimMind_Cooldown>Охлаждение: {0} секунд</RimMind_Cooldown>
+    <RimMind_CustomPrompt>Пользовательский промпт:</RimMind_CustomPrompt>
+    <RimMind_EventActive>Активно</RimMind_EventActive>
+    <RimMind_EventNoPrompt>Без промпта</RimMind_EventNoPrompt>
+    
+    <!-- Automation Categories -->
+    <RimMind_CategoryCombat>Бой и угрозы</RimMind_CategoryCombat>
+    <RimMind_CategoryEmergencies>Чрезвычайные ситуации</RimMind_CategoryEmergencies>
+    <RimMind_CategoryMedical>Медицина и психика</RimMind_CategoryMedical>
+    <RimMind_CategorySocial>Социум и события</RimMind_CategorySocial>
+    <RimMind_CategoryTrade>Торговля и дипломатия</RimMind_CategoryTrade>
+    <RimMind_CategoryResources>Ресурсы</RimMind_CategoryResources>
+    <RimMind_CategoryOther>Другое</RimMind_CategoryOther>
+    
+    <!-- Chat Window -->
+    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <RimMind_ChatClear>Очистить</RimMind_ChatClear>
+    <RimMind_ChatPrompts>Промпты</RimMind_ChatPrompts>
+    <RimMind_ChatAuto>Авто</RimMind_ChatAuto>
+    <RimMind_ChatDirectives>Директивы</RimMind_ChatDirectives>
+    <RimMind_ChatContext>Контекст</RimMind_ChatContext>
+    <RimMind_ChatTokensIn>Токены: {0} вход / {1} выход ({2} всего)</RimMind_ChatTokensIn>
+    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <RimMind_ChatQuickPrompts>Быстрые промпты (клик для вставки):</RimMind_ChatQuickPrompts>
+    <RimMind_ChatSend>Отправить</RimMind_ChatSend>
+    <RimMind_ChatYou>Вы: {0}</RimMind_ChatYou>
+    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <RimMind_ChatErrorPrefix>[Ошибка]</RimMind_ChatErrorPrefix>
+    
+    <!-- Directives Window -->
+    <RimMind_DirectivesTitle>Директивы колонии</RimMind_DirectivesTitle>
+    <RimMind_DirectivesDesc>Расскажите AI о вашем стиле игры, правилах и предпочтениях. Они будут включены в каждое взаимодействие с AI.</RimMind_DirectivesDesc>
+    <RimMind_DirectivesChars>Символы: {0}</RimMind_DirectivesChars>
+    <RimMind_DirectivesCharsLarge>Символы: {0} (большой текст директив может увеличить время ответа)</RimMind_DirectivesCharsLarge>
+    <RimMind_DirectivesSave>Сохранить</RimMind_DirectivesSave>
+    <RimMind_DirectivesCancel>Отмена</RimMind_DirectivesCancel>
+    
+    <!-- Context Window -->
+    <RimMind_ContextTitle>Инспектор контекста</RimMind_ContextTitle>
+    <RimMind_ContextRefresh>Обновить</RimMind_ContextRefresh>
+    <RimMind_ContextTotal>Всего: {0} (~{1} токенов)</RimMind_ContextTotal>
+    <RimMind_ContextLastAPI>Последний API: {0} вход + {1} выход = {2} фактически</RimMind_ContextLastAPI>
+    <RimMind_ContextTabSystem>Система ({0})</RimMind_ContextTabSystem>
+    <RimMind_ContextTabTools>Инструменты ({0}, {1})</RimMind_ContextTabTools>
+    <RimMind_ContextTabChat>Чат ({0} сообщ., {1})</RimMind_ContextTabChat>
+    <RimMind_ContextEmpty>(пусто)</RimMind_ContextEmpty>
+    
+    <!-- Main Button -->
+    <RimMind_MainButton>RimMind</RimMind_MainButton>
+</LanguageData>

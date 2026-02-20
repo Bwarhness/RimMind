@@ -1,4 +1,5 @@
 using System;
+using RimMind.Languages;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -96,7 +97,7 @@ namespace RimMind.Chat
             // Title bar
             var titleRect = new Rect(0f, 0f, inRect.width, 30f);
             Text.Font = GameFont.Medium;
-            Widgets.Label(titleRect, "RimMind AI");
+            Widgets.Label(titleRect, RimMindTranslations.Get("RimMind_ChatTitle"));
             Text.Font = GameFont.Small;
 
             // Header buttons — right-aligned
@@ -107,7 +108,7 @@ namespace RimMind.Chat
 
             // Clear button
             btnX -= btnW;
-            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Clear"))
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), RimMindTranslations.Get("RimMind_ChatClear")))
             {
                 chatManager.ClearHistory();
             }
@@ -115,7 +116,7 @@ namespace RimMind.Chat
             // Prompts toggle button
             btnX -= btnW + 4f;
             GUI.color = showPrompts ? new Color(0.9f, 0.8f, 0.5f) : Color.white;
-            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Prompts"))
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), RimMindTranslations.Get("RimMind_ChatPrompts")))
             {
                 showPrompts = !showPrompts;
             }
@@ -125,7 +126,7 @@ namespace RimMind.Chat
             btnX -= btnW + 4f;
             bool autoEnabled = Core.RimMindMod.Settings.enableEventAutomation;
             GUI.color = autoEnabled ? new Color(0.9f, 0.7f, 0.4f) : Color.white;
-            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Auto"))
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), RimMindTranslations.Get("RimMind_ChatAuto")))
             {
                 var existing = Find.WindowStack.WindowOfType<Automation.AutomationSettingsWindow>();
                 if (existing != null)
@@ -139,7 +140,7 @@ namespace RimMind.Chat
             btnX -= 72f + 4f;
             bool hasDirectives = Core.DirectivesTracker.Instance != null && !string.IsNullOrEmpty(Core.DirectivesTracker.Instance.PlayerDirectives);
             GUI.color = hasDirectives ? new Color(0.6f, 0.9f, 0.7f) : Color.white;
-            if (Widgets.ButtonText(new Rect(btnX, btnY, 72f, btnH), "Directives"))
+            if (Widgets.ButtonText(new Rect(btnX, btnY, 72f, btnH), RimMindTranslations.Get("RimMind_ChatDirectives")))
             {
                 var existing = Find.WindowStack.WindowOfType<DirectivesWindow>();
                 if (existing != null)
@@ -151,7 +152,7 @@ namespace RimMind.Chat
 
             // Context button
             btnX -= btnW + 4f;
-            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Context"))
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), RimMindTranslations.Get("RimMind_ChatContext")))
             {
                 var existing = Find.WindowStack.WindowOfType<ContextViewWindow>();
                 if (existing != null)
@@ -167,9 +168,10 @@ namespace RimMind.Chat
                 var tokenRect = new Rect(0f, topOffset, inRect.width, 16f);
                 Text.Font = GameFont.Tiny;
                 GUI.color = new Color(0.55f, 0.55f, 0.55f);
-                string tokenText = "  Tokens: " + FormatTokenCount(chatManager.LastPromptTokens) + " in / "
-                    + FormatTokenCount(chatManager.LastCompletionTokens) + " out ("
-                    + FormatTokenCount(chatManager.LastTotalTokens) + " total)";
+                string tokenText = "  " + RimMindTranslations.Get("RimMind_ChatTokensIn", 
+                    FormatTokenCount(chatManager.LastPromptTokens), 
+                    FormatTokenCount(chatManager.LastCompletionTokens),
+                    FormatTokenCount(chatManager.LastTotalTokens));
                 Widgets.Label(tokenRect, tokenText);
                 Text.Font = GameFont.Small;
                 GUI.color = Color.white;
@@ -213,7 +215,7 @@ namespace RimMind.Chat
 
             // Send button
             bool canSend = !chatManager.IsProcessing && !string.IsNullOrWhiteSpace(inputText);
-            if (Widgets.ButtonText(sendRect, "Send", active: canSend) && canSend)
+            if (Widgets.ButtonText(sendRect, RimMindTranslations.Get("RimMind_ChatSend"), active: canSend) && canSend)
             {
                 SendCurrentMessage();
             }
@@ -260,8 +262,9 @@ namespace RimMind.Chat
                     continue;
 
                 bool isUser = msg.role == "user";
-                string prefix = isUser ? "You: " : "RimMind: ";
-                string displayText = prefix + (msg.content ?? "");
+                string displayText = isUser 
+                    ? RimMindTranslations.Get("RimMind_ChatYou", msg.content ?? "") 
+                    : RimMindTranslations.Get("RimMind_ChatRimMind", msg.content ?? "");
 
                 // Calculate height
                 float textHeight = Text.CalcHeight(displayText, maxWidth - 12f);
@@ -271,7 +274,7 @@ namespace RimMind.Chat
                 Color bgColor = isUser ? new Color(0.2f, 0.25f, 0.35f, 0.9f) : new Color(0.15f, 0.3f, 0.2f, 0.9f);
 
                 // Check for error messages
-                if (!isUser && msg.content != null && msg.content.StartsWith("[Error"))
+                if (!isUser && msg.content != null && msg.content.StartsWith("[Error]"))
                     bgColor = new Color(0.35f, 0.15f, 0.15f, 0.9f);
 
                 Widgets.DrawBoxSolid(bubbleRect, bgColor);
@@ -295,7 +298,7 @@ namespace RimMind.Chat
             // Label
             Text.Font = GameFont.Tiny;
             GUI.color = new Color(0.7f, 0.7f, 0.7f);
-            Widgets.Label(new Rect(outerRect.x + 6f, outerRect.y + 2f, outerRect.width, 16f), "Quick prompts (click to insert):");
+            Widgets.Label(new Rect(outerRect.x + 6f, outerRect.y + 2f, outerRect.width, 16f), RimMindTranslations.Get("RimMind_ChatQuickPrompts"));
             GUI.color = Color.white;
             Text.Font = GameFont.Small;
 
@@ -385,8 +388,9 @@ namespace RimMind.Chat
                 if (msg.role == "assistant" && string.IsNullOrEmpty(msg.content) && msg.tool_calls != null)
                     continue;
 
-                string prefix = msg.role == "user" ? "You: " : "RimMind: ";
-                string displayText = prefix + (msg.content ?? "");
+                string displayText = msg.role == "user" 
+                    ? RimMindTranslations.Get("RimMind_ChatYou", msg.content ?? "") 
+                    : RimMindTranslations.Get("RimMind_ChatRimMind", msg.content ?? "");
                 float textHeight = Text.CalcHeight(displayText, width - 12f);
                 y += textHeight + 12f;
             }

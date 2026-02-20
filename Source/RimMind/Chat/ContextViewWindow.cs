@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using RimMind.API;
 using RimMind.Core;
+using RimMind.Languages;
 using RimMind.Tools;
 using UnityEngine;
 using Verse;
@@ -229,11 +230,11 @@ namespace RimMind.Chat
 
             // Title
             Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0f, 0f, 180f, 30f), "Context Inspector");
+            Widgets.Label(new Rect(0f, 0f, 180f, 30f), RimMindTranslations.Get("RimMind_ContextTitle"));
             Text.Font = GameFont.Small;
 
             // Refresh button
-            if (Widgets.ButtonText(new Rect(inRect.width - 80f, 2f, 70f, 24f), "Refresh"))
+            if (Widgets.ButtonText(new Rect(inRect.width - 80f, 2f, 70f, 24f), RimMindTranslations.Get("RimMind_ContextRefresh")))
             {
                 RebuildAll();
             }
@@ -246,12 +247,13 @@ namespace RimMind.Chat
             int estTokens = totalChars / 4;
 
             GUI.color = new Color(0.9f, 0.85f, 0.6f);
-            string summary = "Total: " + FormatSize(totalChars) + " (~" + FormatTokenCount(estTokens) + " tokens est.)";
+            string summary = RimMindTranslations.Get("RimMind_ContextTotal", FormatSize(totalChars), FormatTokenCount(estTokens));
             if (chatManager.LastTotalTokens > 0)
             {
-                summary += "  |  Last API: " + FormatTokenCount(chatManager.LastPromptTokens) + " in + "
-                    + FormatTokenCount(chatManager.LastCompletionTokens) + " out = "
-                    + FormatTokenCount(chatManager.LastTotalTokens) + " actual";
+                summary += "  |  " + RimMindTranslations.Get("RimMind_ContextLastAPI", 
+                    FormatTokenCount(chatManager.LastPromptTokens), 
+                    FormatTokenCount(chatManager.LastCompletionTokens),
+                    FormatTokenCount(chatManager.LastTotalTokens));
             }
             Widgets.Label(new Rect(4f, y, inRect.width - 8f, 16f), summary);
             GUI.color = Color.white;

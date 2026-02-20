@@ -6,7 +6,7 @@ namespace RimMind.Core
 {
     public class RimMindSettings : ModSettings
     {
-        // Provider: "openrouter" or "anthropic"
+        // Provider: "openrouter", "anthropic", "claudecode", or "custom"
         public string apiProvider = "openrouter";
 
         // OpenRouter settings
@@ -20,6 +20,11 @@ namespace RimMind.Core
         // Claude Code subscription settings
         public string claudeCodeModelId = "claude-haiku-4-5";
 
+        // Custom provider settings (OpenAI-compatible)
+        public string customEndpointUrl = "";
+        public string customApiKey = "";
+        public string customModelId = "";
+
         // Shared settings
         public float temperature = 0.7f;
         public int maxTokens = 4096;
@@ -32,6 +37,7 @@ namespace RimMind.Core
 
         public bool IsAnthropic => apiProvider == "anthropic";
         public bool IsClaudeCode => apiProvider == "claudecode";
+        public bool IsCustom => apiProvider == "custom";
 
         public string ActiveModelId
         {
@@ -39,6 +45,7 @@ namespace RimMind.Core
             {
                 if (IsClaudeCode) return claudeCodeModelId;
                 if (IsAnthropic) return anthropicModelId;
+                if (IsCustom) return customModelId;
                 return modelId;
             }
         }
@@ -51,6 +58,9 @@ namespace RimMind.Core
             Scribe_Values.Look(ref anthropicToken, "anthropicToken", "");
             Scribe_Values.Look(ref anthropicModelId, "anthropicModelId", "claude-haiku-4-5");
             Scribe_Values.Look(ref claudeCodeModelId, "claudeCodeModelId", "claude-haiku-4-5");
+            Scribe_Values.Look(ref customEndpointUrl, "customEndpointUrl", "");
+            Scribe_Values.Look(ref customApiKey, "customApiKey", "");
+            Scribe_Values.Look(ref customModelId, "customModelId", "");
             Scribe_Values.Look(ref temperature, "temperature", 0.7f);
             Scribe_Values.Look(ref maxTokens, "maxTokens", 4096);
             Scribe_Values.Look(ref enableChatCompanion, "enableChatCompanion", true);

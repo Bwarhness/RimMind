@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RimMind.Languages;
 
 namespace RimMind.Automation
 {
@@ -75,21 +76,21 @@ namespace RimMind.Automation
         public static string GetCategory(string eventType)
         {
             if (eventType.Contains("Raid") || eventType.Contains("Siege") || eventType.Contains("Mechanoid"))
-                return "Combat & Threats";
+                return RimMindTranslations.Get("RimMind_CategoryCombat");
             if (eventType.Contains("Fire") || eventType.Contains("Infestation") || eventType.Contains("Toxic") || 
                 eventType.Contains("Solar") || eventType.Contains("Eclipse") || eventType.Contains("Cold") || 
                 eventType.Contains("Heat"))
-                return "Emergencies";
+                return RimMindTranslations.Get("RimMind_CategoryEmergencies");
             if (eventType.Contains("Mental") || eventType.Contains("Disease") || eventType.Contains("Death"))
-                return "Medical & Mental";
+                return RimMindTranslations.Get("RimMind_CategoryMedical");
             if (eventType.Contains("Wanderer") || eventType.Contains("Refugee") || eventType.Contains("Stranger") || 
                 eventType.Contains("Marriage"))
-                return "Social & Events";
+                return RimMindTranslations.Get("RimMind_CategorySocial");
             if (eventType.Contains("Trader") || eventType.Contains("Caravan"))
-                return "Trade & Diplomacy";
+                return RimMindTranslations.Get("RimMind_CategoryTrade");
             if (eventType.Contains("Research"))
-                return "Resources";
-            return "Other";
+                return RimMindTranslations.Get("RimMind_CategoryResources");
+            return RimMindTranslations.Get("RimMind_CategoryOther");
         }
     }
 }

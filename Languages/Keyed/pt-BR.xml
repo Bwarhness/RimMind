@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- RimMind Mod Settings -->
+    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <RimMind_AIProvider>Provedor de IA:</RimMind_AIProvider>
+    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <RimMind_AnthropicDirect>Anthropic (Chave API direta)</RimMind_AnthropicDirect>
+    <RimMind_ClaudeCode>Claude Code (Assinatura Max/Pro)</RimMind_ClaudeCode>
+    <RimMind_CustomProvider>Provedor personalizado (OpenAI-compatible)</RimMind_CustomProvider>
+    <RimMind_CustomProviderSettings>Configurações do provedor personalizado</RimMind_CustomProviderSettings>
+    <RimMind_CustomProviderDesc>Suporta APIs compatíveis com OpenAI (Ollama, LM Studio, Groq, Together, etc.)</RimMind_CustomProviderDesc>
+    <RimMind_EndpointURL>URL do endpoint:</RimMind_EndpointURL>
+    <RimMind_EndpointURLExamples>Exemplos: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <RimMind_APIKeyOptional>Chave API (opcional para LLMs locais):</RimMind_APIKeyOptional>
+    <RimMind_ModelName>Nome do modelo:</RimMind_ModelName>
+    <RimMind_ModelNameExamples>Exemplos: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_ClaudeCodeAvailable>Credenciais do Claude Code detectadas. Sua assinatura será usada automaticamente.</RimMind_ClaudeCodeAvailable>
+    <RimMind_ClaudeCodeNotAvailable>Claude Code não está logado. Execute 'claude login' em um terminal.</RimMind_ClaudeCodeNotAvailable>
+    <RimMind_AnthropicAPIKey>Chave API Anthropic:</RimMind_AnthropicAPIKey>
+    <RimMind_GetAPIKeyAnthropic>Obter uma chave API em console.anthropic.com</RimMind_GetAPIKeyAnthropic>
+    <RimMind_OpenRouterAPIKey>Chave API OpenRouter:</RimMind_OpenRouterAPIKey>
+    <RimMind_GetAPIKeyOpenRouter>Obter uma chave API em openrouter.ai</RimMind_GetAPIKeyOpenRouter>
+    <RimMind_ModelID>ID do modelo (ex: anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <RimMind_ModelIDAnthropic>ID do modelo (ex: claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <RimMind_Temperature>Temperatura: {0}</RimMind_Temperature>
+    <RimMind_MaxTokens>Máx. tokens: {0}</RimMind_MaxTokens>
+    <RimMind_EnableChatCompanion>Ativar companheiro de chat</RimMind_EnableChatCompanion>
+    <RimMind_AutoDetectDirectives>Detectar diretivas automaticamente</RimMind_AutoDetectDirectives>
+    <RimMind_AutoDetectDirectivesDesc>Quando ativado, a IA detectará preferências de estilo de jogo durante a conversa e ofrecerá salvá-las como diretivas de colônia.</RimMind_AutoDetectDirectivesDesc>
+    
+    <!-- Event Automation -->
+    <RimMind_EventAutomation>Automação de eventos</RimMind_EventAutomation>
+    <RimMind_EnableEventAutomation>Ativar automação de eventos</RimMind_EnableEventAutomation>
+    <RimMind_EnableEventAutomationDesc>Quando ativado, o RimMind pode responder automaticamente a eventos do jogo com prompts configurados.</RimMind_EnableEventAutomationDesc>
+    <RimMind_ConfigureAutomationRules>Configurar regras de automação...</RimMind_ConfigureAutomationRules>
+    <RimMind_EventAutomationEnabled>Automação de eventos ativada. Configure as regras abaixo.</RimMind_EventAutomationEnabled>
+    <RimMind_EventAutomationDesc>Quando ativado, o RimMind enviará automaticamente prompts configurados para a IA quando eventos específicos do jogo ocorrerem. Cada evento pode ter um prompt personalizado e um período de cooldown para evitar spam.</RimMind_EventAutomationDesc>
+    <RimMind_SelectEventToConfigure>← Selecione um tipo de evento para configurar a automação</RimMind_SelectEventToConfigure>
+    <RimMind_UseDefault>Usar padrão</RimMind_UseDefault>
+    <RimMind_Clear>Limpar</RimMind_Clear>
+    <RimMind_SaveChanges>Salvar alterações</RimMind_SaveChanges>
+    <RimMind_SavedAutomationRule>Regra de automação salva para {0}</RimMind_SavedAutomationRule>
+    <RimMind_Enabled>Ativado</RimMind_Enabled>
+    <RimMind_Cooldown>Cooldown: {0} segundos</RimMind_Cooldown>
+    <RimMind_CustomPrompt>Prompt personalizado:</RimMind_CustomPrompt>
+    <RimMind_EventActive>Ativo</RimMind_EventActive>
+    <RimMind_EventNoPrompt>Sem prompt</RimMind_EventNoPrompt>
+    
+    <!-- Automation Categories -->
+    <RimMind_CategoryCombat>Combate e ameaças</RimMind_CategoryCombat>
+    <RimMind_CategoryEmergencies>Emergências</RimMind_CategoryEmergencies>
+    <RimMind_CategoryMedical>Médico e mental</RimMind_CategoryMedical>
+    <RimMind_CategorySocial>Social e eventos</RimMind_CategorySocial>
+    <RimMind_CategoryTrade>Comércio e diplomacia</RimMind_CategoryTrade>
+    <RimMind_CategoryResources>Recursos</RimMind_CategoryResources>
+    <RimMind_CategoryOther>Outro</RimMind_CategoryOther>
+    
+    <!-- Chat Window -->
+    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <RimMind_ChatClear>Limpar</RimMind_ChatClear>
+    <RimMind_ChatPrompts>Prompts</RimMind_ChatPrompts>
+    <RimMind_ChatAuto>Auto</RimMind_ChatAuto>
+    <RimMind_ChatDirectives>Diretivas</RimMind_ChatDirectives>
+    <RimMind_ChatContext>Contexto</RimMind_ChatContext>
+    <RimMind_ChatTokensIn>Tokens: {0} entrada / {1} saída ({2} total)</RimMind_ChatTokensIn>
+    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <RimMind_ChatQuickPrompts>Prompts rápidos (clique para inserir):</RimMind_ChatQuickPrompts>
+    <RimMind_ChatSend>Enviar</RimMind_ChatSend>
+    <RimMind_ChatYou>Você: {0}</RimMind_ChatYou>
+    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <RimMind_ChatErrorPrefix>[Erro]</RimMind_ChatErrorPrefix>
+    
+    <!-- Directives Window -->
+    <RimMind_DirectivesTitle>Diretivas de colônia</RimMind_DirectivesTitle>
+    <RimMind_DirectivesDesc>Diga à IA sobre seu estilo de jogo, regras e preferências. Elas serão incluídas em cada interação com a IA.</RimMind_DirectivesDesc>
+    <RimMind_DirectivesChars>Caracteres: {0}</RimMind_DirectivesChars>
+    <RimMind_DirectivesCharsLarge>Caracteres: {0} (texto grande de diretivas pode aumentar o tempo de resposta)</RimMind_DirectivesCharsLarge>
+    <RimMind_DirectivesSave>Salvar</RimMind_DirectivesSave>
+    <RimMind_DirectivesCancel>Cancelar</RimMind_DirectivesCancel>
+    
+    <!-- Context Window -->
+    <RimMind_ContextTitle>Inspetor de contexto</RimMind_ContextTitle>
+    <RimMind_ContextRefresh>Atualizar</RimMind_ContextRefresh>
+    <RimMind_ContextTotal>Total: {0} (~{1} tokens estimados)</RimMind_ContextTotal>
+    <RimMind_ContextLastAPI>Última API: {0} entrada + {1} saída = {2} real</RimMind_ContextLastAPI>
+    <RimMind_ContextTabSystem>Sistema ({0})</RimMind_ContextTabSystem>
+    <RimMind_ContextTabTools>Ferramentas ({0}, {1})</RimMind_ContextTabTools>
+    <RimMind_ContextTabChat>Chat ({0} msgs, {1})</RimMind_ContextTabChat>
+    <RimMind_ContextEmpty>(vazio)</RimMind_ContextEmpty>
+    
+    <!-- Main Button -->
+    <RimMind_MainButton>RimMind</RimMind_MainButton>
+</LanguageData>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimMind.Core;
+using RimMind.Languages;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -56,22 +57,22 @@ namespace RimMind.Automation
 
             var titleRect = new Rect(0f, 0f, inRect.width, 40f);
             Text.Font = GameFont.Medium;
-            Widgets.Label(titleRect, "RimMind Event Automation");
+            Widgets.Label(titleRect, RimMindTranslations.Get("RimMind_EventAutomation"));
             Text.Font = GameFont.Small;
 
             // Enable/disable master toggle
             var masterToggleRect = new Rect(0f, 45f, inRect.width, 30f);
             bool wasEnabled = RimMindMod.Settings.enableEventAutomation;
-            Widgets.CheckboxLabeled(masterToggleRect, "Enable Event Automation (Master Switch)", ref RimMindMod.Settings.enableEventAutomation);
+            Widgets.CheckboxLabeled(masterToggleRect, RimMindTranslations.Get("RimMind_EnableEventAutomation"), ref RimMindMod.Settings.enableEventAutomation);
             
             if (wasEnabled != RimMindMod.Settings.enableEventAutomation && RimMindMod.Settings.enableEventAutomation)
             {
-                Messages.Message("Event automation enabled. Configure rules below.", MessageTypeDefOf.NeutralEvent);
+                Messages.Message(RimMindTranslations.Get("RimMind_EventAutomationEnabled"), MessageTypeDefOf.NeutralEvent);
             }
 
             // Description
             var descRect = new Rect(0f, 80f, inRect.width, 60f);
-            Widgets.Label(descRect, "When enabled, RimMind will automatically send configured prompts to the AI when specific game events occur.\nEach event can have a custom prompt and cooldown period to prevent spam.");
+            Widgets.Label(descRect, RimMindTranslations.Get("RimMind_EventAutomationDesc"));
 
             // Event list area
             var listRect = new Rect(0f, 145f, inRect.width - 320f, inRect.height - 150f);
@@ -166,12 +167,12 @@ namespace RimMind.Automation
             var statusRect = new Rect(rect.x + rect.width - 60f, rect.y + 5f, 55f, rect.height - 10f);
             if (rule.enabled && !string.IsNullOrEmpty(rule.customPrompt))
             {
-                Widgets.Label(statusRect, "Active");
+                Widgets.Label(statusRect, RimMindTranslations.Get("RimMind_EventActive"));
             }
             else if (rule.enabled)
             {
                 GUI.color = Color.yellow;
-                Widgets.Label(statusRect, "No prompt");
+                Widgets.Label(statusRect, RimMindTranslations.Get("RimMind_EventNoPrompt"));
                 GUI.color = Color.white;
             }
         }
@@ -183,7 +184,7 @@ namespace RimMind.Automation
                 Widgets.DrawBoxSolid(rect, new Color(0.1f, 0.1f, 0.1f, 0.5f));
                 var hintRect = rect.ContractedBy(10f);
                 Text.Anchor = TextAnchor.MiddleCenter;
-                Widgets.Label(hintRect, "← Select an event type\nto configure automation");
+                Widgets.Label(hintRect, RimMindTranslations.Get("RimMind_SelectEventToConfigure"));
                 Text.Anchor = TextAnchor.UpperLeft;
                 return;
             }
@@ -204,18 +205,18 @@ namespace RimMind.Automation
 
             // Enabled toggle
             var rule = RimMindMod.Settings.automationRules[selectedEventType];
-            Widgets.CheckboxLabeled(new Rect(0f, curY, w, 30f), "Enabled", ref rule.enabled);
+            Widgets.CheckboxLabeled(new Rect(0f, curY, w, 30f), RimMindTranslations.Get("RimMind_Enabled"), ref rule.enabled);
             curY += 35f;
 
             // Cooldown setting
-            Widgets.Label(new Rect(0f, curY, w, 25f), $"Cooldown: {editingCooldown} seconds");
+            Widgets.Label(new Rect(0f, curY, w, 25f), RimMindTranslations.Get("RimMind_Cooldown", editingCooldown.ToString()));
             curY += 25f;
 
             editingCooldown = Mathf.RoundToInt(Widgets.HorizontalSlider(new Rect(0f, curY, w, 25f), editingCooldown, 10f, 300f, true, null, "10s", "300s"));
             curY += 30f;
 
             // Custom prompt label
-            Widgets.Label(new Rect(0f, curY, w, 25f), "Custom Prompt:");
+            Widgets.Label(new Rect(0f, curY, w, 25f), RimMindTranslations.Get("RimMind_CustomPrompt"));
             curY += 25f;
 
             // Prompt text area
@@ -227,25 +228,25 @@ namespace RimMind.Automation
             curY = h - 75f;
 
             // Use default button
-            if (Widgets.ButtonText(new Rect(0f, curY, w / 2f - 5f, 30f), "Use Default"))
+            if (Widgets.ButtonText(new Rect(0f, curY, w / 2f - 5f, 30f), RimMindTranslations.Get("RimMind_UseDefault")))
             {
                 editingPrompt = DefaultAutomationPrompts.Get(selectedEventType);
             }
 
             // Clear button
-            if (Widgets.ButtonText(new Rect(w / 2f + 5f, curY, w / 2f - 5f, 30f), "Clear"))
+            if (Widgets.ButtonText(new Rect(w / 2f + 5f, curY, w / 2f - 5f, 30f), RimMindTranslations.Get("RimMind_Clear")))
             {
                 editingPrompt = "";
             }
             curY += 35f;
 
             // Save button
-            if (Widgets.ButtonText(new Rect(0f, curY, w, 30f), "Save Changes"))
+            if (Widgets.ButtonText(new Rect(0f, curY, w, 30f), RimMindTranslations.Get("RimMind_SaveChanges")))
             {
                 rule.customPrompt = editingPrompt;
                 rule.cooldownSeconds = editingCooldown;
                 RimMindMod.Settings.Write();
-                Messages.Message($"Saved automation rule for {selectedEventType}", MessageTypeDefOf.TaskCompletion);
+                Messages.Message(RimMindTranslations.Get("RimMind_SavedAutomationRule", selectedEventType), MessageTypeDefOf.TaskCompletion);
             }
 
             GUI.EndGroup();
