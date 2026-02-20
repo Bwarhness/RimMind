@@ -311,8 +311,8 @@ namespace RimMind.Tools
             if (pawn.InMentalState)
                 return "critical";
 
-            // Check for mental break threshold
-            var mentalBreakChance = pawn.mindState?.mentalBreakManager?.MentalBreakManager?.def?.baseMentalBreakChance ?? 0;
+            // Check for mental break threshold via pawn's mindState
+            var mentalBreakChance = pawn.mindState?.mentalBreakManager?.def?.baseMentalBreakChance ?? 0;
             var recentBreaks = pawn.mindState?.mentalStateHandler?.RecentMentalBreaks ?? 0;
 
             if (recentBreaks > 0 || mentalBreakChance > 0.3f)
