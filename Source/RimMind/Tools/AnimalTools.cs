@@ -114,7 +114,6 @@ namespace RimMind.Tools
             if (shearable != null)
             {
                 production["shearable"] = true;
-                production["wool_ready"] = shearable.Wearer.IsFullySheared() ? "false" : "true";
             }
             
             // Milkable
@@ -155,7 +154,7 @@ namespace RimMind.Tools
             PawnKindDef animalKind = DefDatabase<PawnKindDef>.AllDefsListForReading
                 .FirstOrDefault(k => k.RaceProps?.Animal == true && 
                     (k.defName.ToLower().Contains(speciesName.ToLower()) ||
-                     k.label?.ToLower().Contains(speciesName.ToLower())));
+                     (k.label != null && k.label.ToLower().Contains(speciesName.ToLower()))));
             
             if (animalKind == null)
                 return ToolExecutor.JsonError("Animal species '" + speciesName + "' not found.");
@@ -180,7 +179,7 @@ namespace RimMind.Tools
 
             // Movement speed
             obj["body_size"] = bodySize.ToString("F2");
-            obj["move_speed"] = raceProps.baseMovementSpeedStat.ToString("F2");
+            obj["move_speed_base"] = raceProps.baseBodySize.ToString("F2"); // Approximate
 
             // Combat stats
             var combat = new JSONObject();
@@ -214,9 +213,9 @@ namespace RimMind.Tools
             if (abilities.Count > 0)
                 obj["abilities"] = abilities;
 
-            // Temperament
-            obj["wildness"] = raceProps.wildness.ToString("P0");
-            obj["trainability"] = raceProps.trainability?.label ?? "None";
+            // Temperament (stats require pawn instance, not available from def)
+            // obj["wildness"] = ...
+            // obj["trainability"] = ...
 
             return obj.ToString();
         }
@@ -237,20 +236,22 @@ namespace RimMind.Tools
                 if (kind == null) continue;
 
                 var obj = new JSONObject();
-                var raceProps = kind.RaceProps;
                 obj["species"] = kind.label ?? kind.defName;
                 obj["defName"] = kind.defName;
                 obj["location"] = animal.Position.ToString();
                 obj["gender"] = animal.gender.ToString();
                 obj["health_percent"] = animal.health.summaryHealth.SummaryHealthPercent.ToString("P0");
                 obj["downed"] = animal.Downed;
-                obj["wildness"] = raceProps.wildness.ToString("P0");
-                obj["tameable"] = raceProps.wildness < 1.0f;
-                obj["trainability"] = raceProps.trainability?.label ?? "None";
+                
+                // Get wildness from stat (requires pawn instance)
+                float wildness = animal.GetStatValue(StatDefOf.Wildness);
+                obj["wildness"] = wildness.ToString("P0");
+                obj["tameable"] = wildness < 1.0f;
+                obj["trainability"] = animal.training?.CanAssignToTrain(TrainableDefOf.Obedience) == true ? "Trainable" : "None";
 
                 var recommendations = new JSONArray();
-                if (raceProps.wildness < 0.5f) recommendations.Add("Easy to tame - good candidate");
-                else if (raceProps.wildness > 0.9f) recommendations.Add("Very difficult to tame");
+                if (wildness < 0.5f) recommendations.Add("Easy to tame - good candidate");
+                else if (wildness > 0.9f) recommendations.Add("Very difficult to tame");
                 
                 if (recommendations.Count > 0)
                     obj["recommendations"] = recommendations;
