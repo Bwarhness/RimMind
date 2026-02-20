@@ -63,7 +63,7 @@ namespace RimMind.Tools
                 .Count(b => b.Medical);
             int freeMedBeds = map.listerBuildings.allBuildingsColonist
                 .OfType<Building_Bed>()
-                .Count(b => b.Medical && !b.AnyOccupants);
+                .Count(b => b.Medical && !b.HasAnyDynamicPawn());
             obj["medicalBeds"] = medBeds;
             obj["freeMedicalBeds"] = freeMedBeds;
 
@@ -123,11 +123,20 @@ namespace RimMind.Tools
                             disease["name"] = hediff.def.label;
                             disease["severity"] = hediff.Severity.ToString("0.0");
                             
-                            // Try to get immunity data if available
-                            if (hediff.TryGetProperty("immunity", out float immunity))
+                            // Try to get immunity data from hediff comps
+                            float? immunity = null;
+                            if (hediff is HediffWithComps hwc)
                             {
-                                disease["immunityProgress"] = immunity.ToString("P0");
-                                disease["immune"] = immunity >= 1.0f;
+                                var immunityComp = hwc.GetComp<HediffComp_Immunizable>();
+                                if (immunityComp != null)
+                                {
+                                    immunity = immunityComp.Immunity;
+                                }
+                            }
+                            if (immunity.HasValue)
+                            {
+                                disease["immunityProgress"] = immunity.Value.ToString("P0");
+                                disease["immune"] = immunity.Value >= 1.0f;
                             }
                             else
                             {
@@ -270,7 +279,8 @@ namespace RimMind.Tools
             // Find all tended injuries that might need surgery
             foreach (var hediff in pawn.health.hediffSet.hediffs)
             {
-                if (hediff is Hediff_Injury injury && injury.IsTended() && injury.def.surgeryLiegeTime > 0)
+                // Check for injuries that need tending and may require surgery
+                if (hediff is Hediff_Injury injury && injury.IsTended() && injury.def.tendable)
                 {
                     var surgery = new JSONObject();
                     surgery["type"] = hediff.def.label;
