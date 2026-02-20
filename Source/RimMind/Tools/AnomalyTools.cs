@@ -16,6 +16,10 @@ namespace RimMind.Tools
         /// </summary>
         public static string GetAnomalyEntities(string entityType = null)
         {
+            // Check if Anomaly DLC is active
+            if (!ModsConfig.AnomalyActive)
+                return ToolExecutor.JsonError("Anomaly DLC is not active.");
+
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
 
@@ -41,7 +45,7 @@ namespace RimMind.Tools
                 entity["defName"] = thing.def.defName;
                 entity["label"] = thing.LabelCap ?? thing.def.label;
                 entity["position"] = $"{thing.Position.x}, {thing.Position.z}";
-                entity["tile"] = thing.Position.GetTile(map);
+                entity["tile"] = map.WorldGrid[thing.Position].index;
 
                 // Entity type classification
                 entity["entityType"] = ClassifyEntityType(thing.def.defName);
@@ -70,6 +74,10 @@ namespace RimMind.Tools
         /// </summary>
         public static string GetContainmentStatus()
         {
+            // Check if Anomaly DLC is active
+            if (!ModsConfig.AnomalyActive)
+                return ToolExecutor.JsonError("Anomaly DLC is not active.");
+
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
 
@@ -107,7 +115,7 @@ namespace RimMind.Tools
                 totalCapacity++;
 
                 // Check if occupied
-                if (!building.AnyOccupants)
+                if (!building.HasAnyDynamicPawn())
                 {
                     b["occupied"] = false;
                 }
@@ -165,6 +173,10 @@ namespace RimMind.Tools
         /// </summary>
         public static string AnalyzeEntityInteractions()
         {
+            // Check if Anomaly DLC is active
+            if (!ModsConfig.AnomalyActive)
+                return ToolExecutor.JsonError("Anomaly DLC is not active.");
+
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
 
