@@ -243,6 +243,13 @@ namespace RimMind.Tools
             // Social Tools
             tools.Add(MakeTool("get_social_risks", "Detect social conflicts between colonists. Finds colonist pairs with negative opinions (< -20), calculates mutual hostility, identifies risk-affecting traits (Abrasive, Volatile, Bloodlust, Psychopath), and provides intervention suggestions (separate work areas, avoid shared recreation, etc.). Use this to prevent social fights and optimize colonist interactions."));
 
+            // Joy & Recreation Tools
+            tools.Add(MakeTool("get_joy_saturation", "Get joy type saturation levels for all colonists. Returns current joy level, joy category (Low/Satisfied/High), per-JoyKind tolerance levels (0-100%), saturated types (>80%), and joy-affected traits. Use this to understand recreation satisfaction and identify colonists who need specific types of recreation.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results. If omitted, returns all colonists.")));
+            tools.Add(MakeTool("analyze_recreation_diversity", "Analyze colony recreation diversity and identify gaps. Returns available joy sources by type, missing joy types, colonists with high saturation (>80%), and specific building recommendations for each missing type. Use this to plan recreation improvements and prevent recreation-related mood issues."));
+            tools.Add(MakeTool("recommend_joy_activities", "Recommend specific joy activities for a colonist based on their current saturation levels. Returns current saturation levels, non-saturated joy types, available activities from nearby buildings, and missing recreation types for this colonist.",
+                MakeParam("pawn_name", "string", "The colonist's name to get recommendations for")));
+
             // Environment Tools
             tools.Add(MakeTool("get_environment_quality", "Score each room for beauty, cleanliness, space, and impressiveness. Flags rooms causing negative thoughts, identifies specific issues (poor lighting, extreme temperature, low beauty, cramped space), and suggests concrete improvements (add sculptures, install heaters, expand room, clean floors). Use this for root cause analysis of mood problems and to optimize room quality."));
 
@@ -323,6 +330,18 @@ namespace RimMind.Tools
             // World & Diplomacy Tools
             tools.Add(MakeTool("list_world_destinations", "List all world settlements that can be visited by caravan, with distances and faction relations."));
             tools.Add(MakeTool("get_caravan_info", "Get info about available colonists and animals for caravan formation. Note: Actual caravan formation requires manual player action."));
+            tools.Add(MakeTool("analyze_caravan_capacity", "Calculate caravan carrying capacity and current load. Returns total capacity, current mass, overload percentage, travel speed impact, and recommendations. Use this to diagnose why caravans are slow or can't carry more.",
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID (defaults to active caravan)")));
+            tools.Add(MakeTool("predict_caravan_travel", "Predict travel time and encounter risks for a caravan route. Returns estimated days, biomes crossed, encounter probability, and ambush risk. Use this to plan safe caravan trips.",
+                MakeOptionalParam("destination_tile", "string", "Destination tile ID"),
+                MakeOptionalParam("destination_name", "string", "Destination settlement name (alternative to tile)"),
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID")));
+            tools.Add(MakeTool("optimize_caravan_composition", "Suggest optimal caravan composition for a destination based on purpose. Returns recommended colonists, pack animals, supplies, and mass budget. Use this to plan efficient caravans.",
+                MakeParam("destination", "string", "Destination settlement name or tile"),
+                MakeOptionalParam("purpose", "string", "Purpose: 'trade', 'rescue', or 'raid'. Default: 'trade'"),
+                MakeOptionalParam("max_colonists", "integer", "Maximum colonists to include (optional)")));
+            tools.Add(MakeTool("get_trade_settlement_info", "Get detailed info on nearby tradeable settlements. Returns settlement names, factions, distances, trade inventory potential, and faction relations. Use this to find trade partners.",
+                MakeOptionalParam("max_distance_tiles", "integer", "Maximum search radius in tiles (default: 20)")));
             tools.Add(MakeTool("get_trade_status", "Check if a trade session is currently active with a visiting trader."));
             tools.Add(MakeTool("list_trader_inventory", "List items available from current visiting trader. Requires active trade session."));
             tools.Add(MakeTool("list_factions", "List all known factions with their relation status and goodwill."));
