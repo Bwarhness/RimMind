@@ -29,6 +29,10 @@ namespace RimMind.Tools
             var result = new JSONObject();
             var prisonerList = new JSONArray();
 
+            // Get wardens once for efficiency
+            var wardens = GetAvailableWardens();
+            float bestWarden = wardens.Count > 0 ? wardens[0].skills?.GetSkill(SkillDefOf.Social)?.Level ?? 0f : 0f;
+
             foreach (var prisoner in prisoners)
             {
                 var p = new JSONObject();
@@ -44,8 +48,6 @@ namespace RimMind.Tools
 
                 // Estimated recruitment time (days)
                 // Rough estimate: resistance / (warden_social * 0.3 + 1)
-                var wardens = GetAvailableWardens();
-                float bestWarden = wardens.Count > 0 ? wardens[0].socialSkill : 0f;
                 float daysToRecruit = (prisoner.guest?.Resistance ?? 0) / (bestWarden * 0.3f + 1f);
                 p["estimated_days_to_recruit"] = daysToRecruit.ToString("F1");
 
@@ -61,9 +63,8 @@ namespace RimMind.Tools
             result["prisoners"] = prisonerList;
             result["count"] = prisonerList.Count;
 
-            // Warden info
+            // Warden info - reuse already fetched wardens
             var wardenInfo = new JSONObject();
-            var wardens = GetAvailableWardens();
             wardenInfo["count"] = wardens.Count;
             var wardenList = new JSONArray();
             foreach (var w in wardens)
@@ -139,8 +140,9 @@ namespace RimMind.Tools
                 // Health
                 s["health_percent"] = slave.health.summaryHealth.SummaryHealthPercent.ToString("P0");
 
-                // Work
-                s["work_type"] = slave.workSettings?.CurrentWork.ToString() ?? "None";
+                // Work - check if assigned to warden work
+                bool isWardening = slave.workSettings?.GetPriority(WorkTypeDefOf.Warden) > 0;
+                s["work_type"] = isWardening ? "Warden" : "None";
 
                 slaveList.Add(s);
             }
@@ -301,7 +303,7 @@ namespace RimMind.Tools
             if (map == null) return new List<Pawn>();
 
             return map.mapPawns.PawnsInFaction(Faction.OfPlayer)
-                .Where(p => p.workSettings?.CurrentWork == WorkTypeDefOf.Warden && p.Spawned)
+                .Where(p => p.workSettings?.GetPriority(WorkTypeDefOf.Warden) > 0 && p.Spawned)
                 .OrderByDescending(p => p.skills?.GetSkill(SkillDefOf.Social)?.Level ?? 0)
                 .ToList();
         }
@@ -312,7 +314,8 @@ namespace RimMind.Tools
                 return "critical";
 
             // Check for mental break threshold via pawn's mindState
-            var mentalBreakChance = pawn.mindState?.mentalBreakManager?.def?.baseMentalBreakChance ?? 0;
+            var mentalBreaker = pawn.mindState?.mentalBreaker;
+            var mentalBreakChance = mentalBreaker?.CurrentTakeDamage ?? 0;
             var recentBreaks = pawn.mindState?.mentalStateHandler?.RecentMentalBreaks ?? 0;
 
             if (recentBreaks > 0 || mentalBreakChance > 0.3f)
