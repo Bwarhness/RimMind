@@ -213,9 +213,9 @@ namespace RimMind.Chat
             {
                 if (Find.CurrentMap != null)
                 {
-                    var camPos = Find.CameraDriver.MapPosition.ToIntVec3();
-                    regionX = Math.Max(0, (int)camPos.x - regionW / 2);
-                    regionZ = Math.Max(0, (int)camPos.z - regionH / 2);
+                    var camPos = Find.CameraDriver.MapPosition;
+                    regionX = Math.Max(0, camPos.x - regionW / 2);
+                    regionZ = Math.Max(0, camPos.z - regionH / 2);
                     RefreshGrid();
                 }
             }
@@ -275,7 +275,7 @@ namespace RimMind.Chat
             // Parse the JSON grid
             try
             {
-                var json = JSON.Parse(cachedGrid);
+                var json = JSONNode.Parse(cachedGrid);
                 var gridNode = json["grid"];
                 if (gridNode == null || !gridNode.AsArray)
                 {
