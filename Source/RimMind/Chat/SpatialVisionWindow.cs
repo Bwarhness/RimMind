@@ -217,7 +217,7 @@ namespace RimMind.Chat
             {
                 if (Find.CurrentMap != null)
                 {
-                    var camPos = Find.CameraDriver.Position;
+                    var camPos = Find.CameraDriver.MapPosition;
                     regionX = Math.Max(0, (int)camPos.x - regionW / 2);
                     regionZ = Math.Max(0, (int)camPos.z - regionH / 2);
                     RefreshGrid();
@@ -279,15 +279,7 @@ namespace RimMind.Chat
             // Parse the JSON grid
             try
             {
-                var json = SimpleJSON.JSON.Parse(cachedGrid);
-                var gridNode = json["grid"];
-                if (gridNode == null || !gridNode.AsArray)
-                {
-                    Widgets.Label(rect.ContractedBy(10f), "No grid data");
-                    return;
-                }
-                
-                var grid = gridNode.AsArray;
+                var grid = ParseGrid(cachedGrid);
                 if (grid == null || grid.Count == 0)
                 {
                     Widgets.Label(rect.ContractedBy(10f), "No grid data");
@@ -295,7 +287,7 @@ namespace RimMind.Chat
                 }
                 
                 float gridHeight = grid.Count * cellSize;
-                float gridWidth = grid[0].AsArray.Count * cellSize;
+                float gridWidth = (grid.Count > 0 ? grid[0].Count : 0) * cellSize;
                 
                 var viewRect = new Rect(0f, 0f, gridWidth, gridHeight);
                 Widgets.BeginScrollView(rect, ref scrollPosition, viewRect);
@@ -303,14 +295,9 @@ namespace RimMind.Chat
                 float y = 0f;
                 foreach (var row in grid)
                 {
-                    var rowArray = row.AsArray;
-                    if (rowArray == null) continue;
-                    
                     float x = 0f;
-                    
-                    foreach (var cell in rowArray)
+                    foreach (var cellStr in row)
                     {
-                        string cellStr = cell.Value ?? " ";
                         char code = cellStr.Length > 0 ? cellStr[0] : ' ';
                         Color cellColor = GetColorForSymbol(code, activeTab);
                         
@@ -318,7 +305,7 @@ namespace RimMind.Chat
                         Widgets.DrawBoxSolid(cellRect, cellColor);
                         
                         // Draw cell border
-                        Widgets.DrawBox(cellRect, 1f, Color.black);
+                        Widgets.DrawBox(cellRect, 1);
                         
                         x += cellSize;
                     }
@@ -388,5 +375,48 @@ namespace RimMind.Chat
                 default: return currentMapColors;
             }
         }
+        /// <summary>
+        /// Minimal JSON grid parser - parses {"grid":[["a","b",...], ...]} format
+        /// </summary>
+        private static System.Collections.Generic.List<System.Collections.Generic.List<string>> ParseGrid(string json)
+        {
+            var result = new System.Collections.Generic.List<System.Collections.Generic.List<string>>();
+            if (string.IsNullOrEmpty(json)) return result;
+            
+            int gridStart = json.IndexOf(""grid":");
+            if (gridStart < 0) return result;
+            
+            int outerArrayStart = json.IndexOf('[', gridStart);
+            if (outerArrayStart < 0) return result;
+            
+            int pos = outerArrayStart + 1;
+            while (pos < json.Length)
+            {
+                // Skip whitespace and commas between rows
+                while (pos < json.Length && json[pos] != '[' && json[pos] != ']') pos++;
+                if (pos >= json.Length || json[pos] == ']') break;
+                
+                pos++; // skip row '['
+                var row = new System.Collections.Generic.List<string>();
+                
+                while (pos < json.Length && json[pos] != ']')
+                {
+                    if (json[pos] == '"')
+                    {
+                        pos++; // skip opening quote
+                        int end = json.IndexOf('"', pos);
+                        if (end < 0) { row.Add(" "); break; }
+                        row.Add(json.Substring(pos, end - pos));
+                        pos = end + 1;
+                    }
+                    else pos++;
+                }
+                if (pos < json.Length) pos++; // skip row ']'
+                
+                if (row.Count > 0) result.Add(row);
+            }
+            return result;
+        }
+
     }
 }
