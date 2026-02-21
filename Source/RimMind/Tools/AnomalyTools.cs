@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using RimMind.API;
 using RimWorld;
 using Verse;
@@ -45,7 +46,7 @@ namespace RimMind.Tools
                 entity["defName"] = thing.def.defName;
                 entity["label"] = thing.LabelCap ?? thing.def.label;
                 entity["position"] = $"{thing.Position.x}, {thing.Position.z}";
-                entity["tile"] = map.Tile;
+                entity["tile"] = (int)map.Tile;
 
                 // Entity type classification
                 entity["entityType"] = ClassifyEntityType(thing.def.defName);
@@ -83,10 +84,10 @@ namespace RimMind.Tools
 
             var result = new JSONObject();
 
-            // Find containment buildings
+            // Find containment buildings using reflection to avoid CompContainment compile dependency
             var containmentBuildings = map.listerBuildings.allBuildingsColonist
-                .Where(b => b.def.defName.Contains("Containment") || 
-                           b.def.HasComp(typeof(CompContainment)))
+                .Where(b => b.def.defName.Contains("Containment") ||
+                           HasContainmentComp(b))
                 .ToList();
 
             var buildings = new JSONArray();
@@ -98,46 +99,29 @@ namespace RimMind.Tools
                 var b = new JSONObject();
                 b["defName"] = building.def.defName;
                 b["position"] = $"{building.Position.x}, {building.Position.z}";
-                
-                // Get containment-related properties
-                if (building is Building buildingWithComp)
+
+                // Try to get containment comp via reflection (Anomaly DLC only)
+                bool occupiedSet = TryGetContainmentInfo(building, out string strength, out bool occupied);
+                if (occupiedSet)
                 {
-                    var comp = buildingWithComp.GetComp<CompContainment>();
-                    if (comp != null)
-                    {
-                        b["containmentStrength"] = comp.ContainmentStrength.ToString("0");
-                        b["occupied"] = comp.Occupied;
-                    }
-                    else
-                    {
-                        // Fallback: check if building has any pawns inside
-                        b["occupied"] = building.HasAnyDynamicPawn();
-                    }
+                    b["containmentStrength"] = strength;
+                    b["occupied"] = occupied;
+                }
+                else
+                {
+                    // Fallback: check if building has any pawns nearby
+                    bool hasOccupant = building.HasAnyDynamicPawn();
+                    b["occupied"] = hasOccupant;
                 }
 
                 // Try to get capacity from def
                 b["capacity"] = "1"; // Each containment building holds 1
                 totalCapacity++;
 
-                // Check if occupied (if not already set by comp)
-                if (!b.ContainsKey("occupied"))
-                {
-                    if (!building.HasAnyDynamicPawn())
-                    {
-                        b["occupied"] = false;
-                    }
-                    else
-                    {
-                        b["occupied"] = true;
-                        currentOccupancy++;
-                    }
-                }
-                else
-                {
-                    // Already set by comp, count it
-                    if (b["occupied"] == true)
-                        currentOccupancy++;
-                }
+                // Count occupancy
+                bool isOccupied = b["occupied"].AsBool;
+                if (isOccupied)
+                    currentOccupancy++;
 
                 buildings.Add(b);
             }
@@ -147,15 +131,18 @@ namespace RimMind.Tools
             result["currentOccupancy"] = currentOccupancy;
             result["availableSpace"] = totalCapacity - currentOccupancy;
 
-            // Find contained entities
+            // Find contained entities - use AllPawnsUnspawned which includes pawns in containers
             var containedEntities = new JSONArray();
-            foreach (var pawn in map.mapPawns.PawnsInSpawnedContainers)
+            foreach (var pawn in map.mapPawns.AllPawnsUnspawned)
             {
-                var entity = new JSONObject();
-                entity["name"] = pawn.Name?.ToStringShort ?? pawn.def.label;
-                entity["type"] = pawn.def.defName;
-                entity["contained"] = true;
-                containedEntities.Add(entity);
+                if (pawn.ParentHolder is Building_Casket || pawn.ParentHolder is Building)
+                {
+                    var entity = new JSONObject();
+                    entity["name"] = pawn.Name?.ToStringShort ?? pawn.def.label;
+                    entity["type"] = pawn.def.defName;
+                    entity["contained"] = true;
+                    containedEntities.Add(entity);
+                }
             }
             result["containedEntities"] = containedEntities;
 
@@ -164,7 +151,7 @@ namespace RimMind.Tools
             foreach (var thing in map.listerThings.AllThings)
             {
                 if (!IsAnomalyEntity(thing)) continue;
-                
+
                 // Check if this entity is contained
                 bool isContained = IsEntityContained(thing);
                 if (!isContained)
@@ -203,9 +190,9 @@ namespace RimMind.Tools
             foreach (var entity in allEntities)
             {
                 string type = ClassifyEntityType(entity.def.defName);
-                if (!entityGroups.ContainsKey(type))
+                if (!entityGroups.HasKey(type))
                     entityGroups[type] = new JSONArray();
-                
+
                 ((JSONArray)entityGroups[type]).Add(entity.def.defName);
             }
             result["entityGroups"] = entityGroups;
@@ -218,7 +205,7 @@ namespace RimMind.Tools
                 {
                     var e1 = allEntities[i];
                     var e2 = allEntities[j];
-                    
+
                     float dist = (e1.Position - e2.Position).LengthHorizontal;
                     if (dist < 10) // Too close
                     {
@@ -253,6 +240,47 @@ namespace RimMind.Tools
         }
 
         // Helper methods
+
+        /// <summary>Check if a building has a CompContainment via reflection (Anomaly DLC)</summary>
+        private static bool HasContainmentComp(Building building)
+        {
+            if (building.comps == null) return false;
+            return building.comps.Any(c => c.GetType().Name == "CompContainment");
+        }
+
+        /// <summary>Try to get containment info via reflection; returns true if found</summary>
+        private static bool TryGetContainmentInfo(Building building, out string strength, out bool occupied)
+        {
+            strength = "0";
+            occupied = false;
+
+            if (building.comps == null) return false;
+
+            var comp = building.comps.FirstOrDefault(c => c.GetType().Name == "CompContainment");
+            if (comp == null) return false;
+
+            try
+            {
+                var compType = comp.GetType();
+                var strengthProp = compType.GetProperty("ContainmentStrength",
+                    BindingFlags.Public | BindingFlags.Instance);
+                var occupiedProp = compType.GetProperty("Occupied",
+                    BindingFlags.Public | BindingFlags.Instance);
+
+                if (strengthProp != null)
+                    strength = (strengthProp.GetValue(comp) as float?)?.ToString("0") ?? "0";
+                if (occupiedProp != null)
+                    occupied = (bool)(occupiedProp.GetValue(comp) ?? false);
+            }
+            catch
+            {
+                // Reflection failed; fall back to defaults
+                return false;
+            }
+
+            return true;
+        }
+
         private static bool IsAnomalyEntity(Thing thing)
         {
             if (thing == null) return false;
@@ -264,8 +292,8 @@ namespace RimMind.Tools
                    defName.Contains("Monolith") ||
                    defName.Contains("Obelisk") ||
                    defName.Contains("Pylon") ||
-                   defName.Contains("Corpse") && thing.def.defName.Contains("Human") && 
-                   thing.def.defName.Contains("Anima") ||
+                   (defName.Contains("Corpse") && defName.Contains("Human") &&
+                   defName.Contains("Anima")) ||
                    defName.Contains("Anomaly") ||
                    thing.def?.thingCategories?.Any(c => c.defName.Contains("Anomaly")) == true;
         }
@@ -282,10 +310,10 @@ namespace RimMind.Tools
 
         private static (string level, string status) GetContainmentStatus(Thing thing)
         {
-            // Check if thing is inside a container
+            // Check if thing is inside a container (Building_Casket with containment comp)
             if (thing?.ParentHolder is Building_Casket casket)
             {
-                if (casket.HasComp<CompContainment>())
+                if (HasContainmentComp(casket))
                 {
                     return ("high", "Contained");
                 }
