@@ -97,8 +97,7 @@ namespace RimMind.Tools
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
-            { "get_animal_stats", args => AnimalTools.GetAnimalStats(args?["speciesName"]?.Value) },
-            { "get_wild_animals", args => AnimalTools.GetWildAnimals() },
+            // Note: get_animal_stats and get_wild_animals pending implementation in AnimalTools
 
             // Ideology DLC
             { "get_ideology_info", args => IdeologyTools.GetIdeologyInfo() },
