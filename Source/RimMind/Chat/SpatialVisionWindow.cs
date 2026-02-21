@@ -301,14 +301,14 @@ namespace RimMind.Chat
                 Widgets.BeginScrollView(rect, ref scrollPosition, viewRect);
                 
                 float y = 0f;
-                foreach (var row in grid)
+                foreach (JSONNode row in grid)
                 {
                     var rowArray = row.AsArray;
                     if (rowArray == null) continue;
                     
                     float x = 0f;
                     
-                    foreach (var cell in rowArray)
+                    foreach (JSONNode cell in rowArray)
                     {
                         string cellStr = cell.Value ?? " ";
                         char code = cellStr.Length > 0 ? cellStr[0] : ' ';
