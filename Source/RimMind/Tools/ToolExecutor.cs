@@ -58,7 +58,12 @@ namespace RimMind.Tools
             { "get_threats", args => MilitaryTools.GetThreats() },
             { "get_defenses", args => MilitaryTools.GetDefenses() },
             { "get_combat_readiness", args => MilitaryTools.GetCombatReadiness() },
-            
+
+            // Anomaly DLC Integration
+            { "get_anomaly_entities", args => AnomalyTools.GetAnomalyEntities(args?["entity_type"]?.Value) },
+            { "get_containment_status", args => AnomalyTools.GetContainmentStatus() },
+            { "analyze_entity_interactions", args => AnomalyTools.AnalyzeEntityInteractions() },
+
             // Combat Intelligence (Phase 5)
             { "get_weapon_stats", args => CombatTools.GetWeaponStats(args?["pawnName"]?.Value) },
             { "get_armor_stats", args => CombatTools.GetArmorStats(args?["pawnName"]?.Value) },
