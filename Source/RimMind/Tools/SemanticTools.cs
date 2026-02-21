@@ -8,6 +8,15 @@ using Verse;
 
 namespace RimMind.Tools
 {
+    /// <summary>
+    /// Semantic and Query Architecture for Building (Issue #94)
+    /// 
+    /// Implements:
+    /// - Week 1: Semantic Generator (GetSemanticOverview)
+    /// - Week 2: Query Tools (find_buildable_area, check_placement, get_requirements)
+    /// - Week 3: Integration (semantic overview injected into prompt context)
+    /// - Week 4: Polish
+    /// </summary>
     public static class SemanticTools
     {
         /// <summary>
