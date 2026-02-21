@@ -35,29 +35,23 @@ namespace RimMind.Tools
                 joyObject["currentJoyValue"] = needJoy.CurLevel.ToString("0.00");
 
                 // Joy category (Low/Satisfied/High)
+                // RimWorld JoyCategory values: Empty, VeryLow, Low, Satisfied, High, Extreme
                 string category = "Satisfied";
-                if (needJoy.CurCategory == JoyCategory.ExtremelyLow || needJoy.CurCategory == JoyCategory.VeryLow)
+                if (needJoy.CurCategory == JoyCategory.Empty || needJoy.CurCategory == JoyCategory.VeryLow)
                     category = "Low";
-                else if (needJoy.CurCategory == JoyCategory.High || needJoy.CurCategory == JoyCategory.ExtremelyHigh)
+                else if (needJoy.CurCategory == JoyCategory.High || needJoy.CurCategory == JoyCategory.Extreme)
                     category = "High";
                 joyObject["joyCategory"] = category;
 
-                // Joy tolerances (saturation levels per JoyKind)
+                // Joy tolerances (saturation levels per JoyKind) - enumerate all defined joy kinds
                 var tolerances = new JSONObject();
                 var tolerancesSet = needJoy.tolerances;
                 if (tolerancesSet != null)
                 {
-                    // RimWorld has these joy kinds: Cerebral, Chemical, Dexterity, Gluttonous, GluttonousMulti, Gaming, Social, Study, Television, Work
-                    tolerances["Cerebral"] = tolerancesSet[JoyKindDefOf.Cerebral].ToString("P0");
-                    tolerances["Chemical"] = tolerancesSet[JoyKindDefOf.Chemical].ToString("P0");
-                    tolerances["Dexterity"] = tolerancesSet[JoyKindDefOf.Dexterity].ToString("P0");
-                    tolerances["Gluttonous"] = tolerancesSet[JoyKindDefOf.Gluttonous].ToString("P0");
-                    tolerances["GluttonousMulti"] = tolerancesSet[JoyKindDefOf.GluttonousMulti].ToString("P0");
-                    tolerances["Gaming"] = tolerancesSet[JoyKindDefOf.Gaming].ToString("P0");
-                    tolerances["Social"] = tolerancesSet[JoyKindDefOf.Social].ToString("P0");
-                    tolerances["Study"] = tolerancesSet[JoyKindDefOf.Study].ToString("P0");
-                    tolerances["Television"] = tolerancesSet[JoyKindDefOf.Television].ToString("P0");
-                    tolerances["Work"] = tolerancesSet[JoyKindDefOf.Work].ToString("P0");
+                    foreach (var jk in DefDatabase<JoyKindDef>.AllDefsListForReading)
+                    {
+                        tolerances[jk.defName] = tolerancesSet[jk].ToString("P0");
+                    }
                 }
                 joyObject["joyTolerances"] = tolerances;
 
@@ -115,18 +109,20 @@ namespace RimMind.Tools
 
             // Find all joy-giving buildings
             var availableJoySources = new JSONObject();
-            var joyBuildings = map.listerBuildings.allBuildingsCombatant
+            var presentJoyKindNames = new HashSet<string>();
+            var joyBuildings = map.listerBuildings.allBuildingsColonist
                 .Where(b => b.def.building?.joyKind != null)
                 .GroupBy(b => b.def.building.joyKind.defName);
 
             foreach (var group in joyBuildings)
             {
+                presentJoyKindNames.Add(group.Key);
                 var buildings = new JSONArray();
                 foreach (var b in group)
                 {
                     var buildingInfo = new JSONObject();
                     buildingInfo["defName"] = b.def.defName;
-                    buildingInfo["position"] = $"{b.Position.x}, {b.Position.z}";
+                    buildingInfo["position"] = string.Format("{0}, {1}", b.Position.x, b.Position.z);
                     buildings.Add(buildingInfo);
                 }
                 availableJoySources[group.Key] = buildings;
@@ -135,12 +131,11 @@ namespace RimMind.Tools
 
             // Find missing joy types
             var allJoyKinds = DefDatabase<JoyKindDef>.AllDefsListForReading;
-            var presentJoyKinds = availableJoySources.Keys.ToList();
             var missingJoyKinds = new JSONArray();
 
             foreach (var jk in allJoyKinds)
             {
-                if (!presentJoyKinds.Contains(jk.defName))
+                if (!presentJoyKindNames.Contains(jk.defName))
                     missingJoyKinds.Add(jk.defName);
             }
             result["missingJoyTypes"] = missingJoyKinds;
@@ -201,10 +196,10 @@ namespace RimMind.Tools
                 .FirstOrDefault(p => p.Name?.ToStringShort == pawnName);
 
             if (pawn == null)
-                return ToolExecutor.JsonError($"Colonist '{pawnName}' not found.");
+                return ToolExecutor.JsonError(string.Format("Colonist '{0}' not found.", pawnName));
 
             if (pawn.needs?.joy == null)
-                return ToolExecutor.JsonError($"Colonist '{pawnName}' has no joy need.");
+                return ToolExecutor.JsonError(string.Format("Colonist '{0}' has no joy need.", pawnName));
 
             var result = new JSONObject();
             result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
@@ -234,7 +229,7 @@ namespace RimMind.Tools
 
             // Available activities for non-saturated types
             var recommendedActivities = new JSONArray();
-            var buildings = map.listerBuildings.allBuildingsCombatant;
+            var buildings = map.listerBuildings.allBuildingsColonist;
 
             foreach (string joyType in available)
             {
@@ -252,7 +247,7 @@ namespace RimMind.Tools
                         var activity = new JSONObject();
                         activity["joyType"] = joyType;
                         activity["building"] = b.def.defName;
-                        activity["position"] = $"{b.Position.x}, {b.Position.z}";
+                        activity["position"] = string.Format("{0}, {1}", b.Position.x, b.Position.z);
                         recommendedActivities.Add(activity);
                     }
                 }
