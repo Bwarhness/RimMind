@@ -97,7 +97,13 @@ namespace RimMind.Tools
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
-            // Note: GetAnimalStats and GetWildAnimals removed - use list_animals with filters instead
+            // Note: get_animal_stats and get_wild_animals pending implementation in AnimalTools
+
+            // Ideology DLC
+            { "get_ideology_info", args => IdeologyTools.GetIdeologyInfo() },
+            { "get_pawn_ideology_status", args => IdeologyTools.GetPawnIdeologyStatus(args?["name"]?.Value) },
+            { "get_ritual_status", args => IdeologyTools.GetRitualStatus() },
+            { "analyze_ideology_conflicts", args => IdeologyTools.AnalyzeIdeologyConflicts() },
 
             // Events
             { "get_recent_events", args => EventTools.GetRecentEvents(args?["count"]?.AsInt ?? 5) },
