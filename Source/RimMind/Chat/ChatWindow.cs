@@ -161,6 +161,17 @@ namespace RimMind.Chat
                     Find.WindowStack.Add(new ContextViewWindow(chatManager));
             }
 
+            // Vision button (Spatial Vision debug window)
+            btnX -= btnW + 4f;
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Vision"))
+            {
+                var existing = Find.WindowStack.WindowOfType<SpatialVisionWindow>();
+                if (existing != null)
+                    Find.WindowStack.TryRemove(existing);
+                else
+                    Find.WindowStack.Add(new SpatialVisionWindow());
+            }
+
             // Token usage display
             float topOffset = 34f;
             if (chatManager.LastTotalTokens > 0)
