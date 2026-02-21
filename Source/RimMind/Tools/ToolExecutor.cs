@@ -99,6 +99,12 @@ namespace RimMind.Tools
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
             // Note: GetAnimalStats and GetWildAnimals removed - use list_animals with filters instead
 
+            // Prisoner & Slave Management
+            { "get_prisoner_status", args => PrisonerSlaveTools.GetPrisonerStatus() },
+            { "get_slave_status", args => PrisonerSlaveTools.GetSlaveStatus() },
+            { "analyze_prison_risks", args => PrisonerSlaveTools.AnalyzePrisonRisks() },
+            { "get_recruitment_forecast", args => PrisonerSlaveTools.GetRecruitmentForecast(args?["name"]?.Value) },
+
             // Events
             { "get_recent_events", args => EventTools.GetRecentEvents(args?["count"]?.AsInt ?? 5) },
             { "get_active_alerts", args => EventTools.GetActiveAlerts() },

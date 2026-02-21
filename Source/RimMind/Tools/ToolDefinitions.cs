@@ -218,8 +218,26 @@ namespace RimMind.Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));
             tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, bonded colonist, carrying capacity (pack animals), and production schedules (shearing, milking, eggs).",
                 MakeParam("name", "string", "The animal's name")));
-            // Note: get_animal_stats and get_wild_animals were never implemented (only defined). Removed to match tool registry.
-            // Use list_animals and get_animal_details for current animal functionality.
+            tools.Add(MakeTool("get_animal_stats", "Get detailed statistics for an animal species: carrying capacity (pack animals), movement speed, combat stats (melee damage, armor, DPS), abilities (wool, milk, eggs), wildness level, trainability, filth rate, and market value. Use this to compare animal species for taming, pack use, or combat.",
+                MakeParam("speciesName", "string", "The animal species name (e.g., 'Muffalo', 'Thrumbo', 'Dromedary'). Partial names work.")));
+            tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map: species, location, health, taming difficulty, and value rating. Returns recommendations for taming opportunities (easy/hard/very hard) and hunting targets. Use this to identify rare animals like Thrumbos or plan hunting expeditions.",
+                MakeOptionalParam("speciesFilter", "string", "Optional filter by species name")));
+
+            // Ideology DLC Tools
+            tools.Add(MakeTool("get_ideology_info", "Get colony ideology details including precepts, roles, and rituals (Ideology DLC). Returns ideology name, memes, all precepts with impact levels, role assignments (filled/unfilled slots), and structure. Use this to understand ideological restrictions and requirements."));
+            tools.Add(MakeTool("get_pawn_ideology_status", "Get individual colonist's ideological status (Ideology DLC): assigned role, certainty level, recent certainty factors, and precept comfort. Use to check role assignments and morale factors related to ideology.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("get_ritual_status", "Get status of scheduled and active rituals (Ideology DLC): upcoming ritual obligations with countdown, active ritual details, and colonists with pending obligations. Use to plan ritual preparation and ensure ideological compliance."));
+            tools.Add(MakeTool("analyze_ideology_conflicts", "Detect ideological conflicts affecting colony mood (Ideology DLC): colonists at risk of certainty loss, colonists needing roles, and precept-related issues. Use to proactively manage ideological stability."));
+
+            // Prisoner & Slave Tools
+            tools.Add(MakeTool("get_prisoner_status", "Get detailed status for all prisoners: resistance levels, recruitment chances, estimated time to recruit, mental state risks, and available wardens. Use to manage recruitment efforts and prioritize which prisoners to recruit first.",
+                MakeOptionalParam("name", "string", "Optional filter by prisoner name")));
+            tools.Add(MakeTool("get_slave_status", "Get slave suppression and rebellion risk (Ideology DLC): suppression level, rebellion risk scores, interaction mode, and warden coverage. Use to identify at-risk slaves and prevent rebellions.",
+                MakeOptionalParam("name", "string", "Optional filter by slave name")));
+            tools.Add(MakeTool("analyze_prison_risks", "Calculate prison break and recruitment risks: warden-to-prisoner ratio, overall break risk level, high-risk prisoners, and recommended warden assignments. Use to prevent prison breaks by ensuring adequate warden coverage."));
+            tools.Add(MakeTool("get_recruitment_forecast", "Predict recruitment timelines for prisoners: estimated days to zero resistance, current resistance reduction rate, best warden assignment, and success probability on next attempt. Use to plan recruitment efforts.",
+                MakeOptionalParam("name", "string", "Optional prisoner name to forecast")));
 
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
