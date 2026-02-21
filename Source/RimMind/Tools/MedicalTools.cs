@@ -63,7 +63,7 @@ namespace RimMind.Tools
                 .Count(b => b.Medical);
             int freeMedBeds = map.listerBuildings.allBuildingsColonist
                 .OfType<Building_Bed>()
-                .Count(b => b.Medical && !b.HasAnyDynamicPawn());
+                .Count(b => b.Medical && !b.AnyOccupants);
             obj["medicalBeds"] = medBeds;
             obj["freeMedicalBeds"] = freeMedBeds;
 
@@ -125,7 +125,6 @@ namespace RimMind.Tools
                             
                             // Try to get immunity data from hediff comps
                             float? immunity = null;
-                            if (hediff is HediffWithComps hwc)
                             {
                                 var immunityComp = hwc.GetComp<HediffComp_Immunizable>();
                                 if (immunityComp != null)
@@ -160,7 +159,7 @@ namespace RimMind.Tools
                 colonist["activeDiseases"] = diseases;
 
                 // Overall health summary
-                colonist["healthPercentage"] = pawn.health.summaryHealth.ToString("P0");
+                colonist["healthPercentage"] = pawn.health.summaryHealth.SummaryHealthPercent.ToString("P0");
                 colonist["hasLifeThreateningCondition"] = pawn.health.hediffSet.HasHediff(HediffDefOf.BloodLoss) ||
                     pawn.health.hediffSet.HasHediff(HediffDefOf.ToxicBuildup);
 
@@ -233,7 +232,7 @@ namespace RimMind.Tools
                 // Recent drug usage (from history if tracked)
                 colonist["canAddict"] = pawn.RaceProps.Humanlike && 
                     DefDatabase<ChemicalDef>.AllDefsListForReading.Any(c => 
-                        c.addictionChance > 0);
+                        c.addictionHediff != null);
 
                 // Current needs affecting recovery
                 colonist["hungerLevel"] = pawn.needs?.food?.CurLevelPercentage.ToString("P0") ?? "N/A";
@@ -297,7 +296,7 @@ namespace RimMind.Tools
             float baseSuccess = 0.5f;
 
             // Patient health factor
-            float healthFactor = pawn.health.summaryHealth;
+            float healthFactor = pawn.health.summaryHealth.SummaryHealthPercent;
             if (pawn.health.hediffSet.HasHediff(HediffDefOf.BloodLoss))
                 healthFactor -= 0.3f;
             if (pawn.health.hediffSet.HasHediff(HediffDefOf.ToxicBuildup))
@@ -331,7 +330,7 @@ namespace RimMind.Tools
             float medicineQuality = 0;
             if (bestMedicine != null)
             {
-                medicineQuality = bestMedicine.GetStatValue(StatDefOf.MedicalQuality);
+                medicineQuality = bestMedicine.GetStatValue(StatDefOf.MedicalPotency);
                 result["medicineQuality"] = medicineQuality.ToString("0.0");
                 baseSuccess += (medicineQuality * 0.1f);
             }
