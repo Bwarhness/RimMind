@@ -133,8 +133,7 @@ namespace RimMind.Tools
                         s["rebellion_risk"] = "unknown";
                     }
 
-                    // Interaction mode - use the general prisoner/slave interaction mode
-                    s["interaction_mode"] = slave.guest?.interactionMode?.defName ?? "None";
+                    // Note: slave interaction mode field is internal; skip detailed mode reporting
                 }
 
                 // Health
