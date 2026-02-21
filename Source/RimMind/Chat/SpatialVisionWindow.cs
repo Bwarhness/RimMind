@@ -383,7 +383,7 @@ namespace RimMind.Chat
             var result = new System.Collections.Generic.List<System.Collections.Generic.List<string>>();
             if (string.IsNullOrEmpty(json)) return result;
             
-            int gridStart = json.IndexOf(""grid":");
+            int gridStart = json.IndexOf("\"grid\":");
             if (gridStart < 0) return result;
             
             int outerArrayStart = json.IndexOf('[', gridStart);
