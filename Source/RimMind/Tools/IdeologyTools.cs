@@ -11,12 +11,39 @@ namespace RimMind.Tools
     public static class IdeologyTools
     {
         // Helper: get Pawn_IdeoTracker via reflection (DLC-only field 'ideos' on Pawn)
-        private static dynamic GetIdeoTracker(Pawn pawn)
+        private static object GetIdeoTracker(Pawn pawn)
         {
             if (pawn == null) return null;
             var prop = pawn.GetType().GetProperty("ideos",
                 BindingFlags.Instance | BindingFlags.Public);
             return prop?.GetValue(pawn);
+        }
+
+        private static T GetTrackerProp<T>(object tracker, string propName, T defaultValue = default)
+        {
+            if (tracker == null) return defaultValue;
+            try
+            {
+                var prop = tracker.GetType().GetProperty(propName,
+                    BindingFlags.Instance | BindingFlags.Public);
+                if (prop == null) return defaultValue;
+                var value = prop.GetValue(tracker);
+                if (value is T t) return t;
+                return defaultValue;
+            }
+            catch { return defaultValue; }
+        }
+
+        private static object InvokeTrackerMethod(object tracker, string methodName, params object[] args)
+        {
+            if (tracker == null) return null;
+            try
+            {
+                var method = tracker.GetType().GetMethod(methodName,
+                    BindingFlags.Instance | BindingFlags.Public);
+                return method?.Invoke(tracker, args);
+            }
+            catch { return null; }
         }
 
         public static string GetIdeologyInfo()
@@ -89,8 +116,8 @@ namespace RimMind.Tools
             if (pawn == null)
                 return ToolExecutor.JsonError("Colonist '" + name + "' not found.");
 
-            dynamic ideos = GetIdeoTracker(pawn);
-            if (ideos == null)
+            var ideoTracker = GetIdeoTracker(pawn);
+            if (ideoTracker == null)
                 return ToolExecutor.JsonError("No ideology information for this colonist.");
 
             var result = new JSONObject();
@@ -98,23 +125,30 @@ namespace RimMind.Tools
 
             try
             {
-                var ideology = (Ideo)ideos.Ideo;
+                var ideology = GetTrackerProp<Ideo>(ideoTracker, "Ideo");
                 if (ideology == null)
                     return ToolExecutor.JsonError("Colonist has no ideology.");
 
                 result["ideology"] = ideology.name.ToString();
 
-                float certainty = (float)ideos.Certainty;
+                float certainty = GetTrackerProp<float>(ideoTracker, "Certainty", 0f);
                 result["certainty"] = certainty.ToString("P0");
 
-                // Role via GetRole
+                // Role via GetRole reflection
                 try
                 {
-                    var role = ideos.GetRole(ideology);
+                    var role = InvokeTrackerMethod(ideoTracker, "GetRole", ideology);
                     if (role != null)
                     {
-                        result["role"] = role.def.label;
-                        result["role_def"] = role.def.defName;
+                        var defProp = role.GetType().GetProperty("def");
+                        var roleDef = defProp?.GetValue(role);
+                        if (roleDef != null)
+                        {
+                            var labelProp = roleDef.GetType().GetProperty("label");
+                            var defNameProp = roleDef.GetType().GetProperty("defName");
+                            result["role"] = labelProp?.GetValue(roleDef)?.ToString() ?? "Unknown";
+                            result["role_def"] = defNameProp?.GetValue(roleDef)?.ToString() ?? "Unknown";
+                        }
                     }
                     else
                     {
@@ -125,21 +159,6 @@ namespace RimMind.Tools
                 {
                     result["role"] = "Unknown";
                 }
-
-                // Precept comfort info
-                var preceptComfort = new JSONArray();
-                foreach (var p in ideology.PreceptsListForReading)
-                {
-                    if (p.def.comfort != null)
-                    {
-                        var pc = new JSONObject();
-                        pc["precept"] = p.def.LabelCap.ToString();
-                        pc["comfort"] = p.def.comfort.Value.ToString("P0");
-                        preceptComfort.Add(pc);
-                    }
-                }
-                if (preceptComfort.Count > 0)
-                    result["precept_comfort"] = preceptComfort;
             }
             catch (Exception ex)
             {
@@ -163,26 +182,37 @@ namespace RimMind.Tools
             var obligations = new JSONArray();
             foreach (var p in map.mapPawns.PawnsInFaction(Faction.OfPlayer))
             {
-                dynamic ideos = GetIdeoTracker(p);
-                if (ideos == null) continue;
+                var ideoTracker = GetIdeoTracker(p);
+                if (ideoTracker == null) continue;
 
                 try
                 {
-                    var obligationsList = ideos.Obligations();
+                    var obligationsList = InvokeTrackerMethod(ideoTracker, "Obligations") as System.Collections.IEnumerable;
                     if (obligationsList == null) continue;
                     foreach (var obl in obligationsList)
                     {
                         var o = new JSONObject();
                         o["colonist"] = p.Name?.ToStringShort ?? p.LabelShort;
-                        try { o["ritual"] = obl.def?.LabelCap?.ToString() ?? "Unknown"; } catch { o["ritual"] = "Unknown"; }
-                        try { o["active"] = (bool)obl.active; } catch { }
-                        try { if (obl.target != null) o["target"] = obl.target.LabelCap.ToString(); } catch { }
+                        try
+                        {
+                            var defProp = obl.GetType().GetProperty("def");
+                            var def = defProp?.GetValue(obl);
+                            var labelCapProp = def?.GetType().GetProperty("LabelCap");
+                            o["ritual"] = labelCapProp?.GetValue(def)?.ToString() ?? "Unknown";
+                        }
+                        catch { o["ritual"] = "Unknown"; }
+                        try
+                        {
+                            var activeProp = obl.GetType().GetProperty("active");
+                            o["active"] = (bool)(activeProp?.GetValue(obl) ?? false);
+                        }
+                        catch { }
                         obligations.Add(o);
                     }
                 }
                 catch
                 {
-                    // ObligationsActive may not exist; skip
+                    // Obligations() may not be available; skip
                 }
             }
             result["obligations"] = obligations;
@@ -210,16 +240,22 @@ namespace RimMind.Tools
                 var upcomingCount = 0;
                 foreach (var p in map.mapPawns.PawnsInFaction(Faction.OfPlayer))
                 {
-                    dynamic ideos = GetIdeoTracker(p);
-                    if (ideos == null) continue;
+                    var ideoTracker = GetIdeoTracker(p);
+                    if (ideoTracker == null) continue;
                     try
                     {
-                        var oblList = ideos.Obligations();
+                        var oblList = InvokeTrackerMethod(ideoTracker, "Obligations") as System.Collections.IEnumerable;
                         if (oblList != null)
                         {
-                            foreach (var o in oblList)
+                            foreach (var obl in oblList)
                             {
-                                try { if ((bool)o.active) { upcomingCount++; break; } } catch { }
+                                try
+                                {
+                                    var activeProp = obl.GetType().GetProperty("active");
+                                    if ((bool)(activeProp?.GetValue(obl) ?? false))
+                                    { upcomingCount++; break; }
+                                }
+                                catch { }
                             }
                         }
                     }
@@ -250,22 +286,18 @@ namespace RimMind.Tools
             var atRisk = new JSONArray();
             foreach (var p in colonists)
             {
-                dynamic ideos = GetIdeoTracker(p);
-                if (ideos == null) continue;
+                var ideoTracker = GetIdeoTracker(p);
+                if (ideoTracker == null) continue;
 
-                try
+                float certainty = GetTrackerProp<float>(ideoTracker, "Certainty", 1f);
+                if (certainty < 0.5f)
                 {
-                    float certainty = (float)ideos.Certainty;
-                    if (certainty < 0.5f)
-                    {
-                        var r = new JSONObject();
-                        r["name"] = p.Name?.ToStringShort ?? p.LabelShort;
-                        r["certainty"] = certainty.ToString("P0");
-                        r["status"] = certainty < 0.3f ? "critical" : "at_risk";
-                        atRisk.Add(r);
-                    }
+                    var r = new JSONObject();
+                    r["name"] = p.Name?.ToStringShort ?? p.LabelShort;
+                    r["certainty"] = certainty.ToString("P0");
+                    r["status"] = certainty < 0.3f ? "critical" : "at_risk";
+                    atRisk.Add(r);
                 }
-                catch { }
             }
             result["certainty_at_risk"] = atRisk;
 
@@ -273,22 +305,18 @@ namespace RimMind.Tools
             var preceptIssues = new JSONArray();
             foreach (var p in colonists)
             {
-                dynamic ideos = GetIdeoTracker(p);
-                if (ideos == null) continue;
+                var ideoTracker = GetIdeoTracker(p);
+                if (ideoTracker == null) continue;
 
-                try
+                float certainty = GetTrackerProp<float>(ideoTracker, "Certainty", 1f);
+                if (certainty < 0.7f)
                 {
-                    float certainty = (float)ideos.Certainty;
-                    if (certainty < 0.7f)
-                    {
-                        var pi = new JSONObject();
-                        pi["name"] = p.Name?.ToStringShort ?? p.LabelShort;
-                        pi["certainty"] = certainty.ToString("P0");
-                        pi["note"] = "Low certainty - may need precept review";
-                        preceptIssues.Add(pi);
-                    }
+                    var pi = new JSONObject();
+                    pi["name"] = p.Name?.ToStringShort ?? p.LabelShort;
+                    pi["certainty"] = certainty.ToString("P0");
+                    pi["note"] = "Low certainty - may need precept review";
+                    preceptIssues.Add(pi);
                 }
-                catch { }
             }
             result["precept_related_issues"] = preceptIssues;
 
