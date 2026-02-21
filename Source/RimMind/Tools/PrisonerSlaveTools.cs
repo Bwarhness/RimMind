@@ -19,11 +19,11 @@ namespace RimMind.Tools
 
             if (prisoners.Count == 0)
             {
-                var result = new JSONObject();
-                result["prisoners"] = new JSONArray();
-                result["count"] = 0;
-                result["message"] = "No prisoners in colony";
-                return result.ToString();
+                var emptyResult = new JSONObject();
+                emptyResult["prisoners"] = new JSONArray();
+                emptyResult["count"] = 0;
+                emptyResult["message"] = "No prisoners in colony";
+                return emptyResult.ToString();
             }
 
             var result = new JSONObject();
@@ -39,16 +39,16 @@ namespace RimMind.Tools
                 p["name"] = prisoner.Name?.ToStringShort ?? prisoner.LabelShort;
                 p["race"] = prisoner.kindDef?.label ?? prisoner.def.label;
                 p["resistance"] = prisoner.guest?.Resistance.ToString("F1") ?? "0";
-                p["will"] = prisoner.guest?.Will.ToString("F1") ?? "0";
                 p["recruitable"] = prisoner.guest?.Recruitable;
 
-                // Recruitment chance
-                float recruitChance = RecruitUtility.RecruitChanceFactorForPawn(prisoner);
-                p["recruit_chance"] = (recruitChance * 100f).ToString("F0") + "%";
+                // Recruitment difficulty estimate based on resistance
+                float resistance = prisoner.guest?.Resistance ?? 0f;
+                string recruitDifficulty = resistance <= 0f ? "ready" : resistance < 3f ? "low" : resistance < 8f ? "medium" : "high";
+                p["recruit_difficulty"] = recruitDifficulty;
 
                 // Estimated recruitment time (days)
                 // Rough estimate: resistance / (warden_social * 0.3 + 1)
-                float daysToRecruit = (prisoner.guest?.Resistance ?? 0) / (bestWarden * 0.3f + 1f);
+                float daysToRecruit = resistance / (bestWarden * 0.3f + 1f);
                 p["estimated_days_to_recruit"] = daysToRecruit.ToString("F1");
 
                 // Health status
@@ -133,8 +133,8 @@ namespace RimMind.Tools
                         s["rebellion_risk"] = "unknown";
                     }
 
-                    // Interaction mode
-                    s["interaction_mode"] = slave.guest?.SlaveInteractionMode?.defName ?? "None";
+                    // Interaction mode - use the general prisoner/slave interaction mode
+                    s["interaction_mode"] = slave.guest?.interactionMode?.defName ?? "None";
                 }
 
                 // Health
@@ -205,17 +205,20 @@ namespace RimMind.Tools
                 overallRisk = "low";
             result["overall_break_risk"] = overallRisk;
 
-            // High-risk prisoners
+            // High-risk prisoners - collect names separately to avoid JSONArray iteration issues
             var highRisk = new JSONArray();
+            var highRiskNames = new List<string>();
             foreach (var prisoner in prisoners)
             {
                 var risk = GetMentalStateRisk(prisoner);
                 if (risk == "critical" || risk == "high")
                 {
                     var r = new JSONObject();
-                    r["name"] = prisoner.Name?.ToStringShort ?? prisoner.LabelShort;
+                    string prisonerName = prisoner.Name?.ToStringShort ?? prisoner.LabelShort;
+                    r["name"] = prisonerName;
                     r["risk"] = risk;
                     highRisk.Add(r);
+                    highRiskNames.Add(prisonerName);
                 }
             }
             result["high_risk_prisoners"] = highRisk;
@@ -227,8 +230,8 @@ namespace RimMind.Tools
             else if (ratio < 0.3f)
                 recommendations.Add("Increase warden coverage - current ratio is too low");
             
-            foreach (var r in highRisk)
-                recommendations.Add("Monitor " + r["name"] + " for mental breaks");
+            foreach (var prisonerName in highRiskNames)
+                recommendations.Add("Monitor " + prisonerName + " for mental breaks");
             
             result["recommendations"] = recommendations;
 
@@ -269,13 +272,14 @@ namespace RimMind.Tools
                 f["name"] = prisoner.Name?.ToStringShort ?? prisoner.LabelShort;
                 f["current_resistance"] = prisoner.guest?.Resistance.ToString("F1") ?? "0";
 
-                // Calculate best warden
-                var bestWarden = wardens.OrderByDescending(w => w.socialSkill).First();
+                // Calculate best warden by social skill
+                var bestWarden = wardens.OrderByDescending(w => w.skills?.GetSkill(SkillDefOf.Social)?.Level ?? 0f).First();
                 f["best_warden"] = bestWarden.Name?.ToStringShort ?? bestWarden.LabelShort;
-                f["warden_social"] = bestWarden.socialSkill.ToString("F1");
+                float wardenSocialLevel = bestWarden.skills?.GetSkill(SkillDefOf.Social)?.Level ?? 0f;
+                f["warden_social"] = wardenSocialLevel.ToString("F1");
 
                 // Resistance reduction rate per day (roughly)
-                float reductionRate = bestWarden.socialSkill * 0.3f + 1f;
+                float reductionRate = wardenSocialLevel * 0.3f + 1f;
                 f["resistance_per_day"] = reductionRate.ToString("F1");
 
                 // Days to recruit
@@ -283,12 +287,12 @@ namespace RimMind.Tools
                 float days = resistance / reductionRate;
                 f["days_to_zero_resistance"] = days.ToString("F1");
 
-                // Recruitment chance on next attempt
-                float chance = RecruitUtility.RecruitChanceFactorForPawn(prisoner);
-                f["recruit_chance_next_attempt"] = (chance * 100f).ToString("F0") + "%";
+                // Recruitment difficulty estimate
+                string difficulty = resistance <= 0f ? "ready" : resistance < 3f ? "low" : resistance < 8f ? "medium" : "high";
+                f["recruit_difficulty"] = difficulty;
 
-                // Success probability
-                f["likely_to_succeed"] = chance > 0.8f ? "yes" : (chance > 0.5f ? "uncertain" : "no");
+                // Success estimate
+                f["likely_to_succeed"] = resistance <= 0f ? "yes" : (resistance < 3f ? "uncertain" : "no");
 
                 forecasts.Add(f);
             }
@@ -313,16 +317,18 @@ namespace RimMind.Tools
             if (pawn.InMentalState)
                 return "critical";
 
-            // Check for mental break threshold via pawn's mindState
-            var mentalBreaker = pawn.mindState?.mentalBreaker;
-            var mentalBreakChance = mentalBreaker?.CurrentTakeDamage ?? 0;
-            var recentBreaks = pawn.mindState?.mentalStateHandler?.RecentMentalBreaks ?? 0;
+            if (pawn.needs?.mood == null || pawn.mindState?.mentalBreaker == null)
+                return "low";
 
-            if (recentBreaks > 0 || mentalBreakChance > 0.3f)
+            // Use mood level vs break thresholds (same approach as MoodTools)
+            float moodLevel = pawn.needs.mood.CurLevel;
+            var mentalBreaker = pawn.mindState.mentalBreaker;
+
+            if (moodLevel <= mentalBreaker.BreakThresholdExtreme)
                 return "critical";
-            else if (mentalBreakChance > 0.15f)
+            else if (moodLevel <= mentalBreaker.BreakThresholdMajor)
                 return "high";
-            else if (mentalBreakChance > 0.05f)
+            else if (moodLevel <= mentalBreaker.BreakThresholdMinor)
                 return "medium";
             else
                 return "low";
