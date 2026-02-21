@@ -109,8 +109,9 @@ namespace RimMind.Tools
                 }
                 else
                 {
-                    // Fallback: check if building has any pawns nearby
-                    bool hasOccupant = building.HasAnyDynamicPawn();
+                    // Fallback: check if any pawn is at the building's position
+                    bool hasOccupant = map.mapPawns.AllPawnsSpawned
+                        .Any(p => p.Position == building.Position);
                     b["occupied"] = hasOccupant;
                 }
 
@@ -241,44 +242,56 @@ namespace RimMind.Tools
 
         // Helper methods
 
-        /// <summary>Check if a building has a CompContainment via reflection (Anomaly DLC)</summary>
+        /// <summary>Check if a building has a CompContainment via def-level comp properties</summary>
         private static bool HasContainmentComp(Building building)
         {
-            if (building.comps == null) return false;
-            return building.comps.Any(c => c.GetType().Name == "CompContainment");
+            // Check ThingDef.comps (List<CompProperties>) for a Containment comp definition
+            return building.def.comps?.Any(c => c.GetType().Name.Contains("Containment")) == true;
         }
 
-        /// <summary>Try to get containment info via reflection; returns true if found</summary>
+        /// <summary>Try to get containment info via full reflection on runtime assemblies; returns true if found</summary>
         private static bool TryGetContainmentInfo(Building building, out string strength, out bool occupied)
         {
             strength = "0";
             occupied = false;
 
-            if (building.comps == null) return false;
-
-            var comp = building.comps.FirstOrDefault(c => c.GetType().Name == "CompContainment");
-            if (comp == null) return false;
-
             try
             {
-                var compType = comp.GetType();
-                var strengthProp = compType.GetProperty("ContainmentStrength",
+                // Find CompContainment type in loaded assemblies at runtime (Anomaly DLC)
+                Type compContainmentType = null;
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    compContainmentType = asm.GetType("RimWorld.CompContainment");
+                    if (compContainmentType != null) break;
+                }
+                if (compContainmentType == null) return false;
+
+                // Call GetComp<CompContainment>() via reflection on ThingWithComps
+                var getCompMethod = typeof(ThingWithComps)
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .FirstOrDefault(m => m.Name == "GetComp" && m.IsGenericMethod);
+                if (getCompMethod == null) return false;
+
+                var comp = getCompMethod.MakeGenericMethod(compContainmentType).Invoke(building, null);
+                if (comp == null) return false;
+
+                var strengthProp = compContainmentType.GetProperty("ContainmentStrength",
                     BindingFlags.Public | BindingFlags.Instance);
-                var occupiedProp = compType.GetProperty("Occupied",
+                var occupiedProp = compContainmentType.GetProperty("Occupied",
                     BindingFlags.Public | BindingFlags.Instance);
 
                 if (strengthProp != null)
                     strength = (strengthProp.GetValue(comp) as float?)?.ToString("0") ?? "0";
                 if (occupiedProp != null)
                     occupied = (bool)(occupiedProp.GetValue(comp) ?? false);
+
+                return true;
             }
             catch
             {
                 // Reflection failed; fall back to defaults
                 return false;
             }
-
-            return true;
         }
 
         private static bool IsAnomalyEntity(Thing thing)
