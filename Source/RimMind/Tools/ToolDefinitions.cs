@@ -205,6 +205,13 @@ namespace RimMind.Tools
                 MakeParam("z2", "integer", "End Z coordinate of region"),
                 MakeOptionalParam("roofType", "string", "Filter by roof type: 'none', 'thin', 'thick', 'constructed' (not yet implemented)"),
                 MakeOptionalParam("detectBreaches", "boolean", "Enable breach detection: find unroofed cells adjacent to thick mountain roof (default: false)")));
+
+            // Anomaly DLC Integration Tools
+            tools.Add(MakeTool("get_anomaly_entities", "Get all anomaly entities in the colony. Returns list of entities with location, type, containment status, and threat level. Use this to track Anomaly DLC entities (glowing bodies, shrines, monoliths, etc.).",
+                MakeOptionalParam("entity_type", "string", "Optional filter by entity type")));
+            tools.Add(MakeTool("get_containment_status", "Get containment facility status. Returns containment buildings, capacity, occupancy, contained entities, and uncontained threats. Use this to monitor Anomaly DLC containment facilities."));
+            tools.Add(MakeTool("analyze_entity_interactions", "Analyze anomaly entity interactions and risks. Returns entity groups, proximity risks between entities, and recommended containment actions."));
+
             // Power Management Tools
             tools.Add(MakeTool("analyze_power_grid", "Comprehensive power network analysis. Returns all power networks with their generators, consumers, batteries, and power balance (surplus/deficit). Also identifies buildings that need power but are not connected. Use this to understand the colony's power infrastructure and identify connectivity issues."));
             tools.Add(MakeTool("check_power_connection", "Check if a specific building or area is connected to the power grid. Returns power status, which network it's connected to (if any), and nearest conduit location. Use this to diagnose why a specific building is not receiving power.",
