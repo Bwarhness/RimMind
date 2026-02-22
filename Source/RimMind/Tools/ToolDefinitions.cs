@@ -244,6 +244,15 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_ritual_status", "Get status of scheduled and active rituals (Ideology DLC): upcoming ritual obligations with countdown, active ritual details, and colonists with pending obligations. Use to plan ritual preparation and ensure ideological compliance."));
             tools.Add(MakeTool("analyze_ideology_conflicts", "Detect ideological conflicts affecting colony mood (Ideology DLC): colonists at risk of certainty loss, colonists needing roles, and precept-related issues. Use to proactively manage ideological stability."));
 
+            // Prisoner & Slave Tools
+            tools.Add(MakeTool("get_prisoner_status", "Get detailed status for all prisoners: resistance levels, recruitment chances, estimated time to recruit, mental state risks, and available wardens. Use to manage recruitment efforts and prioritize which prisoners to recruit first.",
+                MakeOptionalParam("name", "string", "Optional filter by prisoner name")));
+            tools.Add(MakeTool("get_slave_status", "Get slave suppression and rebellion risk (Ideology DLC): suppression level, rebellion risk scores, interaction mode, and warden coverage. Use to identify at-risk slaves and prevent rebellions.",
+                MakeOptionalParam("name", "string", "Optional filter by slave name")));
+            tools.Add(MakeTool("analyze_prison_risks", "Calculate prison break and recruitment risks: warden-to-prisoner ratio, overall break risk level, high-risk prisoners, and recommended warden assignments. Use to prevent prison breaks by ensuring adequate warden coverage."));
+            tools.Add(MakeTool("get_recruitment_forecast", "Predict recruitment timelines for prisoners: estimated days to zero resistance, current resistance reduction rate, best warden assignment, and success probability on next attempt. Use to plan recruitment efforts.",
+                MakeOptionalParam("name", "string", "Optional prisoner name to forecast")));
+
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
                 MakeOptionalParam("count", "integer", "Number of recent events to return. Defaults to 5.")));
