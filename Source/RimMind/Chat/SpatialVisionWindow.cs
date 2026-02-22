@@ -293,7 +293,7 @@ namespace RimMind.Chat
                 Widgets.BeginScrollView(rect, ref scrollPosition, viewRect);
                 
                 float y = 0f;
-                foreach (var row in grid)
+                foreach (JSONNode row in grid)
                 {
                     float x = 0f;
                     foreach (var cellStr in row)
