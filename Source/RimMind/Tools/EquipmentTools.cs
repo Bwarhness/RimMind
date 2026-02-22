@@ -75,18 +75,37 @@ namespace RimMind.Tools
 
             // Create job to wear
             var job = JobMaker.MakeJob(JobDefOf.Wear, apparel);
-            if (TakeOrQueueJob(pawn, job))
+
+            // Fix for issue #121: batch wear_apparel calls fail silently because
+            // TryTakeOrderedJob replaces the current job. Check if the pawn already
+            // has an active or queued apparel-related job; if so, enqueue instead.
+            bool hasApparelJob = pawn.jobs.curJob?.def == JobDefOf.Wear
+                || pawn.jobs.curJob?.def == JobDefOf.RemoveApparel
+                || pawn.jobs.jobQueue.Any(qj => qj.job?.def == JobDefOf.Wear || qj.job?.def == JobDefOf.RemoveApparel);
+
+            bool wasQueued;
+            if (hasApparelJob)
+            {
+                pawn.jobs.jobQueue.EnqueueLast(job, JobTag.Misc);
+                wasQueued = true;
+            }
+            else
+            {
+                bool started = pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+                if (!started)
+                    return ToolExecutor.JsonError("Failed to assign wear job.");
+                wasQueued = false;
+            }
+
             {
                 var result = new JSONObject();
                 result["success"] = true;
                 result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
                 result["apparel"] = apparel.LabelCap.ToString();
                 result["location"] = x + "," + z;
-                result["queued"] = pawn.jobs.jobQueue.Count > 0;
+                result["status"] = wasQueued ? "queued" : "started";
                 return result.ToString();
             }
-
-            return ToolExecutor.JsonError("Failed to assign wear job.");
         }
 
         public static string DropEquipment(string colonistName)
