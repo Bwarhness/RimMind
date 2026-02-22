@@ -229,6 +229,10 @@ namespace RimMind.Tools
 
             // Wiki
             { "wiki_lookup", args => WikiTools.WikiLookup(args?["query"]?.Value) },
+
+            // Item Access
+            { "set_item_allowed", args => ItemAccessTools.SetItemAllowed(args) },
+            { "get_forbidden_items", args => ItemAccessTools.GetForbiddenItems(args) },
         };
 
         public static string Execute(string toolName, string argumentsJson)

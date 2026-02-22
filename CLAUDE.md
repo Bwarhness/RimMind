@@ -231,7 +231,7 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (58 tools)
+## Current Tool Catalog (60 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (3): get_relationships, get_faction_relations, get_social_risks
 - **Mood** (4): get_mood_risks, suggest_mood_interventions, get_mood_trends, get_environment_quality
@@ -384,6 +384,7 @@ Widgets.Label(rect, "Click here");    // ❌ hardcoded string
 This applies to: button labels, window titles, tooltips, settings labels, error messages, status text, and any string a player sees.
 
 ## Changelog
+- **2026-02-22**: Added `set_item_allowed` and `get_forbidden_items` tools — Manage item forbid/allow status. `set_item_allowed` bulk-allows or forbids items by cell coordinates, defName, or category (medicine, corpses, weapons, apparel, food, resources) with optional location filter (stockpile/ground). `get_forbidden_items` lists all forbidden items with location and stockpile status. Useful for managing loot after raids, controlling item accessibility, and debugging hauling issues. New file: `Source/RimMind/Tools/ItemAccessTools.cs`. Closes issue #123.
 - **2026-02-22**: Added `wiki_lookup` tool — Live RimWorld wiki queries. AI can now search the RimWorld wiki (rimworldwiki.com) via MediaWiki API and return page extracts. Use for game mechanic questions, item/building descriptions, event explanations, or any factual RimWorld information. Returns page title, extract (capped at 800 chars), URL, and related pages. Handles search failures gracefully. New file: `Source/RimMind/Tools/WikiTools.cs`.
 - **2026-02-17**: Phase 8 - Animal Intelligence — Enhanced animal visibility and management. Added `get_animal_stats` tool for comprehensive species data (carrying capacity, movement speed, combat stats, production abilities with intervals, wildness, trainability, filth rate, manhunter chances). Added `get_wild_animals` tool to list all wild animals on map by species with taming difficulty, hunting value, rarity assessment, and recommendations. Enhanced `list_animals` to show current carrying load for pack animals. Enhanced `get_animal_details` to show production schedules (next shearing/milking/egg with ready status). AI can now: identify taming opportunities ("Rare Thrumbo - worth attempting tame"), optimize pack animals for caravans, remind about production readiness ("Muffalo ready for milking"), and advise on hunting targets. Total tools increased from 52 to 54.
 - **2026-02-17**: Added Phase 3 - Social & Mood Intelligence tools. New MoodHistoryTracker GameComponent tracks mood over time with hourly snapshots persisted with save files. New tools: `get_mood_trends` (track mood velocity, predict time-to-break with 3-day history), `get_social_risks` (detect colonist pairs with mutual hostility and volatile traits), `get_environment_quality` (score all rooms for beauty/cleanliness/space/temp/lighting with actionable suggestions). Enhanced `get_colony_overview` with recreation analysis (joy source count, variety, social vs solo, adequacy assessment). Implements all features from issue #56: mood trend analysis with prediction, social conflict detection, actionable interventions (already existed as suggest_mood_interventions), environment quality scoring, and recreation diagnostics.

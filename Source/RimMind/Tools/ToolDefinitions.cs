@@ -517,6 +517,18 @@ namespace RimMind.Tools
             tools.Add(MakeTool("wiki_lookup", "Search the RimWorld wiki for information about game mechanics, items, buildings, events, or strategies. Returns the intro/extract from the best matching wiki page. Use this when players ask 'what is X?', 'how does Y work?', or need factual game information you're unsure about. Examples: 'what is a psychic drone?', 'how do infestations work?', 'what does the volatile trait do?'.",
                 MakeParam("query", "string", "Search query for the RimWorld wiki (e.g., 'psychic drone', 'infestation', 'steel production')")));
 
+            // Item Access Tools
+            tools.Add(MakeTool("set_item_allowed", "Set allow/forbid status on items. Allowed items can be hauled by colonists; forbidden items are ignored. Use this to bulk-manage item accessibility - e.g., forbid all weapons on the ground, allow medicine in stockpiles only, or unforbid specific items at a cell. At least one targeting parameter (x/z, def_name, or category) is required.",
+                MakeParam("allowed", "boolean", "True to allow items (colonists will haul them), false to forbid items (colonists ignore them)"),
+                MakeOptionalParam("location_filter", "string", "Filter by location: 'all' (default), 'stockpile' (only in stockpile zones), 'ground' (only outside stockpile zones)"),
+                MakeOptionalParam("x", "integer", "X coordinate of specific cell to target"),
+                MakeOptionalParam("z", "integer", "Z coordinate of specific cell to target"),
+                MakeOptionalParam("def_name", "string", "Target all items of this defName on the map (e.g., 'Steel', 'MedicineHerbal')"),
+                MakeOptionalParam("category", "string", "Target by category: 'all', 'medicine', 'corpses', 'weapons', 'apparel', 'food', 'resources'")));
+            tools.Add(MakeTool("get_forbidden_items", "Get all currently forbidden items on the map. Forbidden items are ignored by colonists and won't be hauled. Use this to identify items that need to be allowed, or to audit what's being ignored.",
+                MakeOptionalParam("category", "string", "Filter by category: 'all' (default), 'medicine', 'corpses', 'weapons', 'apparel', 'food', 'resources'"),
+                MakeOptionalParam("location_filter", "string", "Filter by location: 'all' (default), 'stockpile' (only in stockpile zones), 'ground' (only outside stockpile zones)")));
+
             cachedTools = tools;
             return tools;
         }
