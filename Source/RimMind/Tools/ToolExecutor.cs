@@ -58,6 +58,8 @@ namespace RimMind.Tools
 
             // Military
             { "get_threats", args => MilitaryTools.GetThreats() },
+            { "get_fire_support", args => MilitaryTools.GetFireSupport() },
+            { "get_casualties", args => MilitaryTools.GetCasualties() },
             { "get_defenses", args => MilitaryTools.GetDefenses() },
             { "get_combat_readiness", args => MilitaryTools.GetCombatReadiness() },
             
