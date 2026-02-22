@@ -7,6 +7,10 @@ using Verse.AI;
 
 namespace RimMind.Tools
 {
+    /// <summary>
+    /// Tools for issuing direct combat commands to drafted colonists.
+    /// All tools require the target pawn to be drafted first (use draft_colonist).
+    /// </summary>
     public static class DraftedPawnTools
     {
         /// <summary>
@@ -37,6 +41,9 @@ namespace RimMind.Tools
 
             if (!dest.Standable(map))
                 return ToolExecutor.JsonError("Destination (" + x + ", " + z + ") is not standable.");
+
+            if (!pawn.CanReach(dest, Verse.AI.PathEndMode.OnCell, Danger.Deadly))
+                return ToolExecutor.JsonError("Pawn cannot reach destination (blocked path).");
 
             var job = JobMaker.MakeJob(JobDefOf.Goto, new LocalTargetInfo(dest));
             job.playerForced = true;
@@ -74,14 +81,17 @@ namespace RimMind.Tools
             if (pawn.Downed)
                 return ToolExecutor.JsonError("Pawn '" + pawnName + "' is downed and cannot attack.");
 
-            // Find target in all spawned pawns on the map
+            // Find target in all spawned pawns on the map — exact match first, then fall back to contains
             string targetLower = targetName.ToLower();
             var target = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p =>
                 p != pawn &&
                 (p.Name?.ToStringShort?.ToLower() == targetLower ||
-                 p.Name?.ToStringFull?.ToLower().Contains(targetLower) == true ||
-                 p.LabelShort?.ToLower() == targetLower ||
-                 p.LabelShort?.ToLower().Contains(targetLower) == true));
+                 p.LabelShort?.ToLower() == targetLower));
+            if (target == null)
+                target = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p =>
+                    p != pawn &&
+                    (p.Name?.ToStringFull?.ToLower().Contains(targetLower) == true ||
+                     p.LabelShort?.ToLower().Contains(targetLower) == true));
 
             if (target == null)
                 return ToolExecutor.JsonError("Target '" + targetName + "' not found on the map.");
@@ -176,6 +186,26 @@ namespace RimMind.Tools
             if (string.IsNullOrEmpty(targetName))
                 return ToolExecutor.JsonError("targetName parameter required.");
 
+            var map = Find.CurrentMap;
+            if (map == null)
+                return ToolExecutor.JsonError("No active map.");
+
+            // Look up target once before iterating pawns — exact match first, then fall back to contains
+            string targetLower = targetName.ToLower();
+            var target = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p =>
+                p.Name?.ToStringShort?.ToLower() == targetLower ||
+                p.LabelShort?.ToLower() == targetLower);
+            if (target == null)
+                target = map.mapPawns.AllPawnsSpawned.FirstOrDefault(p =>
+                    p.Name?.ToStringFull?.ToLower().Contains(targetLower) == true ||
+                    p.LabelShort?.ToLower().Contains(targetLower) == true);
+
+            if (target == null)
+                return ToolExecutor.JsonError("Target '" + targetName + "' not found on the map.");
+
+            if (target.Dead)
+                return ToolExecutor.JsonError("Target '" + targetName + "' is already dead.");
+
             var results = new JSONArray();
             int successCount = 0;
             int failCount = 0;
@@ -184,26 +214,59 @@ namespace RimMind.Tools
             {
                 if (string.IsNullOrEmpty(name)) continue;
 
-                var attackResult = OrderAttack(name, targetName);
-                var parsed = JSONNode.Parse(attackResult);
-
                 var entry = new JSONObject();
                 entry["pawn"] = name;
 
-                if (parsed["error"] != null)
+                var pawn = ColonistTools.FindPawnByName(name);
+                if (pawn == null)
                 {
                     entry["success"] = false;
-                    entry["error"] = parsed["error"].Value;
+                    entry["error"] = "Pawn '" + name + "' not found.";
                     failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                if (pawn.drafter == null || !pawn.drafter.Drafted)
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Pawn '" + name + "' is not drafted. Use draft_colonist first.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                if (pawn.Downed)
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Pawn '" + name + "' is downed and cannot attack.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                var weapon = pawn.equipment?.Primary;
+                bool isRanged = weapon != null && weapon.def.IsRangedWeapon;
+
+                Job job;
+                string attackType;
+                if (isRanged)
+                {
+                    job = JobMaker.MakeJob(JobDefOf.AttackStatic, target);
+                    attackType = "ranged";
                 }
                 else
                 {
-                    entry["success"] = parsed["success"].AsBool;
-                    entry["attackType"] = parsed["attackType"]?.Value ?? "unknown";
-                    if (parsed["success"].AsBool) successCount++;
-                    else failCount++;
+                    job = JobMaker.MakeJob(JobDefOf.AttackMelee, target);
+                    attackType = "melee";
                 }
 
+                job.playerForced = true;
+                pawn.jobs.StartJob(job, JobCondition.InterruptForced, null, false, true, null, null, false);
+
+                entry["success"] = true;
+                entry["attackType"] = attackType;
+                successCount++;
                 results.Add(entry);
             }
 
@@ -234,6 +297,9 @@ namespace RimMind.Tools
             var pawn = ColonistTools.FindPawnByName(pawnName);
             if (pawn == null)
                 return ToolExecutor.JsonError("Pawn '" + pawnName + "' not found.");
+
+            if (pawn.drafter == null || !pawn.drafter.Drafted)
+                return ToolExecutor.JsonError("Pawn '" + pawnName + "' is not drafted. Use draft_colonist first.");
 
             if (pawn.inventory == null)
                 return ToolExecutor.JsonError("Pawn has no inventory.");
