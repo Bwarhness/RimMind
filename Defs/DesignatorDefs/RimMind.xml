@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Defs>
+    <!-- RimMind Architect tab -->
+    <DesignationCategoryDef>
+        <defName>RimMind</defName>
+        <label>RimMind</label>
+        <order>99</order>
+        <specialDesignatorClasses>
+            <li>RimMind.UI.Designator_RimMindQuery</li>
+        </specialDesignatorClasses>
+    </DesignationCategoryDef>
+</Defs>

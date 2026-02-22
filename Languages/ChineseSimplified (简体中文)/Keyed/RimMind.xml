@@ -136,4 +136,11 @@
     <RimMind_PingTitle>RimMind</RimMind_PingTitle>
     <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
     <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <RimMind_DesignatorLabel>询问 RimMind</RimMind_DesignatorLabel>
+    <RimMind_DesignatorDesc>点击地图上的位置，向 RimMind AI 发送关于该位置的请求。</RimMind_DesignatorDesc>
+    <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <RimMind_LocationQueryHint>描述你想在这个位置做什么...</RimMind_LocationQueryHint>
+    <RimMind_LocationQuerySend>发送</RimMind_LocationQuerySend>
 </LanguageData>

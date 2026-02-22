@@ -136,4 +136,11 @@
     <RimMind_PingTitle>RimMind</RimMind_PingTitle>
     <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
     <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <RimMind_DesignatorLabel>Спросить RimMind</RimMind_DesignatorLabel>
+    <RimMind_DesignatorDesc>Нажмите на место на карте, чтобы отправить запрос ИИ RimMind об этой точке.</RimMind_DesignatorDesc>
+    <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <RimMind_LocationQueryHint>Опишите, что вы хотите сделать в этом месте...</RimMind_LocationQueryHint>
+    <RimMind_LocationQuerySend>Отправить</RimMind_LocationQuerySend>
 </LanguageData>

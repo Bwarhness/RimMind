@@ -136,4 +136,11 @@
     <RimMind_PingTitle>RimMind</RimMind_PingTitle>
     <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
     <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <RimMind_DesignatorLabel>RimMind'a Sor</RimMind_DesignatorLabel>
+    <RimMind_DesignatorDesc>Haritada bir konuma tıklayarak RimMind AI'a bu nokta hakkında bir istek gönderin.</RimMind_DesignatorDesc>
+    <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <RimMind_LocationQueryHint>Bu konumda ne istediğinizi açıklayın...</RimMind_LocationQueryHint>
+    <RimMind_LocationQuerySend>Gönder</RimMind_LocationQuerySend>
 </LanguageData>
