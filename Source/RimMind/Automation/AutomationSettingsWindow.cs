@@ -155,7 +155,7 @@ namespace RimMind.Automation
 
             // Event type label
             var labelRect = new Rect(rect.x + 35f, rect.y, rect.width - 100f, rect.height);
-            string displayName = eventType;
+            string displayName = DefaultAutomationPrompts.GetDisplayName(eventType);
             if (rule.enabled)
             {
                 GUI.color = Color.green;
@@ -199,7 +199,7 @@ namespace RimMind.Automation
 
             // Event type title
             Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0f, curY, w, 30f), selectedEventType);
+            Widgets.Label(new Rect(0f, curY, w, 30f), DefaultAutomationPrompts.GetDisplayName(selectedEventType));
             Text.Font = GameFont.Small;
             curY += 35f;
 

@@ -71,6 +71,20 @@ namespace RimMind.Automation
         }
 
         /// <summary>
+        /// Returns a translated display name for an event type.
+        /// Falls back to the raw eventType if no translation key exists.
+        /// </summary>
+        public static string GetDisplayName(string eventType)
+        {
+            string key = "RimMind_Event_" + eventType;
+            var translated = RimMindTranslations.Get(key);
+            // If translation system returns the key itself, it wasn't found
+            if (translated == key)
+                return eventType;
+            return translated;
+        }
+
+        /// <summary>
         /// Categorizes event types for UI organization.
         /// </summary>
         public static string GetCategory(string eventType)

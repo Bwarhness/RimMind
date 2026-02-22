@@ -34,18 +34,19 @@ namespace RimMind.Chat
             }
         }
 
+        // [0] = translation key for button label, [1] = prompt text (always English for AI)
         private static readonly string[][] quickPrompts = new string[][]
         {
-            new[] { "Bedroom", "Build me a standard wooden bedroom near the center of the map with a bed, end table, and dresser" },
-            new[] { "Dining+Kitchen", "Build a stone dining room and kitchen sharing a wall. Dining room should have a table and chairs, kitchen should have a stove" },
-            new[] { "Barracks", "Build a 5-bed granite barracks with end tables for each bed" },
-            new[] { "Power Setup", "Set up a power grid: 2 solar generators, a wind turbine, and 4 batteries connected with conduits" },
-            new[] { "Workshop", "Build a workshop room with an electric smithy, a hand tailoring bench, and a research bench" },
-            new[] { "Hospital", "Build a hospital room with 3 medical beds, a lamp, and good flooring" },
-            new[] { "Killbox", "Design a killbox entrance with sandbags and turrets for raid defense" },
-            new[] { "Base Layout", "Plan a compact base layout with bedroom, dining room, kitchen, workshop, and hospital - all sharing walls" },
-            new[] { "Colony Status", "Give me a full colony status report - colonists, resources, threats, and priorities" },
-            new[] { "Map Scout", "Scout the map around our base and tell me what you see - terrain, resources, threats" },
+            new[] { "RimMind_Prompt_Bedroom", "Build me a standard wooden bedroom near the center of the map with a bed, end table, and dresser" },
+            new[] { "RimMind_Prompt_DiningKitchen", "Build a stone dining room and kitchen sharing a wall. Dining room should have a table and chairs, kitchen should have a stove" },
+            new[] { "RimMind_Prompt_Barracks", "Build a 5-bed granite barracks with end tables for each bed" },
+            new[] { "RimMind_Prompt_PowerSetup", "Set up a power grid: 2 solar generators, a wind turbine, and 4 batteries connected with conduits" },
+            new[] { "RimMind_Prompt_Workshop", "Build a workshop room with an electric smithy, a hand tailoring bench, and a research bench" },
+            new[] { "RimMind_Prompt_Hospital", "Build a hospital room with 3 medical beds, a lamp, and good flooring" },
+            new[] { "RimMind_Prompt_Killbox", "Design a killbox entrance with sandbags and turrets for raid defense" },
+            new[] { "RimMind_Prompt_BaseLayout", "Plan a compact base layout with bedroom, dining room, kitchen, workshop, and hospital - all sharing walls" },
+            new[] { "RimMind_Prompt_ColonyStatus", "Give me a full colony status report - colonists, resources, threats, and priorities" },
+            new[] { "RimMind_Prompt_MapScout", "Scout the map around our base and tell me what you see - terrain, resources, threats" },
         };
 
         public override Vector2 InitialSize => new Vector2(500f, 600f);
@@ -318,7 +319,8 @@ namespace RimMind.Chat
             float contentHeight = btnHeight;
             foreach (var prompt in quickPrompts)
             {
-                float btnWidth = Text.CalcSize(prompt[0]).x + 16f;
+                string label = RimMindTranslations.Get(prompt[0]);
+                float btnWidth = Text.CalcSize(label).x + 16f;
                 if (x + btnWidth > maxRowWidth && x > 4f)
                 {
                     x = 4f;
@@ -335,7 +337,8 @@ namespace RimMind.Chat
             rowY = 0f;
             foreach (var prompt in quickPrompts)
             {
-                float btnWidth = Text.CalcSize(prompt[0]).x + 16f;
+                string label = RimMindTranslations.Get(prompt[0]);
+                float btnWidth = Text.CalcSize(label).x + 16f;
                 if (x + btnWidth > maxRowWidth && x > 4f)
                 {
                     x = 4f;
@@ -355,7 +358,7 @@ namespace RimMind.Chat
                 // Button text
                 Text.Anchor = TextAnchor.MiddleCenter;
                 GUI.color = new Color(0.85f, 0.9f, 1f);
-                Widgets.Label(btnRect, prompt[0]);
+                Widgets.Label(btnRect, label);
                 GUI.color = Color.white;
                 Text.Anchor = TextAnchor.UpperLeft;
 

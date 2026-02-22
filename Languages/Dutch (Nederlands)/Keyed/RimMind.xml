@@ -88,6 +88,45 @@
     <RimMind_ContextTabChat>Chat ({0} berichten, {1})</RimMind_ContextTabChat>
     <RimMind_ContextEmpty>(leeg)</RimMind_ContextEmpty>
     
+    <!-- Event Display Names -->
+    <RimMind_Event_RaidEnemy>Enemy Raid</RimMind_Event_RaidEnemy>
+    <RimMind_Event_RaidFriendly>Friendly Raid</RimMind_Event_RaidFriendly>
+    <RimMind_Event_PredatorsDeadlyHunt>Predator Manhunter</RimMind_Event_PredatorsDeadlyHunt>
+    <RimMind_Event_Siege>Siege</RimMind_Event_Siege>
+    <RimMind_Event_MechanoidCluster>Mechanoid Cluster</RimMind_Event_MechanoidCluster>
+    <RimMind_Event_FireStarted>Fire</RimMind_Event_FireStarted>
+    <RimMind_Event_Infestation>Infestation</RimMind_Event_Infestation>
+    <RimMind_Event_ToxicFallout>Toxic Fallout</RimMind_Event_ToxicFallout>
+    <RimMind_Event_SolarFlare>Solar Flare</RimMind_Event_SolarFlare>
+    <RimMind_Event_Eclipse>Eclipse</RimMind_Event_Eclipse>
+    <RimMind_Event_ColdSnap>Cold Snap</RimMind_Event_ColdSnap>
+    <RimMind_Event_HeatWave>Heat Wave</RimMind_Event_HeatWave>
+    <RimMind_Event_MentalBreakExtreme>Extreme Mental Break</RimMind_Event_MentalBreakExtreme>
+    <RimMind_Event_MentalBreakMajor>Major Mental Break</RimMind_Event_MentalBreakMajor>
+    <RimMind_Event_MentalBreakMinor>Minor Mental Break</RimMind_Event_MentalBreakMinor>
+    <RimMind_Event_DiseaseContracted>Disease Contracted</RimMind_Event_DiseaseContracted>
+    <RimMind_Event_DiseaseOutbreak>Disease Outbreak</RimMind_Event_DiseaseOutbreak>
+    <RimMind_Event_Death>Colonist Death</RimMind_Event_Death>
+    <RimMind_Event_WandererJoin>Wanderer Joins</RimMind_Event_WandererJoin>
+    <RimMind_Event_RefugeeChased>Chased Refugee</RimMind_Event_RefugeeChased>
+    <RimMind_Event_StrangerInBlackJoin>Stranger in Black</RimMind_Event_StrangerInBlackJoin>
+    <RimMind_Event_Marriage>Marriage</RimMind_Event_Marriage>
+    <RimMind_Event_TraderArrival>Trader Arrival</RimMind_Event_TraderArrival>
+    <RimMind_Event_CaravanRequest>Caravan Request</RimMind_Event_CaravanRequest>
+    <RimMind_Event_ResearchProjectFinished>Research Complete</RimMind_Event_ResearchProjectFinished>
+
+    <!-- Quick Prompt Buttons -->
+    <RimMind_Prompt_Bedroom>Bedroom</RimMind_Prompt_Bedroom>
+    <RimMind_Prompt_DiningKitchen>Dining+Kitchen</RimMind_Prompt_DiningKitchen>
+    <RimMind_Prompt_Barracks>Barracks</RimMind_Prompt_Barracks>
+    <RimMind_Prompt_PowerSetup>Power Setup</RimMind_Prompt_PowerSetup>
+    <RimMind_Prompt_Workshop>Workshop</RimMind_Prompt_Workshop>
+    <RimMind_Prompt_Hospital>Hospital</RimMind_Prompt_Hospital>
+    <RimMind_Prompt_Killbox>Killbox</RimMind_Prompt_Killbox>
+    <RimMind_Prompt_BaseLayout>Base Layout</RimMind_Prompt_BaseLayout>
+    <RimMind_Prompt_ColonyStatus>Colony Status</RimMind_Prompt_ColonyStatus>
+    <RimMind_Prompt_MapScout>Map Scout</RimMind_Prompt_MapScout>
+
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
 </LanguageData>

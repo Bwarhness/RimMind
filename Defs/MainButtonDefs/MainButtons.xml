@@ -2,7 +2,7 @@
 <Defs>
     <MainButtonDef>
         <defName>RimMind</defName>
-        <label>RimMind_MainButton</label>
+        <label>RimMind</label>
         <description>Open the RimMind AI chat companion. Ask questions about your colony, get advice, or chat with your AI advisor.</description>
         <workerClass>RimMind.Chat.MainButtonWorker_RimMind</workerClass>
         <order>1200</order>

@@ -20,20 +20,4 @@ Configure your OpenRouter API key in mod settings to get started.</description>
     <loadAfter>
         <li>brrainz.harmony</li>
     </loadAfter>
-    <languages>
-        <li><code>en-US</code><label>English</label></li>
-        <li><code>zh-CN</code><label>中文</label></li>
-        <li><code>ja-JP</code><label>日本語</label></li>
-        <li><code>ko-KR</code><label>한국어</label></li>
-        <li><code>de-DE</code><label>Deutsch</label></li>
-        <li><code>fr-FR</code><label>Français</label></li>
-        <li><code>es-ES</code><label>Español</label></li>
-        <li><code>pt-BR</code><label>Português</label></li>
-        <li><code>ru-RU</code><label>Русский</label></li>
-        <li><code>pl-PL</code><label>Polski</label></li>
-        <li><code>it-IT</code><label>Italiano</label></li>
-        <li><code>nl-NL</code><label>Nederlands</label></li>
-        <li><code>sv-SE</code><label>Svenska</label></li>
-        <li><code>tr-TR</code><label>Türkçe</label></li>
-    </languages>
 </ModMetaData>

@@ -90,7 +90,7 @@ namespace RimMind.Chat
             cachedSystemChars = systemPrompt.Length;
 
             tabChunks[0] = SplitIntoChunks(systemPrompt);
-            tabHeaders[0] = "System (" + FormatSize(cachedSystemChars) + ")";
+            tabHeaders[0] = RimMindTranslations.Get("RimMind_ContextTabSystem", FormatSize(cachedSystemChars));
         }
 
         private void BuildToolsTab()
@@ -121,7 +121,7 @@ namespace RimMind.Chat
             cachedToolsChars = toolsText.Length;
 
             tabChunks[1] = SplitIntoChunks(toolsText);
-            tabHeaders[1] = "Tools (" + cachedToolCount + ", " + FormatSize(cachedToolsChars) + ")";
+            tabHeaders[1] = RimMindTranslations.Get("RimMind_ContextTabTools", cachedToolCount.ToString(), FormatSize(cachedToolsChars));
         }
 
         private void BuildChatTab()
@@ -178,7 +178,7 @@ namespace RimMind.Chat
 
             string chatText = sb.ToString();
             tabChunks[2] = SplitIntoChunks(chatText);
-            tabHeaders[2] = "Chat (" + cachedMessageCount + " msgs, " + FormatSize(cachedHistoryChars) + ")";
+            tabHeaders[2] = RimMindTranslations.Get("RimMind_ContextTabChat", cachedMessageCount.ToString(), FormatSize(cachedHistoryChars));
         }
 
         private static List<string> SplitIntoChunks(string text)

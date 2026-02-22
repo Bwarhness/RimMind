@@ -88,6 +88,45 @@
     <RimMind_ContextTabChat>聊天 ({0} 条消息, {1})</RimMind_ContextTabChat>
     <RimMind_ContextEmpty>(空)</RimMind_ContextEmpty>
     
+    <!-- Event Display Names -->
+    <RimMind_Event_RaidEnemy>敌人袭击</RimMind_Event_RaidEnemy>
+    <RimMind_Event_RaidFriendly>友方袭击</RimMind_Event_RaidFriendly>
+    <RimMind_Event_PredatorsDeadlyHunt>食人猎手</RimMind_Event_PredatorsDeadlyHunt>
+    <RimMind_Event_Siege>围攻</RimMind_Event_Siege>
+    <RimMind_Event_MechanoidCluster>机械族集群</RimMind_Event_MechanoidCluster>
+    <RimMind_Event_FireStarted>火灾</RimMind_Event_FireStarted>
+    <RimMind_Event_Infestation>虫巢</RimMind_Event_Infestation>
+    <RimMind_Event_ToxicFallout>毒尘</RimMind_Event_ToxicFallout>
+    <RimMind_Event_SolarFlare>太阳耀斑</RimMind_Event_SolarFlare>
+    <RimMind_Event_Eclipse>日食</RimMind_Event_Eclipse>
+    <RimMind_Event_ColdSnap>寒流</RimMind_Event_ColdSnap>
+    <RimMind_Event_HeatWave>热浪</RimMind_Event_HeatWave>
+    <RimMind_Event_MentalBreakExtreme>极端精神崩溃</RimMind_Event_MentalBreakExtreme>
+    <RimMind_Event_MentalBreakMajor>严重精神崩溃</RimMind_Event_MentalBreakMajor>
+    <RimMind_Event_MentalBreakMinor>轻微精神崩溃</RimMind_Event_MentalBreakMinor>
+    <RimMind_Event_DiseaseContracted>感染疾病</RimMind_Event_DiseaseContracted>
+    <RimMind_Event_DiseaseOutbreak>疫病爆发</RimMind_Event_DiseaseOutbreak>
+    <RimMind_Event_Death>殖民者死亡</RimMind_Event_Death>
+    <RimMind_Event_WandererJoin>流浪者加入</RimMind_Event_WandererJoin>
+    <RimMind_Event_RefugeeChased>被追逐的难民</RimMind_Event_RefugeeChased>
+    <RimMind_Event_StrangerInBlackJoin>神秘黑衣人</RimMind_Event_StrangerInBlackJoin>
+    <RimMind_Event_Marriage>婚礼</RimMind_Event_Marriage>
+    <RimMind_Event_TraderArrival>商人到来</RimMind_Event_TraderArrival>
+    <RimMind_Event_CaravanRequest>商队请求</RimMind_Event_CaravanRequest>
+    <RimMind_Event_ResearchProjectFinished>研究完成</RimMind_Event_ResearchProjectFinished>
+
+    <!-- Quick Prompt Buttons -->
+    <RimMind_Prompt_Bedroom>卧室</RimMind_Prompt_Bedroom>
+    <RimMind_Prompt_DiningKitchen>餐厅+厨房</RimMind_Prompt_DiningKitchen>
+    <RimMind_Prompt_Barracks>兵营</RimMind_Prompt_Barracks>
+    <RimMind_Prompt_PowerSetup>电力设施</RimMind_Prompt_PowerSetup>
+    <RimMind_Prompt_Workshop>工作间</RimMind_Prompt_Workshop>
+    <RimMind_Prompt_Hospital>医务室</RimMind_Prompt_Hospital>
+    <RimMind_Prompt_Killbox>杀戮箱</RimMind_Prompt_Killbox>
+    <RimMind_Prompt_BaseLayout>基地布局</RimMind_Prompt_BaseLayout>
+    <RimMind_Prompt_ColonyStatus>殖民地状态</RimMind_Prompt_ColonyStatus>
+    <RimMind_Prompt_MapScout>地图侦察</RimMind_Prompt_MapScout>
+
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
 </LanguageData>
