@@ -31,6 +31,7 @@ namespace RimMind.Chat
         private int lastRefreshTick = 0;
         
         private Vector2 scrollPosition = Vector2.zero;
+        private Vector2 legendScrollPosition = Vector2.zero;
         
         // Tab names
         private readonly string[] tabNames = { "Current Map", "Walkability", "Buildability", "Rooms", "Cover" };
@@ -304,9 +305,6 @@ namespace RimMind.Chat
                         var cellRect = new Rect(x, y, cellSize, cellSize);
                         Widgets.DrawBoxSolid(cellRect, cellColor);
                         
-                        // Draw cell border
-                        Widgets.DrawBox(cellRect, 1);
-                        
                         x += cellSize;
                     }
                     y += cellSize;
@@ -323,34 +321,108 @@ namespace RimMind.Chat
         private void DrawLegend(Rect rect)
         {
             Widgets.DrawBoxSolid(rect, new Color(0.12f, 0.12f, 0.12f, 0.9f));
-            
+
             var innerRect = rect.ContractedBy(5f);
-            var viewRect = new Rect(0f, 0f, innerRect.width - 20f, 400f);
-            
-            Widgets.BeginScrollView(innerRect, ref scrollPosition, viewRect);
-            
-            float curY = 0f;
-            
-            Text.Font = GameFont.Medium;
-            Widgets.Label(new Rect(0f, curY, innerRect.width, 20f), "Legend");
-            curY += 25f;
-            Text.Font = GameFont.Small;
-            
             var colors = GetColorsForTab(activeTab);
+            var names = GetNamesForTab(activeTab);
+            float totalHeight = 25f + colors.Count * 20f;
+            var viewRect = new Rect(0f, 0f, innerRect.width - 16f, totalHeight);
+
+            Widgets.BeginScrollView(innerRect, ref legendScrollPosition, viewRect);
+
+            float curY = 0f;
+
+            Text.Font = GameFont.Medium;
+            Widgets.Label(new Rect(0f, curY, viewRect.width, 22f), "Legend");
+            curY += 25f;
+            Text.Font = GameFont.Tiny;
+
             foreach (var kvp in colors)
             {
-                var colorRect = new Rect(0f, curY, 15f, 15f);
+                var colorRect = new Rect(0f, curY, 14f, 14f);
                 Widgets.DrawBoxSolid(colorRect, kvp.Value);
-                Widgets.DrawBox(colorRect);
-                
-                var labelRect = new Rect(20f, curY, innerRect.width - 20f, 15f);
-                Widgets.Label(labelRect, $"{kvp.Key}");
-                
+
+                string name = names.TryGetValue(kvp.Key, out var n) ? n : kvp.Key.ToString();
+                var labelRect = new Rect(18f, curY - 1f, viewRect.width - 18f, 16f);
+                Widgets.Label(labelRect, $"{kvp.Key}  {name}");
+
                 curY += 18f;
             }
-            
+
+            Text.Font = GameFont.Small;
             Widgets.EndScrollView();
         }
+
+        private static Dictionary<char, string> GetNamesForTab(int tab)
+        {
+            switch (tab)
+            {
+                case 0: return currentMapNames;
+                case 1: return walkabilityNames;
+                case 2: return buildabilityNames;
+                case 3: return roomNames;
+                case 4: return coverNames;
+                default: return currentMapNames;
+            }
+        }
+
+        private static readonly Dictionary<char, string> currentMapNames = new Dictionary<char, string>
+        {
+            ['.'] = "Soil/Ground",
+            ['~'] = "Water",
+            ['^'] = "Mountain/Rock",
+            ['#'] = "Wall/Floor",
+            ['+'] = "Construction",
+            ['='] = "Structure",
+            ['D'] = "Door",
+            ['B'] = "Bed",
+            ['T'] = "Table",
+            ['S'] = "Stove",
+            ['L'] = "Light",
+            ['O'] = "Storage",
+            ['@'] = "Colonist",
+            ['c'] = "Animal",
+            ['h'] = "Hostile",
+            ['!'] = "Danger",
+            ['*'] = "Item/Resource",
+            ['x'] = "Item on Floor",
+        };
+
+        private static readonly Dictionary<char, string> walkabilityNames = new Dictionary<char, string>
+        {
+            ['.'] = "Walkable",
+            ['#'] = "Blocked",
+            ['@'] = "Pawn",
+            ['~'] = "Water",
+            ['^'] = "Mountain",
+        };
+
+        private static readonly Dictionary<char, string> buildabilityNames = new Dictionary<char, string>
+        {
+            ['+'] = "Buildable",
+            ['='] = "Existing",
+            ['-'] = "Unbuildable",
+            ['^'] = "Mountain",
+            ['#'] = "Wall",
+            ['~'] = "Water",
+        };
+
+        private static readonly Dictionary<char, string> roomNames = new Dictionary<char, string>
+        {
+            ['#'] = "Wall",
+            ['D'] = "Door",
+            ['.'] = "Interior",
+            ['o'] = "Outside",
+            ['@'] = "Pawn",
+        };
+
+        private static readonly Dictionary<char, string> coverNames = new Dictionary<char, string>
+        {
+            ['█'] = "Full Cover",
+            ['▒'] = "Partial Cover",
+            ['.'] = "No Cover",
+            ['@'] = "Pawn",
+        };
         
         private Color GetColorForSymbol(char code, int tab)
         {
@@ -376,44 +448,40 @@ namespace RimMind.Chat
             }
         }
         /// <summary>
-        /// Minimal JSON grid parser - parses {"grid":[["a","b",...], ...]} format
+        /// Minimal JSON grid parser - parses {"grid":["..#@~..", "..#.~..", ...]} format
+        /// Each row is a string where each character is a cell code.
         /// </summary>
-        private static System.Collections.Generic.List<System.Collections.Generic.List<string>> ParseGrid(string json)
+        private static List<List<string>> ParseGrid(string json)
         {
-            var result = new System.Collections.Generic.List<System.Collections.Generic.List<string>>();
+            var result = new List<List<string>>();
             if (string.IsNullOrEmpty(json)) return result;
-            
+
             int gridStart = json.IndexOf("\"grid\":");
             if (gridStart < 0) return result;
-            
-            int outerArrayStart = json.IndexOf('[', gridStart);
-            if (outerArrayStart < 0) return result;
-            
-            int pos = outerArrayStart + 1;
-            while (pos < json.Length)
+
+            int arrayStart = json.IndexOf('[', gridStart);
+            if (arrayStart < 0) return result;
+
+            // Find matching closing bracket
+            int pos = arrayStart + 1;
+            while (pos < json.Length && json[pos] != ']')
             {
-                // Skip whitespace and commas between rows
-                while (pos < json.Length && json[pos] != '[' && json[pos] != ']') pos++;
-                if (pos >= json.Length || json[pos] == ']') break;
-                
-                pos++; // skip row '['
-                var row = new System.Collections.Generic.List<string>();
-                
-                while (pos < json.Length && json[pos] != ']')
+                if (json[pos] == '"')
                 {
-                    if (json[pos] == '"')
-                    {
-                        pos++; // skip opening quote
-                        int end = json.IndexOf('"', pos);
-                        if (end < 0) { row.Add(" "); break; }
-                        row.Add(json.Substring(pos, end - pos));
-                        pos = end + 1;
-                    }
-                    else pos++;
+                    pos++; // skip opening quote
+                    int end = json.IndexOf('"', pos);
+                    if (end < 0) break;
+
+                    string rowStr = json.Substring(pos, end - pos);
+                    var row = new List<string>();
+                    foreach (char c in rowStr)
+                        row.Add(c.ToString());
+                    if (row.Count > 0)
+                        result.Add(row);
+
+                    pos = end + 1;
                 }
-                if (pos < json.Length) pos++; // skip row ']'
-                
-                if (row.Count > 0) result.Add(row);
+                else pos++;
             }
             return result;
         }
