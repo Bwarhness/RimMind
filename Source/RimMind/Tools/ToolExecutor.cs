@@ -17,6 +17,7 @@ namespace RimMind.Tools
             { "undraft_colonist", args => ColonistTools.UndraftColonist(args?["name"]?.Value) },
             { "draft_all", args => ColonistTools.DraftAll() },
             { "undraft_all", args => ColonistTools.UndraftAll() },
+            { "get_colonist_locations", args => ColonistTools.GetColonistLocations() },
 
             // Social
             { "get_relationships", args => SocialTools.GetRelationships(args?["name"]?.Value) },
@@ -48,6 +49,7 @@ namespace RimMind.Tools
             { "get_resources", args => ColonyTools.GetResources(args?["category"]?.Value) },
             { "get_rooms", args => ColonyTools.GetRooms() },
             { "get_stockpiles", args => ColonyTools.GetStockpiles() },
+            { "get_resource_trends", args => ColonyTools.GetResourceTrends() },
 
             // Research
             { "get_research_status", args => ResearchTools.GetResearchStatus() },
@@ -114,6 +116,11 @@ namespace RimMind.Tools
             // Mood
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
             { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
+            { "get_mood_trends", args => MoodTools.GetMoodTrends() },
+            { "get_environment_quality", args => EnvironmentTools.GetEnvironmentQuality() },
+
+            // Social
+            { "get_social_risks", args => SocialTools.GetSocialRisks() },
 
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
