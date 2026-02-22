@@ -194,6 +194,7 @@ namespace RimMind.Tools
             // Designations
             { "designate_hunt", args => DesignationTools.DesignateHunt(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
             { "designate_tame", args => DesignationTools.DesignateTame(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
+            { "designate_slaughter", args => DesignationTools.DesignateSlaughter(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
             { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["animal"]?.Value, args?["id"] != null ? args["id"].AsInt : -1) },
             { "designate_mine", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateMine(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
             { "designate_chop", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateChop(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },

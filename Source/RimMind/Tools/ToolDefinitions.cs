@@ -414,7 +414,11 @@ namespace RimMind.Tools
                 MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
                 MakeOptionalParam("animal", "string", "Animal name or species to tame (e.g., 'Muffalo', 'Alpaca'). Used with count for bulk."),
                 MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
-            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Use id for precise targeting or animal name to search.",
+            tools.Add(MakeTool("designate_slaughter", "Mark tamed animals for slaughter. Only works on colony-owned animals (not wild). Returns estimated meat yield. Best workflow: call list_animals first, then use the animal's id for precise targeting. Alternatively use animal name/species with count for bulk.",
+                MakeOptionalParam("id", "integer", "Unique animal ID from list_animals for precise targeting (preferred)"),
+                MakeOptionalParam("animal", "string", "Animal name or species to slaughter (e.g., 'Muffalo', 'chicken'). Used with count for bulk."),
+                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt, tame, or slaughter designation on an animal. Use id for precise targeting or animal name to search.",
                 MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
                 MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",

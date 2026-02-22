@@ -180,8 +180,9 @@ namespace RimMind.Tools
                 pawn = map.mapPawns.AllPawnsSpawned
                     .FirstOrDefault(p => p.RaceProps.Animal && p.thingIDNumber == id &&
                         (map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null ||
-                         map.designationManager.DesignationOn(p, DesignationDefOf.Tame) != null));
-                if (pawn == null) return ToolExecutor.JsonError("No animal with id " + id + " with an active hunt/tame designation found.");
+                         map.designationManager.DesignationOn(p, DesignationDefOf.Tame) != null ||
+                         map.designationManager.DesignationOn(p, DesignationDefOf.Slaughter) != null));
+                if (pawn == null) return ToolExecutor.JsonError("No animal with id " + id + " with an active hunt/tame/slaughter designation found.");
             }
             else
             {
@@ -194,16 +195,19 @@ namespace RimMind.Tools
                          p.kindDef?.label?.Equals(lower, StringComparison.OrdinalIgnoreCase) == true ||
                          p.LabelCap.ToString().Equals(animal, StringComparison.OrdinalIgnoreCase)) &&
                         (map.designationManager.DesignationOn(p, DesignationDefOf.Hunt) != null ||
-                         map.designationManager.DesignationOn(p, DesignationDefOf.Tame) != null));
-                if (pawn == null) return ToolExecutor.JsonError("No animal matching '" + animal + "' with an active hunt/tame designation found.");
+                         map.designationManager.DesignationOn(p, DesignationDefOf.Tame) != null ||
+                         map.designationManager.DesignationOn(p, DesignationDefOf.Slaughter) != null));
+                if (pawn == null) return ToolExecutor.JsonError("No animal matching '" + animal + "' with an active hunt/tame/slaughter designation found.");
             }
 
             var huntDes = map.designationManager.DesignationOn(pawn, DesignationDefOf.Hunt);
             var tameDes = map.designationManager.DesignationOn(pawn, DesignationDefOf.Tame);
+            var slaughterDes = map.designationManager.DesignationOn(pawn, DesignationDefOf.Slaughter);
 
             string action = "none";
             if (huntDes != null) { map.designationManager.RemoveDesignation(huntDes); action = "hunt"; }
             if (tameDes != null) { map.designationManager.RemoveDesignation(tameDes); action = "tame"; }
+            if (slaughterDes != null) { map.designationManager.RemoveDesignation(slaughterDes); action = "slaughter"; }
 
             var result = new JSONObject();
             result["success"] = true;
@@ -307,6 +311,128 @@ namespace RimMind.Tools
             result["plantsDesignated"] = designated;
             result["action"] = "harvest";
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Designate tamed animals for slaughter.
+        /// Only works on colony-owned animals (Faction == Player).
+        /// Use id for precise targeting, or animal+count for species-based.
+        /// count: 1 (default) = one animal, N = exactly N, -1 = all matching.
+        /// </summary>
+        public static string DesignateSlaughter(string animal, int count = 1, int id = -1)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            // ID-based targeting: find exact animal by thingIDNumber
+            if (id >= 0)
+            {
+                var pawn = FindTamedAnimalById(map, id);
+                if (pawn == null) return ToolExecutor.JsonError("No tamed animal with id " + id + " found. Use list_animals to see colony animals with IDs. Only tamed animals can be slaughtered.");
+                if (map.designationManager.DesignationOn(pawn, DesignationDefOf.Slaughter) != null)
+                    return ToolExecutor.JsonError("Animal '" + pawn.LabelCap + "' (id " + id + ") is already designated for slaughter.");
+
+                map.designationManager.AddDesignation(new Designation(pawn, DesignationDefOf.Slaughter));
+                int meatYield = (int)Math.Round(pawn.GetStatValue(StatDefOf.MeatAmount));
+                var result = new JSONObject();
+                result["success"] = true;
+                result["animal"] = pawn.LabelCap.ToString();
+                result["species"] = pawn.kindDef?.label ?? "Unknown";
+                result["id"] = id;
+                result["action"] = "slaughter";
+                result["meat_yield"] = meatYield;
+                return result.ToString();
+            }
+
+            // Species/name-based targeting
+            if (string.IsNullOrEmpty(animal)) return ToolExecutor.JsonError("'animal' or 'id' parameter required.");
+
+            var matches = FindTamedAnimals(map, animal);
+            if (matches.Count == 0)
+                return ToolExecutor.JsonError("No tamed animal matching '" + animal + "' found. Use list_animals to see colony animals. Only tamed animals can be slaughtered (wild animals should be hunted instead).");
+
+            int limit = count == -1 ? matches.Count : count;
+            int designated = 0;
+            int alreadyDesignated = 0;
+            string species = null;
+            int totalMeatYield = 0;
+            var designatedAnimals = new JSONArray();
+
+            foreach (var pawn in matches)
+            {
+                if (designated >= limit) break;
+                species = species ?? (pawn.kindDef?.label ?? "Unknown");
+                if (map.designationManager.DesignationOn(pawn, DesignationDefOf.Slaughter) != null) { alreadyDesignated++; continue; }
+
+                map.designationManager.AddDesignation(new Designation(pawn, DesignationDefOf.Slaughter));
+                int meatYield = (int)Math.Round(pawn.GetStatValue(StatDefOf.MeatAmount));
+                totalMeatYield += meatYield;
+                var entry = new JSONObject();
+                entry["id"] = pawn.thingIDNumber;
+                entry["name"] = pawn.LabelCap.ToString();
+                entry["meat_yield"] = meatYield;
+                designatedAnimals.Add(entry);
+                designated++;
+            }
+
+            if (designated == 0 && alreadyDesignated > 0)
+                return ToolExecutor.JsonError("All " + alreadyDesignated + " matching animals already designated for slaughter.");
+            if (designated == 0)
+                return ToolExecutor.JsonError("Could not designate any matching animals for slaughter.");
+
+            var result2 = new JSONObject();
+            result2["success"] = true;
+            result2["species"] = species;
+            result2["designated_count"] = designated;
+            result2["designated"] = designatedAnimals;
+            result2["total_matching"] = matches.Count;
+            result2["total_meat_yield"] = totalMeatYield;
+            if (alreadyDesignated > 0) result2["already_designated"] = alreadyDesignated;
+            result2["action"] = "slaughter";
+            return result2.ToString();
+        }
+
+        /// <summary>
+        /// Find a tamed animal by its unique thingIDNumber.
+        /// </summary>
+        private static Pawn FindTamedAnimalById(Map map, int id)
+        {
+            return map.mapPawns.AllPawnsSpawned
+                .FirstOrDefault(p => p.RaceProps.Animal &&
+                    p.Faction == Faction.OfPlayer &&
+                    p.thingIDNumber == id);
+        }
+
+        /// <summary>
+        /// Find ALL tamed animals matching the search string.
+        /// If search matches a specific named animal, returns just that one.
+        /// If search matches a species/kind, returns ALL animals of that species.
+        /// </summary>
+        private static List<Pawn> FindTamedAnimals(Map map, string search)
+        {
+            var tamedAnimals = map.mapPawns.AllPawnsSpawned
+                .Where(p => p.RaceProps.Animal && p.Faction == Faction.OfPlayer)
+                .ToList();
+
+            // Exact name match first — return single animal
+            var namedMatch = tamedAnimals.FirstOrDefault(p =>
+                p.Name?.ToStringShort?.Equals(search, StringComparison.OrdinalIgnoreCase) == true);
+            if (namedMatch != null) return new List<Pawn> { namedMatch };
+
+            // Species/kind exact match — return ALL of that species
+            var speciesMatches = tamedAnimals.Where(p =>
+                p.kindDef?.label?.Equals(search, StringComparison.OrdinalIgnoreCase) == true ||
+                p.def.label?.Equals(search, StringComparison.OrdinalIgnoreCase) == true ||
+                p.LabelCap.ToString().Equals(search, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (speciesMatches.Count > 0) return speciesMatches;
+
+            // Contains match as last resort — return ALL matching
+            string lower = search.ToLower();
+            var containsMatches = tamedAnimals.Where(p =>
+                p.LabelCap.ToString().ToLower().Contains(lower) ||
+                (p.kindDef?.label?.ToLower().Contains(lower) == true)).ToList();
+
+            return containsMatches;
         }
 
         /// <summary>
