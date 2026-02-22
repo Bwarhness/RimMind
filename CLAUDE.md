@@ -351,6 +351,20 @@ AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
+### 🔨 Always Build Before Pushing (MANDATORY)
+**Never push code that hasn't been verified to compile.** .NET SDK is installed locally — use it.
+
+```bash
+export PATH="/home/node/.dotnet:$PATH"
+cd /home/node/.openclaw/workspace-rimmind/RimMind
+dotnet build Source/RimMind/RimMind.csproj -c Release
+```
+
+- ✅ `Build succeeded` → safe to commit and push
+- ❌ Any error → fix it first, then build again before pushing
+- The project uses `Krafs.Rimworld.Ref` NuGet package — no actual RimWorld game files needed
+- First run will restore NuGet packages automatically (~2s), subsequent builds are ~4s
+
 ### 🌍 Translations (MANDATORY for all UI)
 **Every user-visible string must be translated.** RimMind ships with 14 language files — all UI text must go through the keyed translation system, never hardcoded.
 
