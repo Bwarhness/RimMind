@@ -351,6 +351,38 @@ AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
+### 🌍 Translations (MANDATORY for all UI)
+**Every user-visible string must be translated.** RimMind ships with 14 language files — all UI text must go through the keyed translation system, never hardcoded.
+
+**Language files location:** `Languages/Keyed/`
+- `en-US.xml` (English — source of truth)
+- `de-DE.xml`, `es-ES.xml`, `fr-FR.xml`, `it-IT.xml`, `ja-JP.xml`, `ko-KR.xml`
+- `nl-NL.xml`, `pl-PL.xml`, `pt-BR.xml`, `ru-RU.xml`, `sv-SE.xml`, `tr-TR.xml`, `zh-CN.xml`
+
+**In C# code, always use:**
+```csharp
+"RimMind_YourKey".Translate()         // simple string
+"RimMind_YourKey".Translate(arg1)     // with format arg {0}
+```
+
+**Never do this:**
+```csharp
+Widgets.Label(rect, "Click here");    // ❌ hardcoded string
+```
+
+**When adding any new UI feature:**
+1. Add the key + English string to `en-US.xml`
+2. Add the same key to **all 13 other language files** — use English as fallback text initially (e.g. `<RimMind_MyKey>My English Text</RimMind_MyKey>`)
+3. Use `"RimMind_MyKey".Translate()` in code
+
+**Key naming convention:** `RimMind_` prefix + PascalCase descriptor
+- Settings: `RimMind_SettingName`
+- Buttons: `RimMind_ButtonLabel`
+- Messages: `RimMind_MessageDescription`
+- Tooltips: `RimMind_TooltipSomething`
+
+This applies to: button labels, window titles, tooltips, settings labels, error messages, status text, and any string a player sees.
+
 ## Changelog
 - **2026-02-22**: Added `wiki_lookup` tool — Live RimWorld wiki queries. AI can now search the RimWorld wiki (rimworldwiki.com) via MediaWiki API and return page extracts. Use for game mechanic questions, item/building descriptions, event explanations, or any factual RimWorld information. Returns page title, extract (capped at 800 chars), URL, and related pages. Handles search failures gracefully. New file: `Source/RimMind/Tools/WikiTools.cs`.
 - **2026-02-17**: Phase 8 - Animal Intelligence — Enhanced animal visibility and management. Added `get_animal_stats` tool for comprehensive species data (carrying capacity, movement speed, combat stats, production abilities with intervals, wildness, trainability, filth rate, manhunter chances). Added `get_wild_animals` tool to list all wild animals on map by species with taming difficulty, hunting value, rarity assessment, and recommendations. Enhanced `list_animals` to show current carrying load for pack animals. Enhanced `get_animal_details` to show production schedules (next shearing/milking/egg with ready status). AI can now: identify taming opportunities ("Rare Thrumbo - worth attempting tame"), optimize pack animals for caravans, remind about production readiness ("Muffalo ready for milking"), and advise on hunting targets. Total tools increased from 52 to 54.
