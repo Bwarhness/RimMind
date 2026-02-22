@@ -8,14 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Assinatura Max/Pro)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>Provedor personalizado (OpenAI-compatible)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>Configurações do provedor personalizado</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>Suporta APIs compatíveis com OpenAI (Ollama, LM Studio, Groq, Together, etc.)</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>Supports OpenAI-compatible APIs (Ollama, LM Studio, Groq, Together, etc.). Requires a provider that supports function/tool calling for full colony management features.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>URL do endpoint:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>Exemplos: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>Chave API (opcional para LLMs locais):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Nome do modelo:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Exemplos: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
     <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>Disable if your provider returns 400 errors. Without tools, the AI can still chat but cannot query colony data.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCallingDesc>RimMind requires tool/function calling to query and manage your colony. Disable only if your provider does not support it — this will break all colony features and leave the AI unable to help beyond basic chat.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Credenciais do Claude Code detectadas. Sua assinatura será usada automaticamente.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code não está logado. Execute 'claude login' em um terminal.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Chave API Anthropic:</RimMind_AnthropicAPIKey>

@@ -8,14 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Max/Pro-prenumeration)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>Anpassad leverantör (OpenAI-kompatibel)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>Anpassade leverantörsinställningar</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>Stöder OpenAI-kompatibla API:er (Ollama, LM Studio, Groq, Together, etc.)</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>Supports OpenAI-compatible APIs (Ollama, LM Studio, Groq, Together, etc.). Requires a provider that supports function/tool calling for full colony management features.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>Endpoint-URL:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>Exempel: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>API-nyckel (valfritt för lokala LLM:er):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Modellnamn:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Exempel: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
     <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>Disable if your provider returns 400 errors. Without tools, the AI can still chat but cannot query colony data.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCallingDesc>RimMind requires tool/function calling to query and manage your colony. Disable only if your provider does not support it — this will break all colony features and leave the AI unable to help beyond basic chat.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code-uppgifter upptäcktes. Din prenumeration används automatiskt.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code inte inloggad. Kör 'claude login' i en terminal.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API-nyckel:</RimMind_AnthropicAPIKey>

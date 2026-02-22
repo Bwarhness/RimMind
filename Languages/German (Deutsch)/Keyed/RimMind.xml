@@ -8,14 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Max/Pro Abonnement)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>Benutzerdefinierter Anbieter (OpenAI-kompatibel)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>Benutzerdefinierte Anbieter-Einstellungen</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>Unterstützt OpenAI-kompatible APIs (Ollama, LM Studio, Groq, Together, etc.)</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>Supports OpenAI-compatible APIs (Ollama, LM Studio, Groq, Together, etc.). Requires a provider that supports function/tool calling for full colony management features.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>Endpunkt-URL:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>Beispiele: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>API-Schlüssel (optional für lokale LLMs):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Modellname:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Beispiele: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
     <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>Disable if your provider returns 400 errors. Without tools, the AI can still chat but cannot query colony data.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCallingDesc>RimMind requires tool/function calling to query and manage your colony. Disable only if your provider does not support it — this will break all colony features and leave the AI unable to help beyond basic chat.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code-Anmeldedaten erkannt. Ihr Abonnement wird automatisch verwendet.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code nicht angemeldet. Führen Sie 'claude login' in einem Terminal aus.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API-Schlüssel:</RimMind_AnthropicAPIKey>
