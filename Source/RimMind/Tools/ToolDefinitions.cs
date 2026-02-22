@@ -406,18 +406,21 @@ namespace RimMind.Tools
                 MakeParam("colonist", "string", "The colonist's name")));
 
             // Designation Tools (Hunting/Taming/Resource Gathering)
-            tools.Add(MakeTool("designate_hunt", "Mark wild animals for hunting. Best workflow: call get_wild_animals first, then use the animal's id for precise targeting. Alternatively use animal name/species with count for bulk operations.",
-                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
-                MakeOptionalParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo'). Used with count for bulk."),
-                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
-            tools.Add(MakeTool("designate_tame", "Mark wild animals for taming. Best workflow: call get_wild_animals first, then use the animal's id to tame specific individuals (e.g., one male and one female for breeding). Alternatively use animal name/species with count for bulk.",
-                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
-                MakeOptionalParam("animal", "string", "Animal name or species to tame (e.g., 'Muffalo', 'Alpaca'). Used with count for bulk."),
-                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
-            tools.Add(MakeTool("designate_slaughter", "Mark tamed animals for slaughter. Only works on colony-owned animals (not wild). Returns estimated meat yield. Best workflow: call list_animals first, then use the animal's id for precise targeting. Alternatively use animal name/species with count for bulk.",
-                MakeOptionalParam("id", "integer", "Unique animal ID from list_animals for precise targeting (preferred)"),
-                MakeOptionalParam("animal", "string", "Animal name or species to slaughter (e.g., 'Muffalo', 'chicken'). Used with count for bulk."),
-                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
+            tools.Add(MakeTool("designate_hunt",
+                "Mark specific wild animals for hunting by their IDs. REQUIRED WORKFLOW: First call get_wild_animals to see animals with IDs, then pass those exact IDs here. Do not guess — always use IDs from get_wild_animals to target specific animals.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for hunting (from get_wild_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to hunt every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("designate_tame",
+                "Mark specific wild animals for taming by their IDs. REQUIRED WORKFLOW: First call get_wild_animals to see animals with IDs, then pass those exact IDs here. Do not guess — always use IDs from get_wild_animals to target specific animals.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for taming (from get_wild_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to tame every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("designate_slaughter",
+                "Mark specific tamed animals for slaughter by their IDs. Only works on colony-owned animals. REQUIRED WORKFLOW: First call list_animals to see animals with IDs, then pass those exact IDs here. Returns estimated meat yield.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for slaughter (from list_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to slaughter every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
             tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt, tame, or slaughter designation on an animal. Use id for precise targeting or animal name to search.",
                 MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
                 MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
@@ -644,6 +647,21 @@ namespace RimMind.Tools
 
             var itemSchema = new JSONObject();
             itemSchema["type"] = "string";
+            p["items"] = itemSchema;
+
+            return p;
+        }
+
+        private static JSONObject MakeIntArrayParam(string name, string description, bool required)
+        {
+            var p = new JSONObject();
+            p["name"] = name;
+            p["param_type"] = "array";
+            p["description"] = description;
+            p["required"] = required;
+
+            var itemSchema = new JSONObject();
+            itemSchema["type"] = "integer";
             p["items"] = itemSchema;
 
             return p;
