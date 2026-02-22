@@ -423,6 +423,11 @@ This applies to: button labels, window titles, tooltips, settings labels, error 
 
 - **2026-02-18**: **Phase 7: Event & Disaster Intelligence** — Enhanced AI understanding of active events and disasters. Tools `get_active_events` and `get_disaster_risks` provide comprehensive event tracking with duration remaining, severity assessment, temperature impacts, specific risks, and actionable recommendations. Event-specific intelligence covers cold snaps, heat waves, toxic fallout, solar flares, eclipses, volcanic winter, nuclear fallout, and more. Disaster risk assessment analyzes infestation probability (overhead mountain tiles, spawn locations), Zzzt risk (stored battery power, explosion damage), and fire risk (flammable materials). Enhanced `get_weather_and_season` to include active events summary with note to use `get_active_events` for detailed information. AI can now explain why disasters happened, predict impacts, and recommend prevention strategies. Addresses issue #61.
 
+## Version Management
+- Auto-bump: GitHub Action increments patch version in `About/About.xml` on every push to `dev`
+- Version displayed in-game on bottom toolbar button and chat window title
+- `<modVersion>` is the correct RimWorld XML field (not `<version>`)
+
 ## Future Plans (Deferred)
 - Phase 2: Enhanced Automation UI (import/export configs, more event types)
 - Phase 3: LLM-powered colonist dialogue (Harmony patch on social interactions)
