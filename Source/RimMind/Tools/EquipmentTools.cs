@@ -55,16 +55,42 @@ namespace RimMind.Tools
             var apparel = cell.GetThingList(map).FirstOrDefault(t => t.def.IsApparel);
             if (apparel == null) return ToolExecutor.JsonError("No apparel found at " + x + "," + z);
 
+            // Check if pawn already has an apparel-related job active or queued
+            // If so, queue this job instead of replacing the current one
+            bool hasApparelJobActive = pawn.CurJobDef == JobDefOf.Wear || 
+                                       pawn.CurJobDef == JobDefOf.RemoveApparel;
+            bool hasApparelJobQueued = pawn.jobs.jobQueue != null && 
+                                       pawn.jobs.jobQueue.Count > 0 &&
+                                       pawn.jobs.jobQueue.Any(qj => qj.job.def == JobDefOf.Wear || 
+                                                                     qj.job.def == JobDefOf.RemoveApparel);
+
             // Create job to wear
             var job = JobMaker.MakeJob(JobDefOf.Wear, apparel);
-            if (pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+            
+            var result = new JSONObject();
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["apparel"] = apparel.LabelCap.ToString();
+            result["location"] = x + "," + z;
+
+            if (hasApparelJobActive || hasApparelJobQueued)
             {
-                var result = new JSONObject();
+                // Queue the job instead of replacing current job
+                // This allows multiple wear_apparel calls in a batch to all execute sequentially
+                pawn.jobs.jobQueue.EnqueueLast(job, JobTag.Misc);
                 result["success"] = true;
-                result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
-                result["apparel"] = apparel.LabelCap.ToString();
-                result["location"] = x + "," + z;
+                result["status"] = "queued";
+                result["note"] = "Job queued behind existing apparel job. Will execute when current job completes.";
                 return result.ToString();
+            }
+            else
+            {
+                // No apparel job active, take the job immediately
+                if (pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+                {
+                    result["success"] = true;
+                    result["status"] = "started";
+                    return result.ToString();
+                }
             }
 
             return ToolExecutor.JsonError("Failed to assign wear job.");

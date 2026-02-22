@@ -95,6 +95,12 @@ DOORS & ROTATION:
 - Cooler rotation = cold side direction. Beds rotation = headboard direction.
 - Workbenches (stoves, benches) need 1 clear cell in front for pawn access. Auto-rotation is tried if placement fails.
 
+APPAREL & EQUIPMENT:
+- When equipping multiple apparel items on a colonist, the game needs time between equips to resolve layer conflicts.
+- wear_apparel will automatically queue jobs when called in rapid succession — subsequent items are queued behind the first.
+- Check the response 'status' field: 'started' = job began immediately, 'queued' = job will execute after current apparel job completes.
+- For best results, equip one item at a time and verify each completes before the next.
+
 OTHER RULES:
 - All blueprints are FORBIDDEN by default. Tell the player to say ""approve_buildings"" when ready (or set auto_approve to true).
 - If defName is wrong, the error suggests similar names — use the suggestion.
