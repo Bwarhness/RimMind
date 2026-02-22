@@ -236,6 +236,14 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map: species, location, health, taming difficulty, and value rating. Returns recommendations for taming opportunities (easy/hard/very hard) and hunting targets. Use this to identify rare animals like Thrumbos or plan hunting expeditions.",
                 MakeOptionalParam("speciesFilter", "string", "Optional filter by species name")));
 
+            // Ideology DLC Tools
+            tools.Add(MakeTool("get_ideology_info", "Get colony ideology details including precepts, roles, and rituals (Ideology DLC). Returns ideology name, memes, all precepts with impact levels, role assignments (filled/unfilled slots), and structure. Use this to understand ideological restrictions and requirements.",
+                MakeOptionalParam("name", "string", "Optional colonist name to get personal ideology details")));
+            tools.Add(MakeTool("get_pawn_ideology_status", "Get individual colonist's ideological status (Ideology DLC): assigned role, certainty level, recent certainty factors, and precept comfort. Use to check role assignments and morale factors related to ideology.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("get_ritual_status", "Get status of scheduled and active rituals (Ideology DLC): upcoming ritual obligations with countdown, active ritual details, and colonists with pending obligations. Use to plan ritual preparation and ensure ideological compliance."));
+            tools.Add(MakeTool("analyze_ideology_conflicts", "Detect ideological conflicts affecting colony mood (Ideology DLC): colonists at risk of certainty loss, colonists needing roles, and precept-related issues. Use to proactively manage ideological stability."));
+
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
                 MakeOptionalParam("count", "integer", "Number of recent events to return. Defaults to 5.")));
