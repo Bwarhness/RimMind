@@ -231,8 +231,9 @@ namespace RimMind.Tools
             var recommendedActivities = new JSONArray();
             var buildings = map.listerBuildings.allBuildingsColonist;
 
-            foreach (string joyType in available)
+            for (int i = 0; i < available.Count; i++)
             {
+                string joyType = available[i].Value;
                 var joyKind = allJoyKinds.FirstOrDefault(jk => jk.defName == joyType);
                 if (joyKind == null) continue;
 
@@ -256,8 +257,9 @@ namespace RimMind.Tools
 
             // Missing recreation types for this colonist
             var missingTypes = new JSONArray();
-            foreach (string joyType in available)
+            for (int i = 0; i < available.Count; i++)
             {
+                string joyType = available[i].Value;
                 var joyKind = allJoyKinds.FirstOrDefault(jk => jk.defName == joyType);
                 if (joyKind == null) continue;
 

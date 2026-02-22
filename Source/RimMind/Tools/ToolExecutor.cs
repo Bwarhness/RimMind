@@ -146,6 +146,11 @@ namespace RimMind.Tools
             { "analyze_recreation_diversity", args => JoyTools.AnalyzeRecreationDiversity() },
             { "recommend_joy_activities", args => JoyTools.RecommendJoyActivities(args?["pawn_name"]?.Value) },
 
+            // Joy & Recreation
+            { "get_joy_saturation", args => JoyTools.GetJoySaturation(args?["pawn_name"]?.Value) },
+            { "analyze_recreation_diversity", args => JoyTools.AnalyzeRecreationDiversity() },
+            { "recommend_joy_activities", args => JoyTools.RecommendJoyActivities(args?["pawn_name"]?.Value) },
+
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
             { "remove_plans", args => PlanTools.RemovePlans(args) },
@@ -170,6 +175,10 @@ namespace RimMind.Tools
             // World & Diplomacy
             { "list_world_destinations", args => WorldTools.ListWorldDestinations() },
             { "get_caravan_info", args => WorldTools.GetCaravanInfo() },
+            { "analyze_caravan_capacity", args => CaravanTools.AnalyzeCaravanCapacity(args?["caravan_id"]?.Value) },
+            { "predict_caravan_travel", args => CaravanTools.PredictCaravanTravel(args?["destination_tile"]?.Value, args?["destination_name"]?.Value, args?["caravan_id"]?.Value) },
+            { "optimize_caravan_composition", args => CaravanTools.OptimizeCaravanComposition(args?["destination"]?.Value, args?["purpose"]?.Value, args?["max_colonists"]?.AsInt ?? 0) },
+            { "get_trade_settlement_info", args => CaravanTools.GetTradeSettlementInfo(args?["max_distance_tiles"]?.AsInt ?? 20) },
             { "get_trade_status", args => WorldTools.GetTradeStatus() },
             { "list_trader_inventory", args => WorldTools.ListTraderInventory() },
             { "list_factions", args => WorldTools.ListFactions() },
