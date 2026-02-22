@@ -125,6 +125,9 @@ namespace RimMind.Tools
 
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
+            { "get_disease_immunity_status", args => MedicalTools.GetDiseaseImmunityStatus(args?["pawn_name"]?.Value) },
+            { "get_drug_tolerance", args => MedicalTools.GetDrugTolerance(args?["pawn_name"]?.Value) },
+            { "predict_surgery_success", args => MedicalTools.PredictSurgerySuccess(args?["patient_name"]?.Value, args?["surgery_def"]?.Value) },
 
             // Health Check
             { "colony_health_check", args => HealthCheckTools.ColonyHealthCheck() },
