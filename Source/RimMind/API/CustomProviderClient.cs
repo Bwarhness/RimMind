@@ -113,6 +113,12 @@ namespace RimMind.API
                             }
                         }
                         catch { }
+
+                        // Add helpful hint for 400 errors (often caused by unsupported tool/function calling)
+                        if (statusCode == 400 && RimMindMod.Settings.customProviderSupportsTools)
+                        {
+                            errorMsg += "\n\n[Hint] If your provider doesn't support function/tool calling, disable 'Supports tool calling' in RimMind mod settings.";
+                        }
                     }
                     else
                     {

@@ -24,6 +24,7 @@ namespace RimMind.Core
         public string customEndpointUrl = "";
         public string customApiKey = "";
         public string customModelId = "";
+        public bool customProviderSupportsTools = true;
 
         // Shared settings
         public float temperature = 0.7f;
@@ -61,6 +62,7 @@ namespace RimMind.Core
             Scribe_Values.Look(ref customEndpointUrl, "customEndpointUrl", "");
             Scribe_Values.Look(ref customApiKey, "customApiKey", "");
             Scribe_Values.Look(ref customModelId, "customModelId", "");
+            Scribe_Values.Look(ref customProviderSupportsTools, "customProviderSupportsTools", true);
             Scribe_Values.Look(ref temperature, "temperature", 0.7f);
             Scribe_Values.Look(ref maxTokens, "maxTokens", 4096);
             Scribe_Values.Look(ref enableChatCompanion, "enableChatCompanion", true);

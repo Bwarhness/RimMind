@@ -14,6 +14,8 @@
     <RimMind_APIKeyOptional>Klucz API (opcjonalny dla lokalnych LLM):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Nazwa modelu:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Przykłady: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>Disable if your provider returns 400 errors. Without tools, the AI can still chat but cannot query colony data.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Wykryto dane logowania Claude Code. Twoja subskrypcja będzie używana automatycznie.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code nie jest zalogowany. Uruchom 'claude login' w terminalu.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Klucz API Anthropic:</RimMind_AnthropicAPIKey>
