@@ -443,11 +443,30 @@ namespace RimMind.Tools
             if (map == null) return null;
 
             string lower = name.ToLower();
-            return map.mapPawns.FreeColonists
+
+            // Search free colonists first
+            var pawn = map.mapPawns.FreeColonists
                 .FirstOrDefault(p =>
                     p.Name?.ToStringShort?.ToLower() == lower ||
                     p.Name?.ToStringFull?.ToLower().Contains(lower) == true ||
                     p.LabelShort?.ToLower() == lower);
+            if (pawn != null) return pawn;
+
+            // Also search prisoners and slaves
+            pawn = map.mapPawns.PrisonersOfColony
+                .FirstOrDefault(p =>
+                    p.Name?.ToStringShort?.ToLower() == lower ||
+                    p.Name?.ToStringFull?.ToLower().Contains(lower) == true ||
+                    p.LabelShort?.ToLower() == lower);
+            if (pawn != null) return pawn;
+
+            // Search slaves (they may not be in PrisonersOfColony)
+            pawn = map.mapPawns.SlavesOfColonySpawned
+                .FirstOrDefault(p =>
+                    p.Name?.ToStringShort?.ToLower() == lower ||
+                    p.Name?.ToStringFull?.ToLower().Contains(lower) == true ||
+                    p.LabelShort?.ToLower() == lower);
+            return pawn;
         }
     }
 }

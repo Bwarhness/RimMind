@@ -17,6 +17,7 @@ namespace RimMind.Tools
             { "undraft_colonist", args => ColonistTools.UndraftColonist(args?["name"]?.Value) },
             { "draft_all", args => ColonistTools.DraftAll() },
             { "undraft_all", args => ColonistTools.UndraftAll() },
+            { "get_colonist_locations", args => ColonistTools.GetColonistLocations() },
 
             // Social
             { "get_relationships", args => SocialTools.GetRelationships(args?["name"]?.Value) },
@@ -48,6 +49,7 @@ namespace RimMind.Tools
             { "get_resources", args => ColonyTools.GetResources(args?["category"]?.Value) },
             { "get_rooms", args => ColonyTools.GetRooms() },
             { "get_stockpiles", args => ColonyTools.GetStockpiles() },
+            { "get_resource_trends", args => ColonyTools.GetResourceTrends() },
 
             // Research
             { "get_research_status", args => ResearchTools.GetResearchStatus() },
@@ -56,9 +58,16 @@ namespace RimMind.Tools
 
             // Military
             { "get_threats", args => MilitaryTools.GetThreats() },
+            { "get_fire_support", args => MilitaryTools.GetFireSupport() },
+            { "get_casualties", args => MilitaryTools.GetCasualties() },
             { "get_defenses", args => MilitaryTools.GetDefenses() },
             { "get_combat_readiness", args => MilitaryTools.GetCombatReadiness() },
-            
+
+            // Anomaly DLC Integration
+            { "get_anomaly_entities", args => AnomalyTools.GetAnomalyEntities(args?["entity_type"]?.Value) },
+            { "get_containment_status", args => AnomalyTools.GetContainmentStatus() },
+            { "analyze_entity_interactions", args => AnomalyTools.AnalyzeEntityInteractions() },
+
             // Combat Intelligence (Phase 5)
             { "get_weapon_stats", args => CombatTools.GetWeaponStats(args?["pawnName"]?.Value) },
             { "get_armor_stats", args => CombatTools.GetArmorStats(args?["pawnName"]?.Value) },
@@ -78,6 +87,7 @@ namespace RimMind.Tools
             { "get_weather_and_season", args => MapTools.GetWeatherAndSeason() },
             { "get_growing_zones", args => MapTools.GetGrowingZones() },
             { "get_power_status", args => MapTools.GetPowerStatus() },
+            { "get_temperature_risks", args => MapTools.GetTemperatureRisks() },
             { "get_map_region", args => MapTools.GetMapRegion(args) },
             { "get_cell_details", args => MapTools.GetCellDetails(args) },
             { "get_blueprints", args => MapTools.GetBlueprints(args) },
@@ -97,7 +107,20 @@ namespace RimMind.Tools
             // Animals
             { "list_animals", args => AnimalTools.ListAnimals() },
             { "get_animal_details", args => AnimalTools.GetAnimalDetails(args?["name"]?.Value) },
-            // Note: GetAnimalStats and GetWildAnimals removed - use list_animals with filters instead
+            { "get_animal_stats", args => AnimalTools.GetAnimalStats(args?["speciesName"]?.Value) },
+            { "get_wild_animals", args => AnimalTools.GetWildAnimals() },
+
+            // Ideology DLC
+            { "get_ideology_info", args => IdeologyTools.GetIdeologyInfo() },
+            { "get_pawn_ideology_status", args => IdeologyTools.GetPawnIdeologyStatus(args?["name"]?.Value) },
+            { "get_ritual_status", args => IdeologyTools.GetRitualStatus() },
+            { "analyze_ideology_conflicts", args => IdeologyTools.AnalyzeIdeologyConflicts() },
+
+            // Prisoner & Slave Management
+            { "get_prisoner_status", args => PrisonerSlaveTools.GetPrisonerStatus() },
+            { "get_slave_status", args => PrisonerSlaveTools.GetSlaveStatus() },
+            { "analyze_prison_risks", args => PrisonerSlaveTools.AnalyzePrisonRisks() },
+            { "get_recruitment_forecast", args => PrisonerSlaveTools.GetRecruitmentForecast(args?["name"]?.Value) },
 
             // Events
             { "get_recent_events", args => EventTools.GetRecentEvents(args?["count"]?.AsInt ?? 5) },
@@ -107,6 +130,9 @@ namespace RimMind.Tools
 
             // Medical
             { "get_medical_overview", args => MedicalTools.GetMedicalOverview() },
+            { "get_disease_immunity_status", args => MedicalTools.GetDiseaseImmunityStatus(args?["pawn_name"]?.Value) },
+            { "get_drug_tolerance", args => MedicalTools.GetDrugTolerance(args?["pawn_name"]?.Value) },
+            { "predict_surgery_success", args => MedicalTools.PredictSurgerySuccess(args?["patient_name"]?.Value, args?["surgery_def"]?.Value) },
 
             // Health Check
             { "colony_health_check", args => HealthCheckTools.ColonyHealthCheck() },
@@ -114,6 +140,16 @@ namespace RimMind.Tools
             // Mood
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
             { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
+            { "get_mood_trends", args => MoodTools.GetMoodTrends() },
+            { "get_environment_quality", args => EnvironmentTools.GetEnvironmentQuality() },
+
+            // Social
+            { "get_social_risks", args => SocialTools.GetSocialRisks() },
+
+            // Joy & Recreation
+            { "get_joy_saturation", args => JoyTools.GetJoySaturation(args?["pawn_name"]?.Value) },
+            { "analyze_recreation_diversity", args => JoyTools.AnalyzeRecreationDiversity() },
+            { "recommend_joy_activities", args => JoyTools.RecommendJoyActivities(args?["pawn_name"]?.Value) },
 
             // Plan
             { "place_plans", args => PlanTools.PlacePlans(args) },
@@ -139,6 +175,10 @@ namespace RimMind.Tools
             // World & Diplomacy
             { "list_world_destinations", args => WorldTools.ListWorldDestinations() },
             { "get_caravan_info", args => WorldTools.GetCaravanInfo() },
+            { "analyze_caravan_capacity", args => CaravanTools.AnalyzeCaravanCapacity(args?["caravan_id"]?.Value) },
+            { "predict_caravan_travel", args => CaravanTools.PredictCaravanTravel(args?["destination_tile"]?.Value, args?["destination_name"]?.Value, args?["caravan_id"]?.Value) },
+            { "optimize_caravan_composition", args => CaravanTools.OptimizeCaravanComposition(args?["destination"]?.Value, args?["purpose"]?.Value, args?["max_colonists"]?.AsInt ?? 0) },
+            { "get_trade_settlement_info", args => CaravanTools.GetTradeSettlementInfo(args?["max_distance_tiles"]?.AsInt ?? 20) },
             { "get_trade_status", args => WorldTools.GetTradeStatus() },
             { "list_trader_inventory", args => WorldTools.ListTraderInventory() },
             { "list_factions", args => WorldTools.ListFactions() },
@@ -152,9 +192,9 @@ namespace RimMind.Tools
             { "unassign_bed", args => BedTools.UnassignBed(args?["colonist"]?.Value) },
 
             // Designations
-            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["animal"]?.Value) },
-            { "designate_tame", args => DesignationTools.DesignateTame(args?["animal"]?.Value) },
-            { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["animal"]?.Value) },
+            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
+            { "designate_tame", args => DesignationTools.DesignateTame(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
+            { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["animal"]?.Value, args?["id"] != null ? args["id"].AsInt : -1) },
             { "designate_mine", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateMine(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
             { "designate_chop", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateChop(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
             { "designate_harvest", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateHarvest(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },

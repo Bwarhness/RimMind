@@ -24,6 +24,7 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name")));
             tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
             tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));
+            tools.Add(MakeTool("get_colonist_locations", "Get real-time positions (x, z coordinates) for all colonists. Returns drafted status, downed status, current job, distance from home area, and flags temperature risks. Use this for tactical awareness and locating specific colonists quickly."));
 
             // Social Tools
             tools.Add(MakeTool("get_relationships", "Get a colonist's social relationships: opinions of and from other colonists, relationship types (lover, spouse, rival, friend, etc).",
@@ -101,6 +102,7 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by category: 'food', 'materials', 'weapons', 'apparel', 'medicine', or 'all'. Defaults to 'all'.")));
             tools.Add(MakeTool("get_rooms", "Get info about all rooms: type/role, impressiveness, beauty, cleanliness, space, and owner if applicable."));
             tools.Add(MakeTool("get_stockpiles", "Get all stockpile zones: name, priority level, number of cells, and configured item filters."));
+            tools.Add(MakeTool("get_resource_trends", "Track resource consumption trends over time. Returns 'days until depleted' for food, medicine, wood, and steel based on current consumption rate. Calculates burn rates, flags 'running low' vs 'critically low' thresholds, and shows historical trends (last 7 days). Use this for predictive planning and early warning of shortages."));
 
             // Research Tools
             tools.Add(MakeTool("get_research_status", "Get current research status: active project name and progress percentage, colony tech level, and available research benches."));
@@ -109,6 +111,8 @@ namespace RimMind.Tools
 
             // Military Tools
             tools.Add(MakeTool("get_threats", "Get active threats on the map with detailed combat analysis: hostile pawns with raid composition breakdown (melee/ranged/grenadiers/special units), weapon and armor analysis for each enemy, dangerous unit identification (centipedes, scythers, sappers, breachers), automatic raid strategy detection (assault/siege/sapper/breach/drop pod) with counter-tactics suggestions, manhunter animals, and active game conditions."));
+            tools.Add(MakeTool("get_fire_support", "Get fire support analysis: colonists and turrets that can provide covering fire, line of fire analysis, recommended firing positions, and suppression opportunities. Use this for coordinating multi-colonist engagements."));
+            tools.Add(MakeTool("get_casualties", "Get combat casualties and medical status: colonists who are downed, dead, or injured. Returns position, injury type, medical priority, and nearest medical station for evacuation. Use this for triage and medical extraction planning."));
             tools.Add(MakeTool("get_defenses", "Get defensive structures: turrets (type, status, ammo), traps, and sandbags/barricades with their locations."));
             tools.Add(MakeTool("get_combat_readiness", "Get combat readiness for each colonist: equipped weapon, armor pieces, shooting skill, melee skill, and any combat-relevant traits."));
             
@@ -127,6 +131,14 @@ namespace RimMind.Tools
                 MakeOptionalParam("radius", "integer", "Search radius in cells (default: 10)")));
             tools.Add(MakeTool("get_tactical_pathfinding", "Get tactical combat intelligence and defensive positioning advice. Identifies enemy approach vectors, detects chokepoints (doors, narrow passages), analyzes defensive structures (turrets, sandbags), and provides actionable tactical recommendations. Includes specific advice for killbox design, drop pod defense, and counter-tactics for sappers/breachers. Use this to understand combat flow and optimize defensive positioning."));
 
+            // DLC Combat Intelligence Tools (Phase 6: Royalty & Biotech)
+            tools.Add(MakeTool("get_psycasts", "Get psycast abilities for psycasters (Royalty DLC). Lists available psycasts per psycaster with their effects, neural heat costs, cooldowns, and combat applications. Returns psylink level (1-6), neural heat (current/max), psyfocus level, and tactical combat suggestions. Use this to understand your colony's psychic capabilities and plan psycast usage in combat.",
+                MakeOptionalParam("name", "string", "The psycaster's name. If omitted, lists all psycasters on the map.")));
+            tools.Add(MakeTool("get_genes", "Get xenotype genes for colonists (Biotech DLC). Lists genes per colonist with gene-granted abilities (fire breath, toxic immunity), stat modifiers, and combat bonuses/penalties. Returns xenotype name and identifies combat-relevant genes. Use this to understand genetic advantages and combat capabilities of your colonists.",
+                MakeOptionalParam("name", "string", "The colonist's name. If omitted, lists all colonists with genes.")));
+            tools.Add(MakeTool("get_mechanitor_info", "Get mechanitor control information (Biotech DLC). Lists all controlled mechs per mechanitor with their type, weapons, health, and combat roles. Returns bandwidth usage (current/max) and deployment strategies. Use this to manage your mech army and plan mechanitor combat tactics.",
+                MakeOptionalParam("name", "string", "The mechanitor's name. If omitted, lists all mechanitors on the map.")));
+
             // Map Tools
             tools.Add(MakeTool("get_semantic_overview", "Get a compact text description of the colony layout including rooms, power, and buildable areas. This provides a high-level overview optimized for understanding base structure without loading full grid data. Use this instead of get_map_region when you need to understand colony layout quickly."));
             tools.Add(MakeTool("find_buildable_area", "Find buildable area candidates for construction. Returns scored candidates with exact positions, sizes, and notes. AI can ask 'where can I build a 5x4 room near the stockpile?' and get actionable results. Scores areas by distance to target, power availability, and terrain quality.",
@@ -139,6 +151,7 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
+            tools.Add(MakeTool("get_temperature_risks", "Check each colonist's current position temperature and compare to their comfortable range. Flag overheating or freezing risks, suggest safe locations to move to. Use this to prevent heatstroke, hypothermia, and keep colonists in safe temperature zones."));
             tools.Add(MakeTool("get_map_region", "Get a character-based grid view of the map showing buildings, pawns, zones, and terrain. Each cell is one character. Use this to understand the colony layout, analyze base design, and identify construction opportunities. Returns a legend of character codes used.",
                 MakeOptionalParam("x", "integer", "Start X coordinate (default: 0)"),
                 MakeOptionalParam("z", "integer", "Start Z coordinate (default: 0)"),
@@ -192,6 +205,13 @@ namespace RimMind.Tools
                 MakeParam("z2", "integer", "End Z coordinate of region"),
                 MakeOptionalParam("roofType", "string", "Filter by roof type: 'none', 'thin', 'thick', 'constructed' (not yet implemented)"),
                 MakeOptionalParam("detectBreaches", "boolean", "Enable breach detection: find unroofed cells adjacent to thick mountain roof (default: false)")));
+
+            // Anomaly DLC Integration Tools
+            tools.Add(MakeTool("get_anomaly_entities", "Get all anomaly entities in the colony. Returns list of entities with location, type, containment status, and threat level. Use this to track Anomaly DLC entities (glowing bodies, shrines, monoliths, etc.).",
+                MakeOptionalParam("entity_type", "string", "Optional filter by entity type")));
+            tools.Add(MakeTool("get_containment_status", "Get containment facility status. Returns containment buildings, capacity, occupancy, contained entities, and uncontained threats. Use this to monitor Anomaly DLC containment facilities."));
+            tools.Add(MakeTool("analyze_entity_interactions", "Analyze anomaly entity interactions and risks. Returns entity groups, proximity risks between entities, and recommended containment actions."));
+
             // Power Management Tools
             tools.Add(MakeTool("analyze_power_grid", "Comprehensive power network analysis. Returns all power networks with their generators, consumers, batteries, and power balance (surplus/deficit). Also identifies buildings that need power but are not connected. Use this to understand the colony's power infrastructure and identify connectivity issues."));
             tools.Add(MakeTool("check_power_connection", "Check if a specific building or area is connected to the power grid. Returns power status, which network it's connected to (if any), and nearest conduit location. Use this to diagnose why a specific building is not receiving power.",
@@ -218,8 +238,27 @@ namespace RimMind.Tools
             tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));
             tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, bonded colonist, carrying capacity (pack animals), and production schedules (shearing, milking, eggs).",
                 MakeParam("name", "string", "The animal's name")));
-            // Note: get_animal_stats and get_wild_animals were never implemented (only defined). Removed to match tool registry.
-            // Use list_animals and get_animal_details for current animal functionality.
+            tools.Add(MakeTool("get_animal_stats", "Get detailed statistics for an animal species: carrying capacity (pack animals), movement speed, combat stats (melee damage, armor, DPS), abilities (wool, milk, eggs), wildness level, trainability, filth rate, and market value. Use this to compare animal species for taming, pack use, or combat.",
+                MakeParam("speciesName", "string", "The animal species name (e.g., 'Muffalo', 'Thrumbo', 'Dromedary'). Partial names work.")));
+            tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map: species, location, health, taming difficulty, and value rating. Returns recommendations for taming opportunities (easy/hard/very hard) and hunting targets. Use this to identify rare animals like Thrumbos or plan hunting expeditions.",
+                MakeOptionalParam("speciesFilter", "string", "Optional filter by species name")));
+
+            // Ideology DLC Tools
+            tools.Add(MakeTool("get_ideology_info", "Get colony ideology details including precepts, roles, and rituals (Ideology DLC). Returns ideology name, memes, all precepts with impact levels, role assignments (filled/unfilled slots), and structure. Use this to understand ideological restrictions and requirements.",
+                MakeOptionalParam("name", "string", "Optional colonist name to get personal ideology details")));
+            tools.Add(MakeTool("get_pawn_ideology_status", "Get individual colonist's ideological status (Ideology DLC): assigned role, certainty level, recent certainty factors, and precept comfort. Use to check role assignments and morale factors related to ideology.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("get_ritual_status", "Get status of scheduled and active rituals (Ideology DLC): upcoming ritual obligations with countdown, active ritual details, and colonists with pending obligations. Use to plan ritual preparation and ensure ideological compliance."));
+            tools.Add(MakeTool("analyze_ideology_conflicts", "Detect ideological conflicts affecting colony mood (Ideology DLC): colonists at risk of certainty loss, colonists needing roles, and precept-related issues. Use to proactively manage ideological stability."));
+
+            // Prisoner & Slave Tools
+            tools.Add(MakeTool("get_prisoner_status", "Get detailed status for all prisoners: resistance levels, recruitment chances, estimated time to recruit, mental state risks, and available wardens. Use to manage recruitment efforts and prioritize which prisoners to recruit first.",
+                MakeOptionalParam("name", "string", "Optional filter by prisoner name")));
+            tools.Add(MakeTool("get_slave_status", "Get slave suppression and rebellion risk (Ideology DLC): suppression level, rebellion risk scores, interaction mode, and warden coverage. Use to identify at-risk slaves and prevent rebellions.",
+                MakeOptionalParam("name", "string", "Optional filter by slave name")));
+            tools.Add(MakeTool("analyze_prison_risks", "Calculate prison break and recruitment risks: warden-to-prisoner ratio, overall break risk level, high-risk prisoners, and recommended warden assignments. Use to prevent prison breaks by ensuring adequate warden coverage."));
+            tools.Add(MakeTool("get_recruitment_forecast", "Predict recruitment timelines for prisoners: estimated days to zero resistance, current resistance reduction rate, best warden assignment, and success probability on next attempt. Use to plan recruitment efforts.",
+                MakeOptionalParam("name", "string", "Optional prisoner name to forecast")));
 
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
@@ -230,6 +269,13 @@ namespace RimMind.Tools
 
             // Medical Tools
             tools.Add(MakeTool("get_medical_overview", "Get medical overview: patients needing treatment, medicine supply by type, available medical beds, and doctors with their medical skill level."));
+            tools.Add(MakeTool("get_disease_immunity_status", "Get disease immunity progress for all colonists. Returns active diseases, immunity progress (0-100%), time to immunity, severity level, and whether diseases can be tended. Use this to track colony health and predict recovery times.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results.")));
+            tools.Add(MakeTool("get_drug_tolerance", "Get colonist drug tolerances and addiction risks. Returns current addictions, chemical dependency levels, addiction-prone traits, and risk assessment. Use this to identify addiction risks and monitor recovery.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results.")));
+            tools.Add(MakeTool("predict_surgery_success", "Predict surgery success probability for a patient. Returns success probability based on doctor skill, patient health, medicine quality, and risk factors. Use this to determine if surgery is safe and what preparations are needed.",
+                MakeParam("patient_name", "string", "The colonist's name who needs surgery"),
+                MakeOptionalParam("surgery_def", "string", "Optional specific surgery defName. If omitted, analyzes most critical needed surgery.")));
 
             // Health Check Tools
             tools.Add(MakeTool("colony_health_check", "Perform a comprehensive colony diagnostic check. This is the 'doctor's checkup' for your entire colony - a single tool that analyzes all critical systems and returns actionable insights. Use this when asked 'How is my colony doing?' or when you need a complete status overview. Analyzes: Food Security (days remaining, growing capacity), Power Grid (generation vs consumption, battery reserves), Defense Readiness (turrets, armed colonists, weapons), Colonist Wellbeing (injuries, mood risks, needs), Resource Bottlenecks (medicine, steel, components), Research Progress, Housing Quality (bedroom quality, bed assignments), and Production Issues (stalled bills, missing workers). Returns overall status (healthy/stable/warning/critical), per-system breakdowns with issues and recommendations, critical alerts requiring immediate action, and top 5 priority recommendations."));
@@ -242,6 +288,13 @@ namespace RimMind.Tools
 
             // Social Tools
             tools.Add(MakeTool("get_social_risks", "Detect social conflicts between colonists. Finds colonist pairs with negative opinions (< -20), calculates mutual hostility, identifies risk-affecting traits (Abrasive, Volatile, Bloodlust, Psychopath), and provides intervention suggestions (separate work areas, avoid shared recreation, etc.). Use this to prevent social fights and optimize colonist interactions."));
+
+            // Joy & Recreation Tools
+            tools.Add(MakeTool("get_joy_saturation", "Get joy type saturation levels for all colonists. Returns current joy level, joy category (Low/Satisfied/High), per-JoyKind tolerance levels (0-100%), saturated types (>80%), and joy-affected traits. Use this to understand recreation satisfaction and identify colonists who need specific types of recreation.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results. If omitted, returns all colonists.")));
+            tools.Add(MakeTool("analyze_recreation_diversity", "Analyze colony recreation diversity and identify gaps. Returns available joy sources by type, missing joy types, colonists with high saturation (>80%), and specific building recommendations for each missing type. Use this to plan recreation improvements and prevent recreation-related mood issues."));
+            tools.Add(MakeTool("recommend_joy_activities", "Recommend specific joy activities for a colonist based on their current saturation levels. Returns current saturation levels, non-saturated joy types, available activities from nearby buildings, and missing recreation types for this colonist.",
+                MakeParam("pawn_name", "string", "The colonist's name to get recommendations for")));
 
             // Environment Tools
             tools.Add(MakeTool("get_environment_quality", "Score each room for beauty, cleanliness, space, and impressiveness. Flags rooms causing negative thoughts, identifies specific issues (poor lighting, extreme temperature, low beauty, cramped space), and suggests concrete improvements (add sculptures, install heaters, expand room, clean floors). Use this for root cause analysis of mood problems and to optimize room quality."));
@@ -323,6 +376,18 @@ namespace RimMind.Tools
             // World & Diplomacy Tools
             tools.Add(MakeTool("list_world_destinations", "List all world settlements that can be visited by caravan, with distances and faction relations."));
             tools.Add(MakeTool("get_caravan_info", "Get info about available colonists and animals for caravan formation. Note: Actual caravan formation requires manual player action."));
+            tools.Add(MakeTool("analyze_caravan_capacity", "Calculate caravan carrying capacity and current load. Returns total capacity, current mass, overload percentage, travel speed impact, and recommendations. Use this to diagnose why caravans are slow or can't carry more.",
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID (defaults to active caravan)")));
+            tools.Add(MakeTool("predict_caravan_travel", "Predict travel time and encounter risks for a caravan route. Returns estimated days, biomes crossed, encounter probability, and ambush risk. Use this to plan safe caravan trips.",
+                MakeOptionalParam("destination_tile", "string", "Destination tile ID"),
+                MakeOptionalParam("destination_name", "string", "Destination settlement name (alternative to tile)"),
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID")));
+            tools.Add(MakeTool("optimize_caravan_composition", "Suggest optimal caravan composition for a destination based on purpose. Returns recommended colonists, pack animals, supplies, and mass budget. Use this to plan efficient caravans.",
+                MakeParam("destination", "string", "Destination settlement name or tile"),
+                MakeOptionalParam("purpose", "string", "Purpose: 'trade', 'rescue', or 'raid'. Default: 'trade'"),
+                MakeOptionalParam("max_colonists", "integer", "Maximum colonists to include (optional)")));
+            tools.Add(MakeTool("get_trade_settlement_info", "Get detailed info on nearby tradeable settlements. Returns settlement names, factions, distances, trade inventory potential, and faction relations. Use this to find trade partners.",
+                MakeOptionalParam("max_distance_tiles", "integer", "Maximum search radius in tiles (default: 20)")));
             tools.Add(MakeTool("get_trade_status", "Check if a trade session is currently active with a visiting trader."));
             tools.Add(MakeTool("list_trader_inventory", "List items available from current visiting trader. Requires active trade session."));
             tools.Add(MakeTool("list_factions", "List all known factions with their relation status and goodwill."));
@@ -341,12 +406,17 @@ namespace RimMind.Tools
                 MakeParam("colonist", "string", "The colonist's name")));
 
             // Designation Tools (Hunting/Taming/Resource Gathering)
-            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Search by name or species (e.g., 'Hare', 'Wild boar', 'Muffalo'). Use list_animals or search_map type='animals' to see available wild animals.",
-                MakeParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo', 'Wild boar')")));
-            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Search by name or species. Animal must not be too wild (wildness < 98%).",
-                MakeParam("animal", "string", "Animal name or species to tame (e.g., 'Husky', 'Muffalo', 'Alpaca')")));
-            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Search by name or species.",
-                MakeParam("animal", "string", "Animal name or species to cancel designation for")));
+            tools.Add(MakeTool("designate_hunt", "Mark wild animals for hunting. Best workflow: call get_wild_animals first, then use the animal's id for precise targeting. Alternatively use animal name/species with count for bulk operations.",
+                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
+                MakeOptionalParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo'). Used with count for bulk."),
+                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
+            tools.Add(MakeTool("designate_tame", "Mark wild animals for taming. Best workflow: call get_wild_animals first, then use the animal's id to tame specific individuals (e.g., one male and one female for breeding). Alternatively use animal name/species with count for bulk.",
+                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
+                MakeOptionalParam("animal", "string", "Animal name or species to tame (e.g., 'Muffalo', 'Alpaca'). Used with count for bulk."),
+                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Use id for precise targeting or animal name to search.",
+                MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
+                MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
                 MakeParam("x1", "integer", "Start X coordinate"),
                 MakeParam("z1", "integer", "Start Z coordinate"),

@@ -8,6 +8,23 @@ namespace RimMind.Tools
 {
     public static class EquipmentTools
     {
+        /// <summary>
+        /// Assigns an ordered job to a pawn. If the pawn already has an active ordered job,
+        /// enqueues this one instead of replacing it (mimics shift-click queueing).
+        /// </summary>
+        private static bool TakeOrQueueJob(Pawn pawn, Job job, JobTag tag = JobTag.Misc)
+        {
+            // If pawn has queued jobs or is already doing an ordered equip/wear job, enqueue instead of replace
+            if (pawn.jobs.jobQueue.Count > 0 ||
+                (pawn.CurJobDef == JobDefOf.Equip || pawn.CurJobDef == JobDefOf.Wear))
+            {
+                pawn.jobs.jobQueue.EnqueueLast(job, new JobTag?(tag));
+                return true;
+            }
+
+            return pawn.jobs.TryTakeOrderedJob(job, tag);
+        }
+
         public static string EquipWeapon(string colonistName, int x, int z)
         {
             var map = Find.CurrentMap;
@@ -26,13 +43,14 @@ namespace RimMind.Tools
 
             // Create job to equip
             var job = JobMaker.MakeJob(JobDefOf.Equip, weapon);
-            if (pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+            if (TakeOrQueueJob(pawn, job))
             {
                 var result = new JSONObject();
                 result["success"] = true;
                 result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
                 result["weapon"] = weapon.LabelCap.ToString();
                 result["location"] = x + "," + z;
+                result["queued"] = pawn.jobs.jobQueue.Count > 0;
                 return result.ToString();
             }
 
@@ -57,13 +75,14 @@ namespace RimMind.Tools
 
             // Create job to wear
             var job = JobMaker.MakeJob(JobDefOf.Wear, apparel);
-            if (pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+            if (TakeOrQueueJob(pawn, job))
             {
                 var result = new JSONObject();
                 result["success"] = true;
                 result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
                 result["apparel"] = apparel.LabelCap.ToString();
                 result["location"] = x + "," + z;
+                result["queued"] = pawn.jobs.jobQueue.Count > 0;
                 return result.ToString();
             }
 
