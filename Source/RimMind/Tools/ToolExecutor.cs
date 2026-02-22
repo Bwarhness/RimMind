@@ -186,6 +186,9 @@ namespace RimMind.Tools
             // Trade
             { "get_active_traders", args => TradeTools.GetActiveTraders() },
             { "analyze_trade_opportunity", args => TradeTools.AnalyzeTradeOpportunity(args?["traderFilter"]?.Value) },
+
+            // Wiki
+            { "wiki_lookup", args => WikiTools.WikiLookup(args?["query"]?.Value) },
         };
 
         public static string Execute(string toolName, string argumentsJson)
