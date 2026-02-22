@@ -365,6 +365,16 @@ dotnet build Source/RimMind/RimMind.csproj -c Release
 - The project uses `Krafs.Rimworld.Ref` NuGet package — no actual RimWorld game files needed
 - First run will restore NuGet packages automatically (~2s), subsequent builds are ~4s
 
+### Git Pre-Push Hook (auto-enforced)
+A pre-push hook lives in `.githooks/pre-push` — it blocks pushes if the build fails.
+
+**Activate it after cloning (one-time setup):**
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook runs `dotnet build` automatically on every `git push`. If build fails, the push is blocked. If dotnet isn't found it warns but allows the push (graceful degradation).
+
 ### 🌍 Translations (MANDATORY for all UI)
 **Every user-visible string must be translated.** RimMind ships with 14 language files — all UI text must go through the keyed translation system, never hardcoded.
 

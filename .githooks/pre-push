@@ -1,0 +1,27 @@
+#!/bin/bash
+# RimMind pre-push hook — verifies the project builds before allowing a push
+
+export PATH="/home/node/.dotnet:$PATH"
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+CSPROJ="$REPO_ROOT/Source/RimMind/RimMind.csproj"
+
+echo "[RimMind] Running build check before push..."
+
+if ! command -v dotnet &> /dev/null; then
+    echo "[RimMind] ⚠️  dotnet not found — skipping build check."
+    echo "           Install .NET SDK or set PATH to /home/node/.dotnet to enable."
+    exit 0
+fi
+
+dotnet build "$CSPROJ" -c Release --nologo -v quiet 2>&1
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "[RimMind] ❌ Build failed — push blocked."
+    echo "           Fix the compile errors above, then push again."
+    exit 1
+fi
+
+echo "[RimMind] ✅ Build passed — push allowed."
+exit 0
