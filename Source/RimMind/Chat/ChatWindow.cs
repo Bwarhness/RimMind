@@ -15,6 +15,10 @@ namespace RimMind.Chat
         private bool scrollToBottom;
         private bool showPrompts;
         private Vector2 promptScrollPos;
+        
+        // Cached version title - computed once on first access
+        private static string cachedVersionTitle;
+        private static bool versionTitleInitialized;
 
         public static ChatWindow Instance => instance;
         public ChatManager Manager => chatManager;
@@ -32,6 +36,33 @@ namespace RimMind.Chat
                     chatManager = new ChatManager();
                 return chatManager;
             }
+        }
+
+        /// <summary>
+        /// Get the version title string, cached after first computation.
+        /// Format: "RimMind AI v1.0.1" or "RimMind AI v1.0.1 [DEV]" for dev builds.
+        /// </summary>
+        public static string GetVersionTitle()
+        {
+            if (!versionTitleInitialized)
+            {
+                // Try to find the mod - check both production and dev package IDs
+                ModMetaData mod = ModLister.GetActiveModWithIdentifier("rimmind.ai") 
+                               ?? ModLister.GetActiveModWithIdentifier("rimmind.ai.dev");
+                
+                string version = mod?.ModVersion ?? "";
+                bool isDev = ModLister.GetActiveModWithIdentifier("rimmind.ai.dev") != null;
+                
+                string title = RimMindTranslations.Get("RimMind_ChatTitle");
+                if (!string.IsNullOrEmpty(version))
+                    title += " v" + version;
+                if (isDev)
+                    title += " [DEV]";
+                
+                cachedVersionTitle = title;
+                versionTitleInitialized = true;
+            }
+            return cachedVersionTitle;
         }
 
         // [0] = translation key for button label, [1] = prompt text (always English for AI)
@@ -95,10 +126,10 @@ namespace RimMind.Chat
 
         public override void DoWindowContents(Rect inRect)
         {
-            // Title bar
+            // Title bar with version
             var titleRect = new Rect(0f, 0f, inRect.width, 30f);
             Text.Font = GameFont.Medium;
-            Widgets.Label(titleRect, RimMindTranslations.Get("RimMind_ChatTitle"));
+            Widgets.Label(titleRect, GetVersionTitle());
             Text.Font = GameFont.Small;
 
             // Header buttons — right-aligned
