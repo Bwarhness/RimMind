@@ -131,6 +131,14 @@ namespace RimMind.Tools
                 MakeOptionalParam("radius", "integer", "Search radius in cells (default: 10)")));
             tools.Add(MakeTool("get_tactical_pathfinding", "Get tactical combat intelligence and defensive positioning advice. Identifies enemy approach vectors, detects chokepoints (doors, narrow passages), analyzes defensive structures (turrets, sandbags), and provides actionable tactical recommendations. Includes specific advice for killbox design, drop pod defense, and counter-tactics for sappers/breachers. Use this to understand combat flow and optimize defensive positioning."));
 
+            // DLC Combat Intelligence Tools (Phase 6: Royalty & Biotech)
+            tools.Add(MakeTool("get_psycasts", "Get psycast abilities for psycasters (Royalty DLC). Lists available psycasts per psycaster with their effects, neural heat costs, cooldowns, and combat applications. Returns psylink level (1-6), neural heat (current/max), psyfocus level, and tactical combat suggestions. Use this to understand your colony's psychic capabilities and plan psycast usage in combat.",
+                MakeOptionalParam("name", "string", "The psycaster's name. If omitted, lists all psycasters on the map.")));
+            tools.Add(MakeTool("get_genes", "Get xenotype genes for colonists (Biotech DLC). Lists genes per colonist with gene-granted abilities (fire breath, toxic immunity), stat modifiers, and combat bonuses/penalties. Returns xenotype name and identifies combat-relevant genes. Use this to understand genetic advantages and combat capabilities of your colonists.",
+                MakeOptionalParam("name", "string", "The colonist's name. If omitted, lists all colonists with genes.")));
+            tools.Add(MakeTool("get_mechanitor_info", "Get mechanitor control information (Biotech DLC). Lists all controlled mechs per mechanitor with their type, weapons, health, and combat roles. Returns bandwidth usage (current/max) and deployment strategies. Use this to manage your mech army and plan mechanitor combat tactics.",
+                MakeOptionalParam("name", "string", "The mechanitor's name. If omitted, lists all mechanitors on the map.")));
+
             // Map Tools
             tools.Add(MakeTool("get_semantic_overview", "Get a compact text description of the colony layout including rooms, power, and buildable areas. This provides a high-level overview optimized for understanding base structure without loading full grid data. Use this instead of get_map_region when you need to understand colony layout quickly."));
             tools.Add(MakeTool("find_buildable_area", "Find buildable area candidates for construction. Returns scored candidates with exact positions, sizes, and notes. AI can ask 'where can I build a 5x4 room near the stockpile?' and get actionable results. Scores areas by distance to target, power availability, and terrain quality.",
