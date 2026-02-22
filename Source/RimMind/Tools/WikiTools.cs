@@ -59,15 +59,14 @@ namespace RimMind.Tools
                 if (pages == null)
                     return ToolExecutor.JsonError("Wiki returned no page data.");
 
-                // Pages is an object with page IDs as keys
+                // Pages is an object with page IDs as keys — access first entry by index
                 string extract = null;
                 string actualTitle = null;
-                foreach (var key in pages.Keys)
+                if (pages.Count > 0)
                 {
-                    var page = pages[key];
+                    var page = pages[0];
                     actualTitle = page["title"]?.Value;
                     extract = page["extract"]?.Value;
-                    break; // Take first (only) page
                 }
 
                 if (string.IsNullOrEmpty(extract))
