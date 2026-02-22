@@ -147,6 +147,47 @@ static class MyPatch
 - Pattern: `ThreadPool.QueueUserWorkItem` -> do work -> `MainThreadDispatcher.Enqueue(callback)`
 - Our MainThreadDispatcher is a GameComponent that processes a ConcurrentQueue<Action> each tick
 
+### 🎯 Job Queue System (USE THIS for ordered/sequential actions)
+**Whenever an action involves sequencing, timing, or priority — use RimWorld's built-in pawn job system. Never use `Thread.Sleep` or manual retry loops.**
+
+RimWorld's job system handles timing, interruption, layer conflicts, and game-tick sequencing correctly by design. Direct property manipulation (e.g. `pawn.apparel.Wear(thing)`) bypasses this and causes silent failures when multiple actions are issued at once.
+
+**Key classes:**
+```csharp
+// Queue a job on a pawn
+Job job = JobMaker.MakeJob(JobDefOf.Wear, apparel);
+pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
+
+// Queue with priority (interrupts current job)
+pawn.jobs.TryTakeOrderedJobPrioritizedWork(job, workGiver, cell);
+
+// Check job queue
+pawn.jobs.curJob       // currently executing job
+pawn.jobs.jobQueue     // pending jobs
+```
+
+**Common JobDefs for tool actions:**
+| Action | JobDef |
+|--------|--------|
+| Equip apparel | `JobDefOf.Wear` |
+| Pick up item | `JobDefOf.TakeInventory` |
+| Haul to stockpile | `JobDefOf.HaulToCell` |
+| Construct building | `JobDefOf.PlaceNoCost` |
+| Draft pawn | direct — `pawn.drafter.Drafted = true` |
+| Move to position | `JobDefOf.Goto` |
+
+**When to use the job queue (mandatory):**
+- Equipping or unequipping apparel
+- Picking up, dropping, or hauling items
+- Any action where **order matters** between multiple calls
+- Any action that **takes time** (construction, hauling, crafting)
+- Any action that should be **interruptible** by the game
+
+**When direct manipulation is acceptable:**
+- Instant stat changes (skill XP, health, etc.)
+- Read-only queries
+- Setting flags/values that take effect immediately with no game-tick dependency
+
 ### Testing & Debugging Mods
 *(Source: https://rimworldwiki.com/wiki/Modding_Tutorials/Testing_mods)*
 
