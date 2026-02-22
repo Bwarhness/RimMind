@@ -141,6 +141,8 @@ namespace RimMind.Chat
                 ClaudeCodeClient.SendAsync(request, handleResponse);
             else if (RimMindMod.Settings.IsAnthropic)
                 AnthropicClient.SendAsync(request, handleResponse);
+            else if (RimMindMod.Settings.IsCustom)
+                CustomProviderClient.SendAsync(request, handleResponse);
             else
                 OpenRouterClient.SendAsync(request, handleResponse);
         }

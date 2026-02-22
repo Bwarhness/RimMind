@@ -1,49 +1,34 @@
-using HarmonyLib;
+using System.Linq;
 using RimWorld;
 using Verse;
 
 namespace RimMind.Chat
 {
     /// <summary>
-    /// Harmony patch to modify the RimMind main button label to include version number.
-    /// MainButtonWorker.Label is not virtual, so we patch the getter.
+    /// Modifies the RimMind main button label to include version number.
+    /// Runs once after all defs are loaded via StaticConstructorOnStartup.
     /// </summary>
-    [HarmonyPatch(typeof(MainButtonWorker), "get_Label")]
+    [StaticConstructorOnStartup]
     public static class MainButtonLabelPatch
     {
-        // Cached label for RimMind button
-        private static string cachedRimMindLabel;
-        private static bool initialized;
-
-        /// <summary>
-        /// Postfix: If this is the RimMind button, return version-enriched label.
-        /// </summary>
-        public static void Postfix(MainButtonWorker __instance, ref string __result)
+        static MainButtonLabelPatch()
         {
-            // Only modify if this is our RimMind button
-            if (__instance?.def?.defName != "RimMind") return;
+            var def = DefDatabase<MainButtonDef>.AllDefs.FirstOrDefault(d => d.defName == "RimMind");
+            if (def == null) return;
 
-            // Initialize cached label once
-            if (!initialized)
-            {
-                ModMetaData mod = ModLister.GetActiveModWithIdentifier("rimmind.ai")
-                               ?? ModLister.GetActiveModWithIdentifier("rimmind.ai.dev");
+            ModMetaData mod = ModLister.GetActiveModWithIdentifier("rimmind.ai")
+                           ?? ModLister.GetActiveModWithIdentifier("rimmind.ai.dev");
 
-                string version = mod?.ModVersion ?? "";
-                bool isDev = ModLister.GetActiveModWithIdentifier("rimmind.ai.dev") != null;
+            string version = mod?.ModVersion ?? "";
+            bool isDev = ModLister.GetActiveModWithIdentifier("rimmind.ai.dev") != null;
 
-                // Start with base label
-                string label = __result ?? "RimMind";
-                if (!string.IsNullOrEmpty(version))
-                    label += " v" + version;
-                if (isDev)
-                    label += " [DEV]";
+            string label = def.label ?? "RimMind";
+            if (!string.IsNullOrEmpty(version))
+                label += " v" + version;
+            if (isDev)
+                label += " [DEV]";
 
-                cachedRimMindLabel = label;
-                initialized = true;
-            }
-
-            __result = cachedRimMindLabel;
+            def.label = label;
         }
     }
 }
