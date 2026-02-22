@@ -356,12 +356,17 @@ namespace RimMind.Tools
                 MakeParam("colonist", "string", "The colonist's name")));
 
             // Designation Tools (Hunting/Taming/Resource Gathering)
-            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Search by name or species (e.g., 'Hare', 'Wild boar', 'Muffalo'). Use list_animals or search_map type='animals' to see available wild animals.",
-                MakeParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo', 'Wild boar')")));
-            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Search by name or species. Animal must not be too wild (wildness < 98%).",
-                MakeParam("animal", "string", "Animal name or species to tame (e.g., 'Husky', 'Muffalo', 'Alpaca')")));
-            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Search by name or species.",
-                MakeParam("animal", "string", "Animal name or species to cancel designation for")));
+            tools.Add(MakeTool("designate_hunt", "Mark wild animals for hunting. Best workflow: call get_wild_animals first, then use the animal's id for precise targeting. Alternatively use animal name/species with count for bulk operations.",
+                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
+                MakeOptionalParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo'). Used with count for bulk."),
+                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
+            tools.Add(MakeTool("designate_tame", "Mark wild animals for taming. Best workflow: call get_wild_animals first, then use the animal's id to tame specific individuals (e.g., one male and one female for breeding). Alternatively use animal name/species with count for bulk.",
+                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
+                MakeOptionalParam("animal", "string", "Animal name or species to tame (e.g., 'Muffalo', 'Alpaca'). Used with count for bulk."),
+                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Use id for precise targeting or animal name to search.",
+                MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
+                MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
                 MakeParam("x1", "integer", "Start X coordinate"),
                 MakeParam("z1", "integer", "Start Z coordinate"),

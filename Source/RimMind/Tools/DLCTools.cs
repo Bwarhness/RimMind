@@ -176,7 +176,7 @@ namespace RimMind.Tools
             var map = Find.CurrentMap;
             if (map == null) return ToolExecutor.JsonError("No active map.");
 
-            // If no name provided, list all colonists with genes
+            // If no name provided, list all colonists with genes (including gene details)
             if (string.IsNullOrEmpty(name))
             {
                 var geneCarriers = new JSONArray();
@@ -188,6 +188,49 @@ namespace RimMind.Tools
                         p["name"] = pawn.Name?.ToStringShort ?? "Unknown";
                         p["xenotype"] = pawn.genes.xenotypeName ?? pawn.genes.XenotypeLabel ?? "Baseline";
                         p["gene_count"] = pawn.genes.GenesListForReading.Count;
+
+                        // Include gene names and combat-relevant flags
+                        var geneNames = new JSONArray();
+                        var combatGeneNames = new JSONArray();
+                        foreach (var gene in pawn.genes.GenesListForReading)
+                        {
+                            geneNames.Add(gene.LabelCap.ToString());
+
+                            // Check if combat-relevant
+                            bool isCombat = false;
+                            if (gene.def.statOffsets != null)
+                            {
+                                foreach (var statMod in gene.def.statOffsets)
+                                {
+                                    var sn = statMod.stat.defName;
+                                    if (sn.Contains("Shooting") || sn.Contains("Melee") ||
+                                        sn.Contains("Armor") || sn.Contains("Dodge") ||
+                                        sn == "MoveSpeed" || sn == "PainShockThreshold")
+                                    { isCombat = true; break; }
+                                }
+                            }
+                            if (!isCombat && gene.def.statFactors != null)
+                            {
+                                foreach (var statMod in gene.def.statFactors)
+                                {
+                                    var sn = statMod.stat.defName;
+                                    if (sn.Contains("Shooting") || sn.Contains("Melee") ||
+                                        sn.Contains("Armor") || sn == "MoveSpeed")
+                                    { isCombat = true; break; }
+                                }
+                            }
+                            if (!isCombat && gene.def.abilities != null && gene.def.abilities.Any())
+                                isCombat = true;
+                            if (!isCombat && gene.def.damageFactors != null)
+                                isCombat = true;
+
+                            if (isCombat)
+                                combatGeneNames.Add(gene.LabelCap.ToString());
+                        }
+                        p["genes"] = geneNames;
+                        if (combatGeneNames.Count > 0)
+                            p["combat_genes"] = combatGeneNames;
+
                         geneCarriers.Add(p);
                     }
                 }

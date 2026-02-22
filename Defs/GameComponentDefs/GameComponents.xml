@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-    <!-- EventAutomationManager - tracks cooldowns for event automation -->
-    <GameComponentDef>
-        <defName>EventAutomationManager</defName>
-        <label>event automation manager</label>
-        <gameComponentClass>RimMind.Automation.EventAutomationManager</gameComponentClass>
-    </GameComponentDef>
-
-    <!-- ResourceTracker - tracks resource consumption over time -->
-    <GameComponentDef>
-        <defName>ResourceTracker</defName>
-        <label>resource tracker</label>
-        <gameComponentClass>RimMind.Core.ResourceTracker</gameComponentClass>
-    </GameComponentDef>
+    <!-- GameComponents (EventAutomationManager, ResourceTracker, etc.) are auto-registered -->
+    <!-- by RimWorld via constructor injection - no XML Defs needed. -->
 </Defs>

@@ -167,9 +167,11 @@ namespace RimMind.Tools
             obj["species"] = animalKind.label ?? animalKind.defName;
             obj["defName"] = animalKind.defName;
 
-            // Carrying capacity - estimate from body size
             var raceProps = animalKind.RaceProps;
             var bodySize = raceProps.baseBodySize;
+            obj["body_size"] = bodySize.ToString("F2");
+
+            // Pack animal & carrying capacity
             obj["pack_animal"] = raceProps.packAnimal;
             if (raceProps.packAnimal)
             {
@@ -177,45 +179,92 @@ namespace RimMind.Tools
                 obj["carrying_capacity"] = estimatedCapacity.ToString("F1") + " kg (estimated)";
             }
 
-            // Movement speed
-            obj["body_size"] = bodySize.ToString("F2");
-            obj["move_speed_base"] = raceProps.baseBodySize.ToString("F2"); // Approximate
+            // Movement speed (from ThingDef stat base)
+            var moveSpeed = race.GetStatValueAbstract(StatDefOf.MoveSpeed);
+            obj["move_speed"] = moveSpeed.ToString("F2");
 
-            // Combat stats
+            // Wildness & trainability (available from ThingDef/RaceProps)
+            var wildness = race.GetStatValueAbstract(StatDefOf.Wildness);
+            obj["wildness"] = (wildness * 100f).ToString("F0") + "%";
+            obj["trainability"] = raceProps.trainability?.LabelCap.ToString() ?? "None";
+
+            // Market value
+            obj["market_value"] = race.BaseMarketValue.ToString("F0");
+
+            // Manhunter chances
+            obj["manhunter_on_tame_fail"] = (raceProps.manhunterOnTameFailChance * 100f).ToString("F0") + "%";
+            obj["manhunter_on_damage"] = (raceProps.manhunterOnDamageChance * 100f).ToString("F0") + "%";
+
+            // Filth rate (from stat bases to avoid pawn-required warning)
+            if (race.statBases != null)
+            {
+                var filthStat = race.statBases.FirstOrDefault(s => s.stat == StatDefOf.FilthRate);
+                if (filthStat != null)
+                    obj["filth_rate"] = filthStat.value.ToString("F2");
+            }
+
+            // Combat stats — calculated from ThingDef tools (melee verbs)
             var combat = new JSONObject();
             combat["body_size"] = bodySize.ToString("F2");
+            // Calculate melee DPS from the animal's attack tools
+            if (race.tools != null && race.tools.Count > 0)
+            {
+                float totalDPS = 0f;
+                var attacks = new JSONArray();
+                foreach (var tool in race.tools)
+                {
+                    float dps = tool.power / (tool.cooldownTime > 0 ? tool.cooldownTime : 1f);
+                    totalDPS += dps;
+                    attacks.Add(tool.label + " (" + tool.power.ToString("F0") + " dmg, " + tool.cooldownTime.ToString("F1") + "s)");
+                }
+                combat["attacks"] = attacks;
+                combat["estimated_dps"] = (totalDPS / race.tools.Count).ToString("F1");
+            }
+            // Armor from stat bases (safe on ThingDef)
+            if (race.statBases != null)
+            {
+                var armorSharpStat = race.statBases.FirstOrDefault(s => s.stat == StatDefOf.ArmorRating_Sharp);
+                var armorBluntStat = race.statBases.FirstOrDefault(s => s.stat == StatDefOf.ArmorRating_Blunt);
+                if (armorSharpStat != null) combat["armor_sharp"] = (armorSharpStat.value * 100f).ToString("F0") + "%";
+                if (armorBluntStat != null) combat["armor_blunt"] = (armorBluntStat.value * 100f).ToString("F0") + "%";
+            }
             obj["combat"] = combat;
 
-            // Abilities
+            // Production abilities
             var abilities = new JSONObject();
-            
+
             var shearable = race.GetCompProperties<CompProperties_Shearable>();
             if (shearable != null)
             {
                 abilities["shearable"] = true;
+                abilities["wool_type"] = shearable.woolDef?.label ?? "wool";
+                abilities["wool_amount"] = shearable.woolAmount;
                 abilities["shear_interval_days"] = shearable.shearIntervalDays.ToString("F0");
             }
-            
+
             var milkable = race.GetCompProperties<CompProperties_Milkable>();
             if (milkable != null)
             {
                 abilities["milkable"] = true;
+                abilities["milk_type"] = milkable.milkDef?.label ?? "milk";
+                abilities["milk_amount"] = milkable.milkAmount;
                 abilities["milk_interval_days"] = milkable.milkIntervalDays.ToString("F0");
             }
-            
+
             var eggLayer = race.GetCompProperties<CompProperties_EggLayer>();
             if (eggLayer != null)
             {
                 abilities["egg_layer"] = true;
                 abilities["egg_interval_days"] = eggLayer.eggLayIntervalDays.ToString("F0");
+                if (eggLayer.eggUnfertilizedDef != null)
+                    abilities["egg_type"] = eggLayer.eggUnfertilizedDef.label;
+                else if (eggLayer.eggFertilizedDef != null)
+                    abilities["egg_type"] = eggLayer.eggFertilizedDef.label;
+                abilities["egg_count_range"] = eggLayer.eggCountRange.min + "-" + eggLayer.eggCountRange.max;
             }
 
             if (abilities.Count > 0)
                 obj["abilities"] = abilities;
-
-            // Temperament (stats require pawn instance, not available from def)
-            // obj["wildness"] = ...
-            // obj["trainability"] = ...
 
             return obj.ToString();
         }
@@ -236,6 +285,7 @@ namespace RimMind.Tools
                 if (kind == null) continue;
 
                 var obj = new JSONObject();
+                obj["id"] = animal.thingIDNumber.ToString();
                 obj["species"] = kind.label ?? kind.defName;
                 obj["defName"] = kind.defName;
                 obj["location"] = animal.Position.ToString();
@@ -250,16 +300,32 @@ namespace RimMind.Tools
                 obj["trainability"] = animal.training?.CanAssignToTrain(TrainableDefOf.Obedience) == true ? "Trainable" : "None";
 
                 var recommendations = new JSONArray();
-                if (wildness < 0.5f) recommendations.Add("Easy to tame - good candidate");
+                if (wildness < 0.35f) recommendations.Add("Easy to tame - good candidate");
+                else if (wildness < 0.65f) recommendations.Add("Moderate taming difficulty");
                 else if (wildness > 0.9f) recommendations.Add("Very difficult to tame");
-                
-                if (recommendations.Count > 0)
-                    obj["recommendations"] = recommendations;
+                else if (wildness > 0.65f) recommendations.Add("Hard to tame");
+
+                // Check for production value
+                var race = animal.def;
+                if (race.GetCompProperties<CompProperties_Shearable>() != null)
+                    recommendations.Add("Produces wool - valuable for textiles");
+                if (race.GetCompProperties<CompProperties_Milkable>() != null)
+                    recommendations.Add("Produces milk - food source");
+                if (race.GetCompProperties<CompProperties_EggLayer>() != null)
+                    recommendations.Add("Lays eggs - food source");
+                if (animal.RaceProps.packAnimal)
+                    recommendations.Add("Pack animal - useful for caravans");
+                if (animal.RaceProps.baseBodySize >= 2.0f)
+                    recommendations.Add("Large animal - good meat yield if hunted");
+                if (animal.kindDef.defName == "Thrumbo")
+                    recommendations.Add("Rare! Extremely valuable - consider taming");
+
+                obj["recommendations"] = recommendations;
 
                 animals.Add(obj);
             }
 
-            // Group by species
+            // Group by species, with individual animal details (id, gender, location)
             var grouped = new JSONObject();
             foreach (var animal in animals)
             {
@@ -271,11 +337,35 @@ namespace RimMind.Tools
                     grouped[species]["defName"] = animal["defName"]?.Value;
                     grouped[species]["count"] = 0;
                     grouped[species]["tameable"] = animal["tameable"]?.Value ?? "false";
-                    grouped[species]["value_rating"] = animal["value_rating"]?.Value ?? "low";
-                    grouped[species]["locations"] = new JSONArray();
+                    grouped[species]["wildness"] = animal["wildness"]?.Value ?? "Unknown";
+                    grouped[species]["trainability"] = animal["trainability"]?.Value ?? "None";
+                    grouped[species]["individuals"] = new JSONArray();
+                    // Taming difficulty rating based on wildness
+                    float w = 0f;
+                    float.TryParse(animal["wildness"]?.Value?.Replace("%", ""), out w);
+                    w = w / 100f;
+                    if (w < 0.35f) grouped[species]["taming_difficulty"] = "Easy";
+                    else if (w < 0.65f) grouped[species]["taming_difficulty"] = "Moderate";
+                    else if (w < 0.85f) grouped[species]["taming_difficulty"] = "Hard";
+                    else grouped[species]["taming_difficulty"] = "Very Hard";
+                    // Recommendations
+                    var recs = new JSONArray();
+                    if (animal["recommendations"] != null)
+                    {
+                        for (int i = 0; i < animal["recommendations"].Count; i++)
+                            recs.Add(animal["recommendations"][i].Value);
+                    }
+                    grouped[species]["recommendations"] = recs;
                 }
                 grouped[species]["count"] = (grouped[species]["count"].AsInt) + 1;
-                grouped[species]["locations"].Add(animal["location"]?.Value);
+                // Add individual animal with unique ID for precise targeting
+                var individual = new JSONObject();
+                individual["id"] = animal["id"]?.Value;
+                individual["gender"] = animal["gender"]?.Value;
+                individual["location"] = animal["location"]?.Value;
+                individual["health_percent"] = animal["health_percent"]?.Value;
+                if (animal["downed"]?.AsBool == true) individual["downed"] = true;
+                grouped[species]["individuals"].Add(individual);
             }
 
             var result = new JSONObject();
