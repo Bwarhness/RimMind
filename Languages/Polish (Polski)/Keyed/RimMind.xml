@@ -143,4 +143,7 @@
     <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
     <RimMind_LocationQueryHint>Opisz, co chcesz zrobić w tej lokalizacji...</RimMind_LocationQueryHint>
     <RimMind_LocationQuerySend>Wyślij</RimMind_LocationQuerySend>
+    <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
+    <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
+
 </LanguageData>

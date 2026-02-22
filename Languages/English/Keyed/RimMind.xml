@@ -71,6 +71,8 @@
     <RimMind_ChatYou>You: {0}</RimMind_ChatYou>
     <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
     <RimMind_ChatErrorPrefix>[Error]</RimMind_ChatErrorPrefix>
+    <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
+    <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
     
     <!-- Directives Window -->
     <RimMind_DirectivesTitle>Colony Directives</RimMind_DirectivesTitle>

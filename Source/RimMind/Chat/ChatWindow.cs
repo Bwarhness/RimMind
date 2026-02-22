@@ -20,6 +20,9 @@ namespace RimMind.Chat
         private static string cachedVersionTitle;
         private static bool versionTitleInitialized;
 
+        // GUIStyle for selectable (but read-only) message text — initialized lazily
+        private static GUIStyle _selectableTextStyle;
+
         public static ChatWindow Instance => instance;
         public ChatManager Manager => chatManager;
         public ChatManager ChatManager => chatManager;
@@ -290,6 +293,26 @@ namespace RimMind.Chat
                 scrollToBottom = false;
             }
 
+            // Lazily initialize a GUIStyle for selectable text.
+            // Based on GUI.skin.textArea so Unity handles cursor/selection internally,
+            // but with all backgrounds stripped so it looks like a plain label.
+            if (_selectableTextStyle == null)
+            {
+                _selectableTextStyle = new GUIStyle(GUI.skin.textArea)
+                {
+                    wordWrap = true,
+                    stretchWidth = false,
+                    stretchHeight = false,
+                };
+                _selectableTextStyle.padding   = new RectOffset(0, 0, 0, 0);
+                _selectableTextStyle.margin    = new RectOffset(0, 0, 0, 0);
+                _selectableTextStyle.border    = new RectOffset(0, 0, 0, 0);
+                _selectableTextStyle.normal.background   = null;
+                _selectableTextStyle.hover.background    = null;
+                _selectableTextStyle.active.background   = null;
+                _selectableTextStyle.focused.background  = null;
+            }
+
             Widgets.BeginScrollView(outerRect, ref scrollPosition, viewRect);
 
             float y = 4f;
@@ -324,9 +347,37 @@ namespace RimMind.Chat
 
                 var textRect = new Rect(bubbleRect.x + 6f, bubbleRect.y + 4f, bubbleRect.width - 12f, bubbleRect.height - 8f);
 
-                GUI.color = isUser ? new Color(0.85f, 0.9f, 1f) : new Color(0.85f, 1f, 0.9f);
-                Widgets.Label(textRect, displayText);
+                // Render message as a selectable TextArea (looks like a label, supports Ctrl+C).
+                // The return value (potentially edited text) is intentionally discarded to keep
+                // the display read-only — on the next frame we always re-render from msg.content.
+                Color textColor = isUser ? new Color(0.85f, 0.9f, 1f) : new Color(0.85f, 1f, 0.9f);
+                _selectableTextStyle.normal.textColor  = textColor;
+                _selectableTextStyle.hover.textColor   = textColor;
+                _selectableTextStyle.focused.textColor = textColor;
+                _selectableTextStyle.active.textColor  = textColor;
+
                 GUI.color = Color.white;
+                GUI.TextArea(textRect, displayText, _selectableTextStyle);
+
+                // Copy button — visible only while the cursor is over this bubble
+                if (Mouse.IsOver(bubbleRect))
+                {
+                    const float copyBtnW = 50f;
+                    const float copyBtnH = 18f;
+                    var copyBtnRect = new Rect(
+                        bubbleRect.xMax - copyBtnW - 4f,
+                        bubbleRect.y + 2f,
+                        copyBtnW,
+                        copyBtnH
+                    );
+                    GUI.color = new Color(1f, 1f, 1f, 0.85f);
+                    if (Widgets.ButtonText(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessage")))
+                    {
+                        GUIUtility.systemCopyBuffer = msg.content ?? "";
+                    }
+                    GUI.color = Color.white;
+                    TooltipHandler.TipRegion(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessageTip"));
+                }
 
                 y += textHeight + 12f;
             }
