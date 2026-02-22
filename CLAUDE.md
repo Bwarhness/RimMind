@@ -2,6 +2,7 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
+**Steam Workshop (Dev)**: https://steamcommunity.com/sharedfiles/filedetails/?id=3668326181
 RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 63 different colony data tools via function calling.
 
 ## Build & Development
