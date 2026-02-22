@@ -544,6 +544,26 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by category: 'all' (default), 'medicine', 'corpses', 'weapons', 'apparel', 'food', 'resources'"),
                 MakeOptionalParam("location_filter", "string", "Filter by location: 'all' (default), 'stockpile' (only in stockpile zones), 'ground' (only outside stockpile zones)")));
 
+            // Drafted Pawn Command Tools
+            tools.Add(MakeTool("move_pawn", "Move a drafted pawn to specific coordinates on the map. Pawn must be drafted first (use draft_colonist). The pawn will walk/run to the destination. Returns error if pawn is not drafted, is downed, coordinates are out of bounds, not standable, or destination is unreachable.",
+                MakeParam("pawnName", "string", "Name of the pawn to move"),
+                MakeParam("x", "integer", "X coordinate to move to"),
+                MakeParam("z", "integer", "Z coordinate to move to")));
+            tools.Add(MakeTool("order_attack", "Order a drafted pawn to attack a specific target pawn or animal. Automatically uses ranged or melee attack based on the pawn's equipped weapon. Pawn must be drafted first. Target name supports exact and partial matching. Returns error if pawn is not drafted, is downed, or target is not found on the map.",
+                MakeParam("pawnName", "string", "Name of the pawn to give the attack order to"),
+                MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
+            tools.Add(MakeTool("hold_position", "Order a drafted pawn to hold their current position in combat stance. The pawn will stay in place and auto-attack nearby enemies. Pawn must be drafted first. Returns error if pawn is not drafted or is downed.",
+                MakeParam("pawnName", "string", "Name of the pawn to hold position")));
+            tools.Add(MakeTool("order_group_attack", "Order multiple drafted pawns to all attack a single target. All pawns must be drafted first. Returns per-pawn results — partial success is possible if some pawns fail.",
+                MakeParam("pawnNames", "array", "List of pawn names to give the attack order to"),
+                MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
+            tools.Add(MakeTool("switch_weapon", "Switch a drafted pawn's equipped weapon to another weapon from their inventory. Accepts both defName and partial label match. Pawn must be drafted. Returns available inventory weapons if specified weapon not found.",
+                MakeParam("pawnName", "string", "Name of the pawn whose weapon to switch"),
+                MakeParam("weaponDefName", "string", "DefName or label (partial match) of the weapon to switch to")));
+            tools.Add(MakeTool("set_fire_mode", "Set fire mode for a drafted pawn's ranged weapon (burst/single/auto). NOTE: Not available in vanilla RimWorld — requires Combat Extended mod. Returns an informational error in vanilla.",
+                MakeParam("pawnName", "string", "Name of the pawn"),
+                MakeParam("mode", "string", "Fire mode: 'burst', 'single', or 'auto'")));
+
             // Ping/Highlight Tools
             tools.Add(MakeTool("ping_location", "Ping a location on the map to draw the player's attention. Camera jumps to the location immediately and a clickable letter is posted for future reference. Use this to highlight important spots: resource deposits, danger areas, suggested building locations, points of interest, etc.",
                 MakeParam("x", "integer", "X coordinate on the map"),

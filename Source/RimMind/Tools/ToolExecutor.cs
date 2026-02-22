@@ -239,6 +239,13 @@ namespace RimMind.Tools
             // Ping/Highlight
             { "ping_location", args => PingTools.PingLocation(args) },
 
+            // Drafted Pawn Commands
+            { "move_pawn", args => DraftedPawnTools.MovePawn(args?["pawnName"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
+            { "order_attack", args => DraftedPawnTools.OrderAttack(args?["pawnName"]?.Value, args?["targetName"]?.Value) },
+            { "hold_position", args => DraftedPawnTools.HoldPosition(args?["pawnName"]?.Value) },
+            { "order_group_attack", args => DraftedPawnTools.OrderGroupAttack(DraftedPawnTools.ExtractPawnNames(args?["pawnNames"]), args?["targetName"]?.Value) },
+            { "switch_weapon", args => DraftedPawnTools.SwitchWeapon(args?["pawnName"]?.Value, args?["weaponDefName"]?.Value) },
+
             // Deconstruct
             { "deconstruct_building", args => BuildingTools.DeconstructBuilding(args) },
         };
