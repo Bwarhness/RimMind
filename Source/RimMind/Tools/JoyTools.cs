@@ -168,9 +168,9 @@ namespace RimMind.Tools
             var recommendations = new JSONArray();
             if (missingJoyKinds.Count > 0)
             {
-                foreach (var missing in missingJoyKinds)
+                for (int i = 0; i < missingJoyKinds.Count; i++)
                 {
-                    string joyType = missing.ToString();
+                    string joyType = missingJoyKinds[i].Value;
                     var suggestion = new JSONObject();
                     suggestion["joyType"] = joyType;
                     suggestion["buildings"] = GetRecommendedBuildingsForJoyKind(joyType);
@@ -275,30 +275,29 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
-        private static string GetRecommendedBuildingsForJoyKind(string joyKind)
+        private static JSONArray GetRecommendedBuildingsForJoyKind(string joyKind)
         {
-            // Map joy types to recommended buildings
+            // Map RimWorld JoyKindDef defNames to recommended buildings
             var buildingMap = new Dictionary<string, string[]>
             {
-                ["Cerebral"] = new[] { "ChessTable", "Bookshelf" },
+                ["Meditative"] = new[] { "MeditationSpot", "NatureShrine" },
+                ["Social"] = new[] { "Campfire", "PartySpot" },
+                ["Gaming_Dexterity"] = new[] { "HorseshoesPin", "BilliardsTable", "BoxingRing" },
+                ["Gaming_Cerebral"] = new[] { "ChessTable" },
+                ["Television"] = new[] { "TubeTelevision", "FlatscreenTelevision", "MegascreenTelevision" },
+                ["Telescope"] = new[] { "Telescope" },
+                ["HighCulture"] = new[] { "HarpHarpsichord", "Piano" },
                 ["Chemical"] = new[] { "DrugLab", "Brewery" },
-                ["Dexterity"] = new[] { "BilliardsTable", "Horseshoes", "BoxingRing" },
-                ["Gluttonous"] = new[] { "Stove", "Brewery" },
-                ["GluttonousMulti"] = new[] { "DiningChair", "Table" },
-                ["Gaming"] = new[] { "PokerTable", "Hoopstone", "BilliardsTable" },
-                ["Social"] = new[] { "Brewery", "Campfire", "PartySpot" },
-                ["Study"] = new[] { "ResearchBench", "DeepDrill" },
-                ["Television"] = new[] { "Television", "Telescope" },
-                ["Work"] = new[] { "HandLoom", "TailoringBench" }
+                ["Gluttonous"] = new[] { "FueledStove", "ElectricStove" },
+                ["Reading"] = new[] { "Bookcase" },
             };
 
+            var result = new JSONArray();
             if (buildingMap.TryGetValue(joyKind, out var buildings))
             {
-                var result = new JSONArray();
                 foreach (var b in buildings) result.Add(b);
-                return result.ToString();
             }
-            return "[]";
+            return result;
         }
     }
 }
