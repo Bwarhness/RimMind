@@ -235,6 +235,9 @@ namespace RimMind.Tools
             { "set_item_allowed", args => ItemAccessTools.SetItemAllowed(args) },
             { "get_forbidden_items", args => ItemAccessTools.GetForbiddenItems(args) },
 
+            // Ping/Highlight
+            { "ping_location", args => PingTools.PingLocation(args) },
+
             // Deconstruct
             { "deconstruct_building", args => BuildingTools.DeconstructBuilding(args) },
         };

@@ -539,6 +539,13 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by category: 'all' (default), 'medicine', 'corpses', 'weapons', 'apparel', 'food', 'resources'"),
                 MakeOptionalParam("location_filter", "string", "Filter by location: 'all' (default), 'stockpile' (only in stockpile zones), 'ground' (only outside stockpile zones)")));
 
+            // Ping/Highlight Tools
+            tools.Add(MakeTool("ping_location", "Ping a location on the map to draw the player's attention. Camera jumps to the location immediately and a clickable letter is posted for future reference. Use this to highlight important spots: resource deposits, danger areas, suggested building locations, points of interest, etc.",
+                MakeParam("x", "integer", "X coordinate on the map"),
+                MakeParam("z", "integer", "Z coordinate on the map"),
+                MakeOptionalParam("label", "string", "Text label for the ping (shown in letter). Default: 'Location marked'"),
+                MakeOptionalParam("color", "string", "Letter color: 'yellow'/'neutral' (default), 'green'/'positive', 'red'/'negative'/'danger', 'blue'/'info'")));
+
             cachedTools = tools;
             return tools;
         }
