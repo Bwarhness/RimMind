@@ -8,14 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Assinatura Max/Pro)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>Provedor personalizado (OpenAI-compatible)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>Configurações do provedor personalizado</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>Supports OpenAI-compatible APIs (Ollama, LM Studio, Groq, Together, etc.). Requires a provider that supports function/tool calling for full colony management features.</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>Suporta APIs compatíveis com OpenAI (Ollama, LM Studio, Groq, Together, etc.). Requer um provedor com suporte a chamadas de funções/ferramentas para funcionalidades completas de gerenciamento de colônia.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>URL do endpoint:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>Exemplos: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>Chave API (opcional para LLMs locais):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Nome do modelo:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Exemplos: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
     <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>RimMind requires tool/function calling to query and manage your colony. Disable only if your provider does not support it — this will break all colony features and leave the AI unable to help beyond basic chat.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCallingDesc>O RimMind requer chamadas de funções/ferramentas para consultar e gerenciar sua colônia. Desative apenas se seu provedor não oferecer suporte — isso desativará todos os recursos da colônia e limitará a IA ao chat básico.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Credenciais do Claude Code detectadas. Sua assinatura será usada automaticamente.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code não está logado. Execute 'claude login' em um terminal.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Chave API Anthropic:</RimMind_AnthropicAPIKey>
@@ -131,4 +131,9 @@
 
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
+
+    <!-- Ping Location -->
+    <RimMind_PingTitle>RimMind</RimMind_PingTitle>
+    <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
+    <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
 </LanguageData>

@@ -8,14 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Max/Pro 구독)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>사용자 지정 제공자 (OpenAI 호환)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>사용자 지정 제공자 설정</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>Supports OpenAI-compatible APIs (Ollama, LM Studio, Groq, Together, etc.). Requires a provider that supports function/tool calling for full colony management features.</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>OpenAI 호환 API(Ollama, LM Studio, Groq, Together 등)를 지원합니다. 완전한 식민지 관리 기능을 사용하려면 함수/도구 호출을 지원하는 공급자가 필요합니다.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>엔드포인트 URL:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>예: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>API 키 (로컬 LLM은 선택사항):</RimMind_APIKeyOptional>
     <RimMind_ModelName>모델 이름:</RimMind_ModelName>
     <RimMind_ModelNameExamples>예: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
     <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>RimMind requires tool/function calling to query and manage your colony. Disable only if your provider does not support it — this will break all colony features and leave the AI unable to help beyond basic chat.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCallingDesc>RimMind는 식민지를 조회하고 관리하기 위해 도구/함수 호출이 필요합니다. 공급자가 지원하지 않는 경우에만 비활성화하세요 — 이렇게 하면 모든 식민지 기능이 비활성화되고 AI는 기본 채팅 이상의 도움을 줄 수 없습니다.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code 자격 증명이 감지되었습니다. 구독이 자동으로 사용됩니다.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code에 로그인되지 않았습니다. 터미널에서 'claude login'을 실행하세요.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API 키:</RimMind_AnthropicAPIKey>
@@ -131,4 +131,9 @@
 
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
+
+    <!-- Ping Location -->
+    <RimMind_PingTitle>RimMind</RimMind_PingTitle>
+    <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
+    <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
 </LanguageData>
