@@ -21,13 +21,13 @@ jobs:
       - name: Bump patch version in About.xml
         id: bump
         run: |
-          CURRENT=$(grep -oP '(?<=<version>)[^<]+' About/About.xml)
+          CURRENT=$(grep -oP '(?<=<modVersion>)[^<]+' About/About.xml)
           MAJOR=$(echo $CURRENT | cut -d. -f1)
           MINOR=$(echo $CURRENT | cut -d. -f2)
           PATCH=$(echo $CURRENT | cut -d. -f3)
           NEW_PATCH=$((PATCH + 1))
           NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          sed -i "s|<version>$CURRENT</version>|<version>$NEW_VERSION</version>|" About/About.xml
+          sed -i "s|<modVersion>$CURRENT</modVersion>|<modVersion>$NEW_VERSION</modVersion>|" About/About.xml
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "Bumped $CURRENT → $NEW_VERSION"
 
