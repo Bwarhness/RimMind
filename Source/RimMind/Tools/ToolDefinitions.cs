@@ -443,6 +443,10 @@ namespace RimMind.Tools
             tools.Add(MakeTool("analyze_trade_opportunity", "Analyze trade opportunities with current traders. Compares colony resources against trader inventory to suggest profitable trades: items to buy for urgent needs (medicine, components, food), items to sell for profit (surplus materials), and strategic purchases. Returns recommendations with priority scores and reasoning.",
                 MakeOptionalParam("traderFilter", "string", "Optional filter to analyze specific trader by name, faction, or type (e.g., 'orbital', 'caravan'). If omitted, analyzes all traders.")));
 
+            // Wiki Tools
+            tools.Add(MakeTool("wiki_lookup", "Search the RimWorld wiki for information about game mechanics, items, buildings, events, or strategies. Returns the intro/extract from the best matching wiki page. Use this when players ask 'what is X?', 'how does Y work?', or need factual game information you're unsure about. Examples: 'what is a psychic drone?', 'how do infestations work?', 'what does the volatile trait do?'.",
+                MakeParam("query", "string", "Search query for the RimWorld wiki (e.g., 'psychic drone', 'infestation', 'steel production')")));
+
             cachedTools = tools;
             return tools;
         }

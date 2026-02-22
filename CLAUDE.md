@@ -231,7 +231,7 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (57 tools)
+## Current Tool Catalog (58 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (3): get_relationships, get_faction_relations, get_social_risks
 - **Mood** (4): get_mood_risks, suggest_mood_interventions, get_mood_trends, get_environment_quality
@@ -248,6 +248,7 @@ RimMind/
 - **Zone** (3): list_zones, create_zone, delete_zone
 - **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
+- **Wiki** (1): wiki_lookup
 
 ## Building & Spatial Planning
 
@@ -350,7 +351,40 @@ AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
+### 🌍 Translations (MANDATORY for all UI)
+**Every user-visible string must be translated.** RimMind ships with 14 language files — all UI text must go through the keyed translation system, never hardcoded.
+
+**Language files location:** `Languages/Keyed/`
+- `en-US.xml` (English — source of truth)
+- `de-DE.xml`, `es-ES.xml`, `fr-FR.xml`, `it-IT.xml`, `ja-JP.xml`, `ko-KR.xml`
+- `nl-NL.xml`, `pl-PL.xml`, `pt-BR.xml`, `ru-RU.xml`, `sv-SE.xml`, `tr-TR.xml`, `zh-CN.xml`
+
+**In C# code, always use:**
+```csharp
+"RimMind_YourKey".Translate()         // simple string
+"RimMind_YourKey".Translate(arg1)     // with format arg {0}
+```
+
+**Never do this:**
+```csharp
+Widgets.Label(rect, "Click here");    // ❌ hardcoded string
+```
+
+**When adding any new UI feature:**
+1. Add the key + English string to `en-US.xml`
+2. Add the same key to **all 13 other language files** — use English as fallback text initially (e.g. `<RimMind_MyKey>My English Text</RimMind_MyKey>`)
+3. Use `"RimMind_MyKey".Translate()` in code
+
+**Key naming convention:** `RimMind_` prefix + PascalCase descriptor
+- Settings: `RimMind_SettingName`
+- Buttons: `RimMind_ButtonLabel`
+- Messages: `RimMind_MessageDescription`
+- Tooltips: `RimMind_TooltipSomething`
+
+This applies to: button labels, window titles, tooltips, settings labels, error messages, status text, and any string a player sees.
+
 ## Changelog
+- **2026-02-22**: Added `wiki_lookup` tool — Live RimWorld wiki queries. AI can now search the RimWorld wiki (rimworldwiki.com) via MediaWiki API and return page extracts. Use for game mechanic questions, item/building descriptions, event explanations, or any factual RimWorld information. Returns page title, extract (capped at 800 chars), URL, and related pages. Handles search failures gracefully. New file: `Source/RimMind/Tools/WikiTools.cs`.
 - **2026-02-17**: Phase 8 - Animal Intelligence — Enhanced animal visibility and management. Added `get_animal_stats` tool for comprehensive species data (carrying capacity, movement speed, combat stats, production abilities with intervals, wildness, trainability, filth rate, manhunter chances). Added `get_wild_animals` tool to list all wild animals on map by species with taming difficulty, hunting value, rarity assessment, and recommendations. Enhanced `list_animals` to show current carrying load for pack animals. Enhanced `get_animal_details` to show production schedules (next shearing/milking/egg with ready status). AI can now: identify taming opportunities ("Rare Thrumbo - worth attempting tame"), optimize pack animals for caravans, remind about production readiness ("Muffalo ready for milking"), and advise on hunting targets. Total tools increased from 52 to 54.
 - **2026-02-17**: Added Phase 3 - Social & Mood Intelligence tools. New MoodHistoryTracker GameComponent tracks mood over time with hourly snapshots persisted with save files. New tools: `get_mood_trends` (track mood velocity, predict time-to-break with 3-day history), `get_social_risks` (detect colonist pairs with mutual hostility and volatile traits), `get_environment_quality` (score all rooms for beauty/cleanliness/space/temp/lighting with actionable suggestions). Enhanced `get_colony_overview` with recreation analysis (joy source count, variety, social vs solo, adequacy assessment). Implements all features from issue #56: mood trend analysis with prediction, social conflict detection, actionable interventions (already existed as suggest_mood_interventions), environment quality scoring, and recreation diagnostics.
 - **2026-02-17**: **Phase 2: Construction & Workflow Intelligence** — Added work bottleneck detection and construction progress tracking. New tools: `get_work_queue` (shows pending jobs by type with counts: total/in-progress/blocked/assigned colonists for hauling, construction, mining, planting, repair) and `get_construction_status` (lists all blueprints with completion %, materials needed vs available, forbidden status, current builders). Enhanced `place_building` with material pre-check: now warns if insufficient materials exist before placing blueprints, showing shortages with "need X more steel" format. Addresses issue #55.
