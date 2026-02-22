@@ -504,6 +504,12 @@ namespace RimMind.Tools
                 MakeOptionalParam("x2", "integer", "End X for area approval"),
                 MakeOptionalParam("z2", "integer", "End Z for area approval"),
                 MakeOptionalParam("all", "boolean", "Set true to approve ALL AI-proposed blueprints")));
+            tools.Add(MakeTool("deconstruct_building", "Mark already-built structures for deconstruction using RimWorld's native designation system. Colonists will deconstruct the marked buildings and recover materials. Works on player-built structures, ancient ruins, and ship chunks. At least one targeting parameter is required.",
+                MakeOptionalParam("x", "integer", "X coordinate of target cell"),
+                MakeOptionalParam("z", "integer", "Z coordinate of target cell"),
+                MakeOptionalParam("x2", "integer", "Second corner X for rectangular area selection"),
+                MakeOptionalParam("z2", "integer", "Second corner Z for rectangular area selection"),
+                MakeOptionalParam("def_name", "string", "Target all buildings of this defName on the entire map (e.g., 'Wall', 'ShipChunk', 'AncientCryptosleepCasket')")));
 
             // Directive Tools
             tools.Add(MakeTool("get_directives", "Get the current player-defined colony directives. These are standing rules, preferences, and playstyle instructions set by the player. Check this before adding new directives to avoid duplicates."));

@@ -1086,6 +1086,141 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        /// <summary>
+        /// Mark already-built structures for deconstruction using RimWorld's native designation system.
+        /// Parameters: x/z (cell), x2/z2 (area), def_name (all of type). At least one required.
+        /// </summary>
+        public static string DeconstructBuilding(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            bool hasCell = args?["x"] != null && args?["z"] != null;
+            bool hasArea = hasCell && args?["x2"] != null && args?["z2"] != null;
+            string defName = args?["def_name"]?.Value;
+
+            if (!hasCell && string.IsNullOrEmpty(defName))
+                return ToolExecutor.JsonError("At least one parameter required: x/z (cell), x2/z2 (area), or def_name.");
+
+            var targets = new List<Thing>();
+
+            // Collect target buildings
+            if (!string.IsNullOrEmpty(defName))
+            {
+                // Target all buildings of this defName on the map
+                foreach (var building in map.listerBuildings.allBuildingsColonist)
+                {
+                    if (string.Equals(building.def.defName, defName, StringComparison.OrdinalIgnoreCase))
+                        targets.Add(building);
+                }
+                // Also check non-colonist buildings (ancient ruins, ship chunks, etc.)
+                foreach (var thing in map.listerThings.AllThings)
+                {
+                    if (thing is Building && !(thing is Blueprint) && !(thing is Frame))
+                    {
+                        if (string.Equals(thing.def.defName, defName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!targets.Contains(thing))
+                                targets.Add(thing);
+                        }
+                    }
+                }
+            }
+            else if (hasArea)
+            {
+                // Area selection
+                int x1 = args["x"].AsInt;
+                int z1 = args["z"].AsInt;
+                int x2 = args["x2"].AsInt;
+                int z2 = args["z2"].AsInt;
+                int minX = Math.Min(x1, x2), maxX = Math.Max(x1, x2);
+                int minZ = Math.Min(z1, z2), maxZ = Math.Max(z1, z2);
+
+                for (int z = minZ; z <= maxZ; z++)
+                {
+                    for (int x = minX; x <= maxX; x++)
+                    {
+                        var cell = new IntVec3(x, 0, z);
+                        if (!cell.InBounds(map)) continue;
+
+                        foreach (var thing in cell.GetThingList(map))
+                        {
+                            if (thing is Building && !(thing is Blueprint) && !(thing is Frame))
+                            {
+                                if (!targets.Contains(thing))
+                                    targets.Add(thing);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Single cell
+                int x = args["x"].AsInt;
+                int z = args["z"].AsInt;
+                var cell = new IntVec3(x, 0, z);
+
+                if (!cell.InBounds(map))
+                    return ToolExecutor.JsonError($"Position ({x}, {z}) is outside map bounds.");
+
+                foreach (var thing in cell.GetThingList(map))
+                {
+                    if (thing is Building && !(thing is Blueprint) && !(thing is Frame))
+                        targets.Add(thing);
+                }
+            }
+
+            int designated = 0;
+            int alreadyDesignated = 0;
+            int skipped = 0;
+            var structuresList = new JSONArray();
+
+            foreach (var thing in targets)
+            {
+                // Check if already designated for deconstruction
+                if (map.designationManager.DesignationOn(thing, DesignationDefOf.Deconstruct) != null)
+                {
+                    alreadyDesignated++;
+                    continue;
+                }
+
+                // Check if it can be deconstructed
+                bool canDeconstruct = thing.def.building?.IsDeconstructible ?? false;
+
+                // Also allow ship chunks and mineable things
+                if (!canDeconstruct && thing.def.mineable)
+                    canDeconstruct = true;
+
+                // Check if it's a real built thing
+                bool isBuilt = thing is Building && !(thing is Blueprint) && !(thing is Frame);
+
+                if (!canDeconstruct || !isBuilt)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                // Apply the deconstruction designation
+                map.designationManager.AddDesignation(new Designation(thing, DesignationDefOf.Deconstruct));
+                designated++;
+
+                string label = thing.def.label ?? thing.def.defName;
+                structuresList.Add($"{label} at {thing.Position.x},{thing.Position.z}");
+            }
+
+            var result = new JSONObject();
+            result["designated"] = designated;
+            result["already_designated"] = alreadyDesignated;
+            result["skipped"] = skipped;
+            if (structuresList.Count > 0 && structuresList.Count <= 50)
+                result["structures"] = structuresList;
+            else if (structuresList.Count > 50)
+                result["structures_note"] = $"{structuresList.Count} structures designated (list truncated)";
+
+            return result.ToString();
+        }
+
         public static string ApproveBuildings(JSONNode args)
         {
             var map = Find.CurrentMap;

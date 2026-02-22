@@ -2,7 +2,7 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 61 different colony data tools via function calling.
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 62 different colony data tools via function calling.
 
 ## Build & Development
 
@@ -247,7 +247,7 @@ RimMind/
 - **Directives** (3): get_directives, add_directive, remove_directive
 - **Plan** (3): get_plans, place_plans, remove_plans
 - **Zone** (3): list_zones, create_zone, delete_zone
-- **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
+- **Building** (7): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings, deconstruct_building
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
 - **Wiki** (1): wiki_lookup
 
@@ -385,6 +385,7 @@ Widgets.Label(rect, "Click here");    // ❌ hardcoded string
 This applies to: button labels, window titles, tooltips, settings labels, error messages, status text, and any string a player sees.
 
 ## Changelog
+- **2026-02-22**: Added `deconstruct_building` tool — Mark already-built structures for deconstruction using RimWorld's native designation system. Parameters: x/z (target cell), x2/z2 (rectangular area), def_name (all buildings of type on map). At least one parameter required. Works on player-built structures, ancient ruins, ship chunks, and other deconstructible buildings. Returns designated count, already_designated, skipped, and list of affected structures. Closes issue #128.
 - **2026-02-22**: Added `designate_slaughter` tool — Mark tamed animals for slaughter. Only works on colony-owned animals (not wild). Returns estimated meat yield using `StatDefOf.MeatAmount`. Parameters: `animal` (name/species), `count` (optional, default 1), `id` (optional, specific pawn id). Updated `cancel_animal_designation` to also handle slaughter designations. Closes issue #125.
 - **2026-02-22**: Added `set_item_allowed` and `get_forbidden_items` tools — Manage item forbid/allow status. `set_item_allowed` bulk-allows or forbids items by cell coordinates, defName, or category (medicine, corpses, weapons, apparel, food, resources) with optional location filter (stockpile/ground). `get_forbidden_items` lists all forbidden items with location and stockpile status. Useful for managing loot after raids, controlling item accessibility, and debugging hauling issues. New file: `Source/RimMind/Tools/ItemAccessTools.cs`. Closes issue #123.
 - **2026-02-22**: Added `wiki_lookup` tool — Live RimWorld wiki queries. AI can now search the RimWorld wiki (rimworldwiki.com) via MediaWiki API and return page extracts. Use for game mechanic questions, item/building descriptions, event explanations, or any factual RimWorld information. Returns page title, extract (capped at 800 chars), URL, and related pages. Handles search failures gracefully. New file: `Source/RimMind/Tools/WikiTools.cs`.
