@@ -39,7 +39,7 @@ namespace RimMind.Tools
                 bool isAnomalyEntity = IsAnomalyEntity(thing);
                 if (!isAnomalyEntity) continue;
 
-                if (entityType != null && !thing.def.defName.Contains(entityType, StringComparison.OrdinalIgnoreCase))
+                if (entityType != null && thing.def.defName.IndexOf(entityType, StringComparison.OrdinalIgnoreCase) < 0)
                     continue;
 
                 var entity = new JSONObject();
@@ -229,10 +229,10 @@ namespace RimMind.Tools
                 recommendations.Add($"Contain {uncontained.Count} uncontained entities");
             }
 
-            var criticalThreats = uncontained.Where(e => AssessThreatLevel(e) == "critical").ToList();
-            if (criticalThreats.Count > 0)
+            var hostileEntities = uncontained.Where(e => AssessThreatLevel(e) == "hostile").ToList();
+            if (hostileEntities.Count > 0)
             {
-                recommendations.Add("CRITICAL: Immediately contain critical threat entities");
+                recommendations.Add($"Warning: {hostileEntities.Count} hostile entities detected");
             }
 
             result["recommendations"] = recommendations;
@@ -313,12 +313,13 @@ namespace RimMind.Tools
 
         private static string ClassifyEntityType(string defName)
         {
-            if (defName.Contains("GlowingBody")) return "Glowing Body";
-            if (defName.Contains("Shrine")) return "Shrine";
-            if (defName.Contains("Monolith") || defName.Contains("Obelisk")) return "Monolith";
-            if (defName.Contains("Pylon")) return "Pylon";
-            if (defName.Contains("Anima")) return "Anima Entity";
-            return "Unknown Anomaly";
+            if (defName.Contains("GlowingBody")) return "Entity";
+            if (defName.Contains("Shrine")) return "Structure";
+            if (defName.Contains("Monolith")) return "Story Object";
+            if (defName.Contains("Obelisk")) return "Story Object";
+            if (defName.Contains("Pylon")) return "Structure";
+            if (defName.Contains("Anima")) return "Entity";
+            return "Anomaly";
         }
 
         private static (string level, string status) GetContainmentStatus(Thing thing)
@@ -377,23 +378,26 @@ namespace RimMind.Tools
 
         private static string AssessThreatLevel(Thing thing)
         {
+            // Check if actively hostile
+            if (thing is Pawn p && p.HostileTo(Faction.OfPlayer))
+                return "hostile";
+
+            // Check containment status - uncontained is higher concern
+            bool contained = IsEntityContained(thing);
+
             string defName = thing.def.defName;
 
-            // Critical threats
+            // Monoliths/Obelisks are story items - not immediate threats unless interacted with
             if (defName.Contains("Monolith") || defName.Contains("Obelisk"))
-                return "critical";
+                return contained ? "contained" : "inactive";
 
-            // High threats
-            if (defName.Contains("GlowingBody") && defName.Contains("Tier"))
-                return "high";
-
-            // Medium threats
-            if (defName.Contains("Shrine") || defName.Contains("Pylon"))
-                return "medium";
-
-            // Low threats
+            // Active creature-type entities
             if (defName.Contains("GlowingBody"))
-                return "low";
+                return contained ? "contained" : "moderate";
+
+            // Structures
+            if (defName.Contains("Shrine") || defName.Contains("Pylon"))
+                return contained ? "contained" : "low";
 
             return "unknown";
         }
