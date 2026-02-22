@@ -436,6 +436,50 @@ namespace RimMind.Tools
         }
 
         /// <summary>
+        /// Query all active animal designations (hunt, tame, slaughter).
+        /// </summary>
+        public static string GetAnimalDesignations(string type = "all")
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var results = new JSONArray();
+            int count = 0;
+
+            foreach (var des in map.designationManager.AllDesignations)
+            {
+                var pawn = des.target.Thing as Pawn;
+                if (pawn == null || !pawn.RaceProps.Animal) continue;
+
+                string desType = null;
+                if (des.def == DesignationDefOf.Hunt) desType = "hunt";
+                else if (des.def == DesignationDefOf.Tame) desType = "tame";
+                else if (des.def == DesignationDefOf.Slaughter) desType = "slaughter";
+                else continue;
+
+                if (type != "all" && desType != type) continue;
+
+                var entry = new JSONObject();
+                entry["animal_name"] = pawn.Name?.ToStringShort ?? pawn.LabelShort;
+                entry["species"] = pawn.kindDef?.label ?? "Unknown";
+                entry["id"] = pawn.thingIDNumber;
+                entry["gender"] = pawn.gender.ToString().ToLower();
+                entry["x"] = pawn.Position.x;
+                entry["z"] = pawn.Position.z;
+                entry["designation"] = desType;
+                entry["faction"] = pawn.Faction == Faction.OfPlayer ? "tamed" : "wild";
+                results.Add(entry);
+                count++;
+            }
+
+            var result = new JSONObject();
+            result["total"] = count;
+            result["filter"] = type;
+            result["designations"] = results;
+            return result.ToString();
+        }
+
+        /// <summary>
         /// Find a wild animal by its unique thingIDNumber (from get_wild_animals output).
         /// </summary>
         private static Pawn FindAnimalById(Map map, int id)

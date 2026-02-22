@@ -421,6 +421,8 @@ namespace RimMind.Tools
             tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt, tame, or slaughter designation on an animal. Use id for precise targeting or animal name to search.",
                 MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
                 MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
+            tools.Add(MakeTool("get_animal_designations", "Query which animals are currently designated for hunt, tame, or slaughter. Use after designate_hunt/tame/slaughter to verify the designation applied correctly.",
+                MakeOptionalParam("type", "string", "Filter by type: 'hunt', 'tame', 'slaughter', or 'all' (default)")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
                 MakeParam("x1", "integer", "Start X coordinate"),
                 MakeParam("z1", "integer", "Start Z coordinate"),

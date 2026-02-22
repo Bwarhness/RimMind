@@ -231,7 +231,7 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (61 tools)
+## Current Tool Catalog (62 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
 - **Social** (3): get_relationships, get_faction_relations, get_social_risks
 - **Mood** (4): get_mood_risks, suggest_mood_interventions, get_mood_trends, get_environment_quality
@@ -241,7 +241,7 @@ RimMind/
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
 - **Map** (7): get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, get_blueprints, search_map
 - **Animals** (4): list_animals, get_animal_details, get_animal_stats, get_wild_animals
-- **Designation** (7): designate_hunt, designate_tame, designate_slaughter, cancel_animal_designation, designate_mine, designate_chop, designate_harvest
+- **Designation** (8): designate_hunt, designate_tame, designate_slaughter, cancel_animal_designation, get_animal_designations, designate_mine, designate_chop, designate_harvest
 - **Events** (2): get_recent_events, get_active_alerts
 - **Medical** (1): get_medical_overview
 - **Directives** (3): get_directives, add_directive, remove_directive
@@ -385,6 +385,7 @@ Widgets.Label(rect, "Click here");    // ❌ hardcoded string
 This applies to: button labels, window titles, tooltips, settings labels, error messages, status text, and any string a player sees.
 
 ## Changelog
+- **2026-02-22**: Added `get_animal_designations` query tool — AI can now verify which animals are currently designated for hunt, tame, or slaughter. Returns animal name, species, ID, gender, position, designation type, and faction (tamed/wild). Supports filtering by type ('hunt', 'tame', 'slaughter', or 'all'). Use after designate_hunt/tame/slaughter to confirm designations were applied correctly. Closes issue #131 (partial).
 - **2026-02-22**: Added location-aware chat input via Architect panel (issue #130). New RimMind tab in Architect panel with "Ask RimMind" designator. Click any map cell to open a dialog showing terrain, fertility, zone, buildings, and room info. Type a message and it's sent to the AI with full location context in format `[Location: x=45, z=80 | Terrain: RichSoil | Fertility: 140% | Zone: Growing Zone | Buildings: None]`. New files: `Source/RimMind/UI/Designator_RimMindQuery.cs`, `Source/RimMind/UI/Dialog_RimMindLocationQuery.cs`, `Defs/DesignatorDefs/RimMind.xml`. Added translations for all 14 supported languages. Closes issue #130.
 - **2026-02-22**: Added `ping_location` tool — AI can highlight map locations for the player. Camera jumps immediately to the coordinates and a clickable letter is posted in the letter stack (top-right). Uses RimWorld's native letter system for familiarity. Parameters: x/z (required coordinates), label (optional text description), color (optional: yellow/neutral, green/positive, red/negative/danger). Use cases: marking resource deposits, highlighting danger areas, suggesting building locations, pointing out points of interest. New file: `Source/RimMind/Tools/PingTools.cs`. Closes issue #129.
 - **2026-02-22**: Added `deconstruct_building` tool — Mark already-built structures for deconstruction using RimWorld's native designation system. Parameters: x/z (target cell), x2/z2 (rectangular area), def_name (all buildings of type on map). At least one parameter required. Works on player-built structures, ancient ruins, ship chunks, and other deconstructible buildings. Returns designated count, already_designated, skipped, and list of affected structures. Closes issue #128.
