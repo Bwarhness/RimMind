@@ -354,12 +354,39 @@ AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
 ### 🌍 Translations (MANDATORY for all UI)
-**Every user-visible string must be translated.** RimMind ships with 14 language files — all UI text must go through the keyed translation system, never hardcoded.
+**Every user-visible string must be translated.** RimMind ships with 14 language folders — all UI text must go through the keyed translation system, never hardcoded.
 
-**Language files location:** `Languages/Keyed/`
-- `en-US.xml` (English — source of truth)
-- `de-DE.xml`, `es-ES.xml`, `fr-FR.xml`, `it-IT.xml`, `ja-JP.xml`, `ko-KR.xml`
-- `nl-NL.xml`, `pl-PL.xml`, `pt-BR.xml`, `ru-RU.xml`, `sv-SE.xml`, `tr-TR.xml`, `zh-CN.xml`
+**Language folder structure:** `Languages/<FolderName>/Keyed/RimMind.xml`
+
+RimWorld uses localized folder names (not ISO codes):
+| Folder Name | Language |
+|---|---|
+| `English` | English (source of truth) |
+| `German (Deutsch)` | German |
+| `Spanish (Español(Castellano))` | Spanish |
+| `French (Français)` | French |
+| `Italian (Italiano)` | Italian |
+| `Japanese (日本語)` | Japanese |
+| `Korean (한국어)` | Korean |
+| `Dutch (Nederlands)` | Dutch |
+| `Polish (Polski)` | Polish |
+| `PortugueseBrazilian (Português Brasileiro)` | Portuguese (Brazil) |
+| `Russian (Русский)` | Russian |
+| `Swedish (Svenska)` | Swedish |
+| `Turkish (Türkçe)` | Turkish |
+| `ChineseSimplified (简体中文)` | Chinese Simplified |
+
+**DefInjected translations** (for Def labels/descriptions):
+- Located at `Languages/<FolderName>/DefInjected/<DefType>/` (e.g. `DefInjected/MainButtonDef/MainButtons.xml`)
+- Uses `<DefName.fieldName>` format (e.g. `<RimMind.label>`, `<RimMind.description>`)
+- Currently only Chinese Simplified has DefInjected translations
+
+**Translation comment convention:**
+Each translation line should have an `<!-- EN: ... -->` comment above it showing the English original. This makes it easier for translators to update translations when the English text changes.
+```xml
+    <!-- EN: Colony Directives -->
+  <RimMind_DirectivesTitle>殖民地准则</RimMind_DirectivesTitle>
+```
 
 **In C# code, always use:**
 ```csharp
@@ -373,7 +400,7 @@ Widgets.Label(rect, "Click here");    // ❌ hardcoded string
 ```
 
 **When adding any new UI feature:**
-1. Add the key + English string to `en-US.xml`
+1. Add the key + English string to `English/Keyed/RimMind.xml`
 2. Add the same key to **all 13 other language files** — use English as fallback text initially (e.g. `<RimMind_MyKey>My English Text</RimMind_MyKey>`)
 3. Use `"RimMind_MyKey".Translate()` in code
 

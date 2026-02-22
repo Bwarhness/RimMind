@@ -14,8 +14,8 @@
     <RimMind_APIKeyOptional>API-sleutel (optioneel voor lokale LLM's):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Modelnaam:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Voorbeelden: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
-    <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>RimMind vereist functie-/toolaanroepen om je kolonie te bevragen en te beheren. Schakel alleen uit als je provider dit niet ondersteunt — dit schakelt alle koloniefuncties uit en beperkt de AI tot basischat.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCalling>Let op: Ondersteuning voor tool-/functieaanroepen vereist</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>Je model moet tool-/functieaanroepen ondersteunen zodat RimMind je kolonie kan bevragen en beheren. Zonder deze ondersteuning zijn alle koloniefuncties niet beschikbaar en kan de AI alleen basischat bieden.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code-gegevens gedetecteerd. Je abonnement wordt automatisch gebruikt.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code niet ingelogd. Voer 'claude login' uit in een terminal.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API-sleutel:</RimMind_AnthropicAPIKey>

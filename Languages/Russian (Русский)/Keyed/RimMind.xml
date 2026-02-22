@@ -14,8 +14,8 @@
     <RimMind_APIKeyOptional>API-ключ (опционально для локальных LLM):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Имя модели:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Примеры: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
-    <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>RimMind требует вызова функций/инструментов для запроса и управления колонией. Отключайте только если ваш провайдер не поддерживает это — это отключит все функции управления колонией и оставит ИИ доступным лишь для базового чата.</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCalling>Примечание: Требуется поддержка вызова инструментов/функций</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>Ваша модель должна поддерживать вызов инструментов/функций, чтобы RimMind мог запрашивать и управлять колонией. Без этого все функции колонии будут недоступны, и ИИ сможет предложить только базовый чат.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Обнаружены учётные данные Claude Code. Ваша подписка будет использована автоматически.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code не авторизован. Выполните 'claude login' в терминале.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>API-ключ Anthropic:</RimMind_AnthropicAPIKey>

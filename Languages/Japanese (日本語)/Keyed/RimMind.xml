@@ -14,8 +14,8 @@
     <RimMind_APIKeyOptional>API キー (ローカル LLM は任意):</RimMind_APIKeyOptional>
     <RimMind_ModelName>モデル名:</RimMind_ModelName>
     <RimMind_ModelNameExamples>例: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
-    <RimMind_SupportsToolCalling>Supports tool/function calling</RimMind_SupportsToolCalling>
-    <RimMind_SupportsToolCallingDesc>RimMindはコロニーの照会と管理に関数/ツール呼び出しが必要です。プロバイダーがサポートしていない場合のみ無効にしてください——これにより全てのコロニー機能が失われ、AIは基本的なチャット以外の支援ができなくなります。</RimMind_SupportsToolCallingDesc>
+    <RimMind_SupportsToolCalling>注意：ツール/関数呼び出しのサポートが必要です</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>RimMindがコロニーを照会・管理するには、モデルがツール/関数呼び出しをサポートしている必要があります。サポートがない場合、すべてのコロニー機能は利用できず、AIは基本的なチャットのみ提供できます。</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code の認証情報が検出されました。サブスクリプションが自動的に使用されます。</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code にログインしていません。ターミナルで 'claude login' を実行してください。</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API キー:</RimMind_AnthropicAPIKey>
