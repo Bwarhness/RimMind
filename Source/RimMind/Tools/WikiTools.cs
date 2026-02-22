@@ -45,29 +45,23 @@ namespace RimMind.Tools
                 if (string.IsNullOrEmpty(pageTitle))
                     return ToolExecutor.JsonError("Wiki search returned invalid result.");
 
-                // Step 2: Get the page extract
-                string extractUrl = WIKI_BASE + "?action=query&format=json&prop=extracts&explaintext=1&exintro=1&titles=" + 
-                    Uri.EscapeDataString(pageTitle);
+                // Step 2: Get the page intro wikitext via parse API
+                string parseUrl = WIKI_BASE + "?action=parse&format=json&page=" +
+                    Uri.EscapeDataString(pageTitle) + "&prop=wikitext&section=0";
 
-                string extractJson = FetchUrl(extractUrl);
-                if (extractJson == null)
+                string parseJson = FetchUrl(parseUrl);
+                if (parseJson == null)
                     return ToolExecutor.JsonError("Failed to fetch wiki page - network error.");
 
-                var extractResult = JSONNode.Parse(extractJson);
-                var pages = extractResult?["query"]?["pages"];
+                var parseResult = JSONNode.Parse(parseJson);
+                var parseNode = parseResult?["parse"];
 
-                if (pages == null)
+                if (parseNode == null)
                     return ToolExecutor.JsonError("Wiki returned no page data.");
 
-                // Pages is an object with page IDs as keys — access first entry by index
-                string extract = null;
-                string actualTitle = null;
-                if (pages.Count > 0)
-                {
-                    var page = pages[0];
-                    actualTitle = page["title"]?.Value;
-                    extract = page["extract"]?.Value;
-                }
+                string actualTitle = parseNode["title"]?.Value;
+                string rawWikitext = parseNode["wikitext"]?["*"]?.Value;
+                string extract = StripWikiMarkup(rawWikitext);
 
                 if (string.IsNullOrEmpty(extract))
                 {
@@ -123,6 +117,73 @@ namespace RimMind.Tools
                 Log.Warning("[RimMind] WikiTools error: " + ex.Message);
                 return ToolExecutor.JsonError("Wiki lookup failed: " + ex.Message);
             }
+        }
+
+        private static string StripWikiMarkup(string wikitext)
+        {
+            if (string.IsNullOrEmpty(wikitext)) return null;
+
+            var sb = new StringBuilder(wikitext.Length);
+            int i = 0;
+            while (i < wikitext.Length)
+            {
+                // Skip templates {{ ... }} (handle nesting)
+                if (i < wikitext.Length - 1 && wikitext[i] == '{' && wikitext[i + 1] == '{')
+                {
+                    int depth = 1;
+                    i += 2;
+                    while (i < wikitext.Length - 1 && depth > 0)
+                    {
+                        if (wikitext[i] == '{' && wikitext[i + 1] == '{') { depth++; i += 2; }
+                        else if (wikitext[i] == '}' && wikitext[i + 1] == '}') { depth--; i += 2; }
+                        else i++;
+                    }
+                    continue;
+                }
+                // Skip HTML comments <!-- ... -->
+                if (i < wikitext.Length - 3 && wikitext[i] == '<' && wikitext[i + 1] == '!' && wikitext[i + 2] == '-' && wikitext[i + 3] == '-')
+                {
+                    int end = wikitext.IndexOf("-->", i + 4);
+                    i = end >= 0 ? end + 3 : wikitext.Length;
+                    continue;
+                }
+                // Skip wiki tables {| ... |}
+                if (i < wikitext.Length - 1 && wikitext[i] == '{' && wikitext[i + 1] == '|')
+                {
+                    int end = wikitext.IndexOf("|}", i + 2);
+                    i = end >= 0 ? end + 2 : wikitext.Length;
+                    continue;
+                }
+                // Strip [[link|display]] -> display, [[link]] -> link
+                if (i < wikitext.Length - 1 && wikitext[i] == '[' && wikitext[i + 1] == '[')
+                {
+                    int end = wikitext.IndexOf("]]", i + 2);
+                    if (end >= 0)
+                    {
+                        string inner = wikitext.Substring(i + 2, end - i - 2);
+                        int pipe = inner.IndexOf('|');
+                        sb.Append(pipe >= 0 ? inner.Substring(pipe + 1) : inner);
+                        i = end + 2;
+                        continue;
+                    }
+                }
+                // Strip bold/italic markers
+                if (wikitext[i] == '\'') { i++; continue; }
+                // Skip ---- horizontal rules
+                if (i < wikitext.Length - 3 && wikitext[i] == '-' && wikitext[i + 1] == '-' && wikitext[i + 2] == '-' && wikitext[i + 3] == '-')
+                {
+                    while (i < wikitext.Length && wikitext[i] == '-') i++;
+                    continue;
+                }
+                sb.Append(wikitext[i]);
+                i++;
+            }
+
+            // Clean up extra whitespace
+            string result = sb.ToString().Trim();
+            while (result.Contains("\n\n\n"))
+                result = result.Replace("\n\n\n", "\n\n");
+            return string.IsNullOrWhiteSpace(result) ? null : result;
         }
 
         private static string FetchUrl(string url)
