@@ -8,12 +8,13 @@ GitHub Actions variable TELEGRAM_STATUS_MESSAGE_ID).
 import os, json, subprocess, re, urllib.request, urllib.error
 from datetime import datetime, timezone
 
-BOT_TOKEN    = os.environ['TELEGRAM_BOT_TOKEN']
-GH_TOKEN     = os.environ['GH_TOKEN']
-CHAT_ID      = "-1003732082318"
-THREAD_ID    = os.environ['TELEGRAM_DEV_THREAD_ID']
+BOT_TOKEN     = os.environ['TELEGRAM_BOT_TOKEN']
+GH_TOKEN      = os.environ['GH_TOKEN']
+CHAT_ID       = "-1003732082318"
+THREAD_ID     = os.environ['TELEGRAM_DEV_THREAD_ID']
 STATUS_MSG_ID = os.environ.get('TELEGRAM_STATUS_MESSAGE_ID', '')
-REPO         = "Bwarhness/RimMind"
+REPO          = "Bwarhness/RimMind"
+DEFAULT_BRANCH = "main"
 
 # ── GitHub API ──────────────────────────────────────────────────────────────
 
@@ -32,7 +33,6 @@ def gh_get(path):
         return None
 
 def gh_set_variable(name, value):
-    """Create or update a GitHub Actions repository variable."""
     url = f"https://api.github.com/repos/{REPO}/actions/variables/{name}"
     payload = json.dumps({'name': name, 'value': value}).encode()
     for method in ('PATCH', 'POST'):
@@ -70,9 +70,53 @@ def tg(method, data):
 def html_escape(text):
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
-# ── Content generation ──────────────────────────────────────────────────────
+# ── Content extraction ──────────────────────────────────────────────────────
 
-DEFAULT_BRANCH = "main"
+def extract_example_prompts(body, max_prompts=3):
+    """Extract prompts from '## Example Test Prompts' or '## Testing' section."""
+    if not body:
+        return []
+    # Try Example Test Prompts first, then Testing
+    for pattern in [
+        r'##\s*Example\s+Test\s+Prompts?\s*\n(.*?)(?=\n##\s|\Z)',
+        r'##\s*Test(?:ing|s?(?:\s+Prompts?)?)\s*\n(.*?)(?=\n##\s|\Z)',
+    ]:
+        match = re.search(pattern, body, re.DOTALL | re.IGNORECASE)
+        if match:
+            raw = match.group(1).strip()
+            prompts = []
+            for line in raw.split('\n'):
+                # Strip markdown bullets, italic/bold markers, and quotes
+                line = re.sub(r'^[-*>\s]+', '', line).strip()   # leading bullets
+                line = re.sub(r'[*_`]', '', line)               # markdown formatting
+                line = re.sub(r'\s*—.*$', '', line)             # strip "— annotation" suffixes
+                line = line.strip('"\'').strip()
+                if line and not line.startswith('#') and len(line) > 5:
+                    prompts.append(line)
+                if len(prompts) >= max_prompts:
+                    break
+            if prompts:
+                return prompts
+    return []
+
+def get_pr_for_commit(sha):
+    data = gh_get(f"commits/{sha}/pulls")
+    if data:
+        return data[0]
+    return None
+
+def get_issue(number):
+    return gh_get(f"issues/{number}")
+
+def extract_issue_number(text):
+    # Prefer "closes/fixes #NNN" style, fall back to bare #NNN
+    m = re.search(r'(?:closes?|fixes?|resolves?)\s+#(\d+)', text or '', re.IGNORECASE)
+    if m:
+        return m.group(1)
+    m = re.search(r'#(\d+)', text or '')
+    return m.group(1) if m else None
+
+# ── Git helpers ─────────────────────────────────────────────────────────────
 
 def get_unreleased_commits():
     result = subprocess.run(
@@ -86,65 +130,63 @@ def get_unreleased_commits():
             commits.append({'sha': sha.strip(), 'subject': subject.strip()})
     return commits
 
-def get_pr_for_commit(sha):
-    data = gh_get(f"commits/{sha}/pulls")
-    if data:
-        return data[0]
-    return None
-
-def extract_testing_section(body):
-    """Pull the ## Testing / ## Test Prompts section out of a PR body."""
-    if not body:
-        return None
-    match = re.search(
-        r'##\s*Test(?:ing|s?(?:\s+Prompts?)?)\s*\n(.*?)(?=\n##\s|\Z)',
-        body, re.DOTALL | re.IGNORECASE
+def get_version():
+    """Read version from About/About.xml on HEAD."""
+    result = subprocess.run(
+        ['git', 'show', 'HEAD:About/About.xml'],
+        capture_output=True, text=True
     )
-    if not match:
-        return None
-    raw = match.group(1).strip()
-    lines = []
-    for l in raw.split('\n'):
-        l = l.strip().lstrip('- *').strip()
-        if l and not l.startswith('#'):
-            lines.append(l)
-        if len(lines) >= 3:
-            break
-    return lines if lines else None
-
-def extract_issue_number(text):
-    m = re.search(r'(?:closes?|fixes?|resolves?)\s+#(\d+)|(?:^|\s)#(\d+)', text or '', re.IGNORECASE)
+    m = re.search(r'<version>([^<]+)</version>', result.stdout, re.IGNORECASE)
     if m:
-        return m.group(1) or m.group(2)
-    return None
+        return m.group(1).strip()
+    # Fallback: scan recent commit messages
+    result2 = subprocess.run(
+        ['git', 'log', 'HEAD', '-5', '--format=%s'],
+        capture_output=True, text=True
+    )
+    m2 = re.search(r'(\d+\.\d+\.\d+)', result2.stdout)
+    return m2.group(1) if m2 else ''
 
-SKIP_PATTERNS = ['bump version', '[skip ci]', 'chore: bump', 'merge pull request',
-                 'merge branch', 'merge remote', 'add using system', 'ensure all fixes',
-                 'add missing using', 'add using']
+SKIP_PATTERNS = [
+    'bump version', '[skip ci]', 'chore: bump', 'merge pull request',
+    'merge branch', 'merge remote', 'add using system', 'ensure all fixes',
+    'add missing using', 'add using', 'merge community', 'sanitize ci',
+    'clarify version', 'add version management', 'add dev workshop',
+    'trigger version', 'add steam workshop', 'test version',
+    'translations docs', 'claude.md', 'add auto-update script',
+    'custom provider routing', 'version bump workflow',
+]
+
+# Only show commits that introduce user-facing features or bug fixes
+REQUIRE_PREFIX = re.compile(r'^(feat|fix)(?:\([^)]+\))?:', re.IGNORECASE)
 
 def is_noise(subject):
     s = subject.lower()
-    return any(p in s for p in SKIP_PATTERNS)
+    if any(p in s for p in SKIP_PATTERNS):
+        return True
+    # Skip anything that isn't a feat: or fix: (docs, chore, ci, refactor, etc.)
+    # unless it has an issue number reference (manually written commit)
+    if not REQUIRE_PREFIX.match(subject) and not re.search(r'#\d+', subject):
+        return True
+    return False
 
-def current_version():
-    result = subprocess.run(
-        ['git', 'log', 'HEAD', '-1', '--format=%s'],
-        capture_output=True, text=True
-    )
-    m = re.search(r'(\d+\.\d+\.\d+)', result.stdout)
-    return m.group(1) if m else ''
+MAX_FEATURES = 8
 
-MAX_FEATURES = 10  # show only the most recent N features
+# ── Message builder ─────────────────────────────────────────────────────────
 
 def build_message(commits):
-    version = current_version()
-    ver_str = f" (v{version})" if version else ""
+    version = get_version()
 
     lines = [
-        f"🧪 <b>Testable on Dev{html_escape(ver_str)}</b>",
-        "<i>On the dev Steam branch — not yet released to main</i>",
+        f"🧪 <b>Testable on Dev</b>",
+        "",
+        f"📦 <b>Version: {html_escape(version)}</b>" if version else "",
+        "<i>Switch to the <b>dev</b> Steam beta branch, then verify your version matches above.</i>",
         "",
     ]
+    # Remove blank lines from version block if no version
+    lines = [l for l in lines if l != ""]
+    lines.append("")
 
     features = []
     seen_issues = set()
@@ -159,24 +201,32 @@ def build_message(commits):
         pr = get_pr_for_commit(c['sha'])
         pr_body = pr.get('body', '') if pr else ''
 
-        issue_num = (extract_issue_number(subj) or extract_issue_number(pr_body))
+        issue_num = extract_issue_number(subj) or extract_issue_number(pr_body)
         if issue_num and issue_num in seen_issues:
             continue
         if issue_num:
             seen_issues.add(issue_num)
 
-        prefix = f"#{issue_num} — " if issue_num else ""
+        # Clean up display title
         display = re.sub(r'^(feat|fix|chore|docs|refactor|ci)(?:\([^)]+\))?:\s*', '', subj, flags=re.IGNORECASE)
-        # Strip trailing (#NNN) from display
         display = re.sub(r'(\s*\(#\d+\))+\s*$', '', display).strip()
+        prefix = f"#{issue_num} — " if issue_num else ""
 
         entry = [f"✅ <b>{html_escape(prefix + display)}</b>"]
 
-        if pr:
-            prompts = extract_testing_section(pr_body)
-            if prompts:
-                for p in prompts:
-                    entry.append(f"  • {html_escape(p)}")
+        # Get example prompts — issue body first, PR body as fallback
+        prompts = []
+        if issue_num:
+            issue = get_issue(issue_num)
+            if issue:
+                prompts = extract_example_prompts(issue.get('body', ''))
+        if not prompts and pr_body:
+            prompts = extract_example_prompts(pr_body)
+
+        if prompts:
+            entry.append("<i>Try these:</i>")
+            for p in prompts:
+                entry.append(f'  💬 <i>"{html_escape(p)}"</i>')
 
         features.append('\n'.join(entry))
 
@@ -187,7 +237,7 @@ def build_message(commits):
         lines.append("<i>Nothing new since last release</i>\n")
 
     now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
-    lines.append(f"<i>Last updated: {now}</i>")
+    lines.append(f"<i>Updated: {now}</i>")
 
     return '\n'.join(lines)
 
