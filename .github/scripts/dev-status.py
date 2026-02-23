@@ -72,7 +72,7 @@ def html_escape(text):
 
 # ── Content generation ──────────────────────────────────────────────────────
 
-DEFAULT_BRANCH = "master"
+DEFAULT_BRANCH = "main"
 
 def get_unreleased_commits():
     result = subprocess.run(
