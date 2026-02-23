@@ -20,6 +20,7 @@ namespace RimMind.Tools
                 if (!animal.RaceProps.Animal) continue;
 
                 var obj = new JSONObject();
+                obj["id"] = animal.thingIDNumber;
                 obj["name"] = animal.Name?.ToStringShort ?? animal.LabelShort;
                 obj["species"] = animal.kindDef?.label ?? "Unknown";
                 obj["gender"] = animal.gender.ToString();
