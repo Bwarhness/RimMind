@@ -48,7 +48,7 @@ def gh_set_variable(name, value):
             return
         except urllib.error.HTTPError as e:
             if e.code == 404 and method == 'PATCH':
-                continue  # variable doesn't exist yet, try POST
+                continue
             print(f"  gh_set_variable {name} ({method}) failed: {e}")
             return
 
@@ -67,11 +67,16 @@ def tg(method, data):
         print(f"  tg {method} failed: {e}")
         return {'ok': False}
 
+def html_escape(text):
+    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
 # ── Content generation ──────────────────────────────────────────────────────
+
+DEFAULT_BRANCH = "master"
 
 def get_unreleased_commits():
     result = subprocess.run(
-        ['git', 'log', 'origin/main..HEAD', '--format=%H|%s'],
+        ['git', 'log', f'origin/{DEFAULT_BRANCH}..HEAD', '--format=%H|%s'],
         capture_output=True, text=True
     )
     commits = []
@@ -98,24 +103,28 @@ def extract_testing_section(body):
     if not match:
         return None
     raw = match.group(1).strip()
-    # Keep lines that look like actual prompts/instructions, drop blank/header lines
     lines = []
     for l in raw.split('\n'):
         l = l.strip().lstrip('- *').strip()
         if l and not l.startswith('#'):
             lines.append(l)
-        if len(lines) >= 4:
+        if len(lines) >= 3:
             break
-    return '\n'.join(f'  • {l}' for l in lines) if lines else None
+    return lines if lines else None
 
 def extract_issue_number(text):
-    m = re.search(r'#(\d+)', text or '')
-    return m.group(1) if m else None
+    m = re.search(r'(?:closes?|fixes?|resolves?)\s+#(\d+)|(?:^|\s)#(\d+)', text or '', re.IGNORECASE)
+    if m:
+        return m.group(1) or m.group(2)
+    return None
 
-SKIP_PATTERNS = ['bump version', '[skip ci]', 'chore: bump', 'merge pull request']
+SKIP_PATTERNS = ['bump version', '[skip ci]', 'chore: bump', 'merge pull request',
+                 'merge branch', 'merge remote', 'add using system', 'ensure all fixes',
+                 'add missing using', 'add using']
 
 def is_noise(subject):
-    return any(p in subject.lower() for p in SKIP_PATTERNS)
+    s = subject.lower()
+    return any(p in s for p in SKIP_PATTERNS)
 
 def current_version():
     result = subprocess.run(
@@ -125,35 +134,49 @@ def current_version():
     m = re.search(r'(\d+\.\d+\.\d+)', result.stdout)
     return m.group(1) if m else ''
 
+MAX_FEATURES = 10  # show only the most recent N features
+
 def build_message(commits):
     version = current_version()
     ver_str = f" (v{version})" if version else ""
 
     lines = [
-        f"🧪 *Testable on Dev{ver_str}*",
-        "_On the dev Steam branch — not yet released to main_",
+        f"🧪 <b>Testable on Dev{html_escape(ver_str)}</b>",
+        "<i>On the dev Steam branch — not yet released to main</i>",
         "",
     ]
 
     features = []
+    seen_issues = set()
+
     for c in commits:
         subj = c['subject']
         if is_noise(subj):
             continue
+        if len(features) >= MAX_FEATURES:
+            break
 
         pr = get_pr_for_commit(c['sha'])
-        issue_num = extract_issue_number(subj) or (extract_issue_number(pr.get('body', '') if pr else '') if pr else None)
+        pr_body = pr.get('body', '') if pr else ''
+
+        issue_num = (extract_issue_number(subj) or extract_issue_number(pr_body))
+        if issue_num and issue_num in seen_issues:
+            continue
+        if issue_num:
+            seen_issues.add(issue_num)
 
         prefix = f"#{issue_num} — " if issue_num else ""
-        # Strip conventional commit prefix for cleaner display
-        display = re.sub(r'^(feat|fix|chore|docs|refactor|ci):\s*', '', subj, flags=re.IGNORECASE)
+        display = re.sub(r'^(feat|fix|chore|docs|refactor|ci)(?:\([^)]+\))?:\s*', '', subj, flags=re.IGNORECASE)
+        # Strip trailing (#NNN) from display
+        display = re.sub(r'(\s*\(#\d+\))+\s*$', '', display).strip()
 
-        entry = [f"✅ *{prefix}{display}*"]
+        entry = [f"✅ <b>{html_escape(prefix + display)}</b>"]
 
         if pr:
-            prompts = extract_testing_section(pr.get('body', ''))
+            prompts = extract_testing_section(pr_body)
             if prompts:
-                entry.append(prompts)
+                for p in prompts:
+                    entry.append(f"  • {html_escape(p)}")
 
         features.append('\n'.join(entry))
 
@@ -161,10 +184,10 @@ def build_message(commits):
         lines.extend(features)
         lines.append("")
     else:
-        lines.append("_Nothing new since last release_\n")
+        lines.append("<i>Nothing new since last release</i>\n")
 
-    now = datetime.now(timezone.utc).strftime('%Y\\-%m\\-%d %H:%M UTC')
-    lines.append(f"_Last updated: {now}_")
+    now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+    lines.append(f"<i>Last updated: {now}</i>")
 
     return '\n'.join(lines)
 
@@ -184,25 +207,25 @@ def main():
 
     new_msg_id = None
 
-    # Try editing existing message first
     if STATUS_MSG_ID:
         result = tg('editMessageText', {
             'chat_id': CHAT_ID,
             'message_id': int(STATUS_MSG_ID),
             'text': message,
-            'parse_mode': 'MarkdownV2'
+            'parse_mode': 'HTML'
         })
         if result.get('ok'):
             print(f"Edited existing message {STATUS_MSG_ID}")
             new_msg_id = STATUS_MSG_ID
+        else:
+            print(f"Edit failed: {result}")
 
-    # Post new if no existing or edit failed
     if not new_msg_id:
         result = tg('sendMessage', {
             'chat_id': CHAT_ID,
             'message_thread_id': int(THREAD_ID),
             'text': message,
-            'parse_mode': 'MarkdownV2'
+            'parse_mode': 'HTML'
         })
         if result.get('ok'):
             new_msg_id = str(result['result']['message_id'])
@@ -211,7 +234,6 @@ def main():
             print(f"Failed to post: {result}")
             return
 
-    # Update stored message ID if it changed
     if new_msg_id and new_msg_id != STATUS_MSG_ID:
         gh_set_variable('TELEGRAM_STATUS_MESSAGE_ID', new_msg_id)
         print(f"Updated TELEGRAM_STATUS_MESSAGE_ID → {new_msg_id}")
