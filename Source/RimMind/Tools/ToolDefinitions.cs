@@ -533,16 +533,31 @@ namespace RimMind.Tools
                 MakeParam("query", "string", "Search query for the RimWorld wiki (e.g., 'psychic drone', 'infestation', 'steel production')")));
 
             // Item Access Tools
-            tools.Add(MakeTool("set_item_allowed", "Set allow/forbid status on items. Allowed items can be hauled by colonists; forbidden items are ignored. Use this to bulk-manage item accessibility - e.g., forbid all weapons on the ground, allow medicine in stockpiles only, or unforbid specific items at a cell. At least one targeting parameter (x/z, def_name, or category) is required.",
-                MakeParam("allowed", "boolean", "True to allow items (colonists will haul them), false to forbid items (colonists ignore them)"),
-                MakeOptionalParam("location_filter", "string", "Filter by location: 'all' (default), 'stockpile' (only in stockpile zones), 'ground' (only outside stockpile zones)"),
-                MakeOptionalParam("x", "integer", "X coordinate of specific cell to target"),
-                MakeOptionalParam("z", "integer", "Z coordinate of specific cell to target"),
-                MakeOptionalParam("def_name", "string", "Target all items of this defName on the map (e.g., 'Steel', 'MedicineHerbal')"),
-                MakeOptionalParam("category", "string", "Target by category: 'all', 'medicine', 'corpses', 'weapons', 'apparel', 'food', 'resources'")));
-            tools.Add(MakeTool("get_forbidden_items", "Get all currently forbidden items on the map. Forbidden items are ignored by colonists and won't be hauled. Use this to identify items that need to be allowed, or to audit what's being ignored.",
-                MakeOptionalParam("category", "string", "Filter by category: 'all' (default), 'medicine', 'corpses', 'weapons', 'apparel', 'food', 'resources'"),
-                MakeOptionalParam("location_filter", "string", "Filter by location: 'all' (default), 'stockpile' (only in stockpile zones), 'ground' (only outside stockpile zones)")));
+            tools.Add(MakeTool("set_item_allowed", "Allow or forbid items on the map. Allowed items get hauled by colonists; forbidden items are ignored. " +
+                "TARGETING (checked in priority order — use only ONE): " +
+                "(1) ids: target exact items by ID array. " +
+                "(2) type: fuzzy text match on defName or label (e.g. 'steel', 'flak', 'meal'). " +
+                "(3) category: predefined group. " +
+                "(4) x/z or x1/z1/x2/z2: items at a cell or in a rectangular area. " +
+                "(5) NO targeting params: targets ALL items on the entire map. " +
+                "COMMON PATTERNS: Allow everything: set_item_allowed(allowed:true). " +
+                "Allow all weapons: set_item_allowed(allowed:true, category:'weapons'). " +
+                "Forbid specific items: set_item_allowed(allowed:false, ids:[1234, 5678]). " +
+                "Allow steel: set_item_allowed(allowed:true, type:'steel').",
+                MakeParam("allowed", "boolean", "true = allow (colonists haul), false = forbid (colonists ignore)"),
+                MakeOptionalParam("ids", "array", "Array of item thingIDNumbers for precise targeting (from get_forbidden_items or search_map)"),
+                MakeOptionalParam("type", "string", "Fuzzy text filter — matches defName or label. Examples: 'steel', 'medicine', 'flak vest', 'meal'. Tries exact defName first, then substring match."),
+                MakeOptionalParam("category", "string", "Predefined group: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'"),
+                MakeOptionalParam("x", "integer", "X coordinate of cell (single cell targeting)"),
+                MakeOptionalParam("z", "integer", "Z coordinate of cell (single cell targeting)"),
+                MakeOptionalParam("x1", "integer", "Top-left X of rectangular area"),
+                MakeOptionalParam("z1", "integer", "Top-left Z of rectangular area"),
+                MakeOptionalParam("x2", "integer", "Bottom-right X of rectangular area"),
+                MakeOptionalParam("z2", "integer", "Bottom-right Z of rectangular area")));
+            tools.Add(MakeTool("get_forbidden_items", "List all currently forbidden items on the map. Returns each item's ID, name, defName, position, and stockpile location. " +
+                "Use this FIRST to see what's forbidden before calling set_item_allowed. " +
+                "The returned IDs can be passed directly to set_item_allowed(ids:[...]) for precise targeting.",
+                MakeOptionalParam("category", "string", "Filter: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'. Omit for all items.")));
 
             // Drafted Pawn Command Tools
             tools.Add(MakeTool("move_pawn", "Move a drafted pawn to specific coordinates on the map. Pawn must be drafted first (use draft_colonist). The pawn will walk/run to the destination. Returns error if pawn is not drafted, is downed, coordinates are out of bounds, not standable, or destination is unreachable.",
@@ -569,7 +584,7 @@ namespace RimMind.Tools
                 MakeParam("x", "integer", "X coordinate on the map"),
                 MakeParam("z", "integer", "Z coordinate on the map"),
                 MakeOptionalParam("label", "string", "Text label for the ping (shown in letter). Default: 'Location marked'"),
-                MakeOptionalParam("color", "string", "Letter color: 'yellow'/'neutral' (default), 'green'/'positive', 'red'/'negative'/'danger', 'blue'/'info'")));
+                MakeOptionalParam("color", "string", "Letter color: 'grey'/'neutral' (default), 'blue'/'positive'/'info', 'red'/'danger'/'threat', 'orange'/'warning'/'negative', 'yellow'")));
 
             cachedTools = tools;
             return tools;

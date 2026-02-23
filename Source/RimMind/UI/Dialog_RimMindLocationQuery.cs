@@ -32,7 +32,7 @@ namespace RimMind.UI
             closeOnClickedOutside = false;
             closeOnAccept = false;
             forceCatchAcceptAndCancelEventEvenIfUnfocused = true;
-            absorbInputAroundWindow = false;
+            absorbInputAroundWindow = true;
 
             // Pre-compute cell info
             cellInfoText = BuildCellInfoDisplay();
@@ -78,6 +78,7 @@ namespace RimMind.UI
             // Input field (multi-line text area)
             float inputHeight = 80f;
             var inputRect = new Rect(0f, y, inRect.width, inputHeight);
+            GUI.SetNextControlName("RimMindLocationInput");
             inputText = Widgets.TextArea(inputRect, inputText);
 
             y += inputHeight + 10f;
@@ -91,13 +92,6 @@ namespace RimMind.UI
             if (Widgets.ButtonText(sendBtnRect, RimMindTranslations.Get("RimMind_LocationQuerySend"), active: canSend) && canSend)
             {
                 SendQuery();
-            }
-
-            // Focus input field
-            GUI.SetNextControlName("RimMindLocationInput");
-            if (Event.current.type == EventType.Layout)
-            {
-                GUI.FocusControl("RimMindLocationInput");
             }
         }
 

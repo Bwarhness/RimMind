@@ -10,19 +10,16 @@ namespace RimMind.Tools
     {
         /// <summary>
         /// Assigns an ordered job to a pawn. If the pawn already has an active ordered job,
-        /// enqueues this one instead of replacing it (mimics shift-click queueing).
+        /// queues this one using RimWorld's native shift-click queueing mechanism.
         /// </summary>
         private static bool TakeOrQueueJob(Pawn pawn, Job job, JobTag tag = JobTag.Misc)
         {
-            // If pawn has queued jobs or is already doing an ordered equip/wear job, enqueue instead of replace
-            if (pawn.jobs.jobQueue.Count > 0 ||
-                (pawn.CurJobDef == JobDefOf.Equip || pawn.CurJobDef == JobDefOf.Wear))
-            {
-                pawn.jobs.jobQueue.EnqueueLast(job, new JobTag?(tag));
-                return true;
-            }
+            bool shouldQueue = pawn.jobs.jobQueue.Count > 0 ||
+                pawn.CurJobDef == JobDefOf.Equip ||
+                pawn.CurJobDef == JobDefOf.Wear ||
+                pawn.CurJobDef == JobDefOf.RemoveApparel;
 
-            return pawn.jobs.TryTakeOrderedJob(job, tag);
+            return pawn.jobs.TryTakeOrderedJob(job, tag, requestQueueing: shouldQueue);
         }
 
         public static string EquipWeapon(string colonistName, int x, int z)
@@ -73,39 +70,21 @@ namespace RimMind.Tools
             var apparel = cell.GetThingList(map).FirstOrDefault(t => t.def.IsApparel);
             if (apparel == null) return ToolExecutor.JsonError("No apparel found at " + x + "," + z);
 
-            // Create job to wear
+            // Create job to wear — use TakeOrQueueJob so batch calls queue sequentially
             var job = JobMaker.MakeJob(JobDefOf.Wear, apparel);
+            bool queued = pawn.jobs.jobQueue.Count > 0 || pawn.CurJobDef == JobDefOf.Equip
+                || pawn.CurJobDef == JobDefOf.Wear || pawn.CurJobDef == JobDefOf.RemoveApparel;
 
-            // Fix for issue #121: batch wear_apparel calls fail silently because
-            // TryTakeOrderedJob replaces the current job. Check if the pawn already
-            // has an active or queued apparel-related job; if so, enqueue instead.
-            bool hasApparelJob = pawn.jobs.curJob?.def == JobDefOf.Wear
-                || pawn.jobs.curJob?.def == JobDefOf.RemoveApparel
-                || pawn.jobs.jobQueue.Any(qj => qj.job?.def == JobDefOf.Wear || qj.job?.def == JobDefOf.RemoveApparel);
+            if (!TakeOrQueueJob(pawn, job))
+                return ToolExecutor.JsonError("Failed to assign wear job.");
 
-            bool wasQueued;
-            if (hasApparelJob)
-            {
-                pawn.jobs.jobQueue.EnqueueLast(job, JobTag.Misc);
-                wasQueued = true;
-            }
-            else
-            {
-                bool started = pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc);
-                if (!started)
-                    return ToolExecutor.JsonError("Failed to assign wear job.");
-                wasQueued = false;
-            }
-
-            {
-                var result = new JSONObject();
-                result["success"] = true;
-                result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
-                result["apparel"] = apparel.LabelCap.ToString();
-                result["location"] = x + "," + z;
-                result["status"] = wasQueued ? "queued" : "started";
-                return result.ToString();
-            }
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["apparel"] = apparel.LabelCap.ToString();
+            result["location"] = x + "," + z;
+            result["status"] = queued ? "queued" : "started";
+            return result.ToString();
         }
 
         public static string DropEquipment(string colonistName)

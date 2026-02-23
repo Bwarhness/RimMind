@@ -1099,6 +1099,7 @@ namespace RimMind.Tools
                     if (matches.Count < MaxResults)
                     {
                         var m = new JSONObject();
+                        m["id"] = pawn.thingIDNumber;
                         m["name"] = pawn.LabelShort;
                         m["x"] = pawn.Position.x;
                         m["z"] = pawn.Position.z;
@@ -1138,6 +1139,7 @@ namespace RimMind.Tools
                         if (locs.Count < 10)
                         {
                             var loc = new JSONObject();
+                            loc["id"] = thing.thingIDNumber;
                             loc["x"] = thing.Position.x;
                             loc["z"] = thing.Position.z;
                             if (thing.stackCount > 1) loc["count"] = thing.stackCount;

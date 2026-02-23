@@ -91,6 +91,12 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
+        // RimWorld letter colors (from StandardLetters.xml):
+        //   ThreatBig:     (204,115,115) = red,    flashing, bounce, urgent
+        //   ThreatSmall:   (204,155,125) = orange,  flashing, bounce
+        //   NegativeEvent: (204,196,135) = yellow
+        //   NeutralEvent:  (175,176,185) = grey/silver
+        //   PositiveEvent: (120,176,216) = blue
         private static LetterDef GetLetterDef(string color)
         {
             if (string.IsNullOrEmpty(color))
@@ -98,21 +104,26 @@ namespace RimMind.Tools
 
             switch (color.ToLowerInvariant())
             {
-                case "green":
+                case "blue":
                 case "positive":
+                case "info":
                     return LetterDefOf.PositiveEvent;
 
                 case "red":
-                case "negative":
                 case "danger":
                 case "threat":
-                    return LetterDefOf.NegativeEvent;
+                    return LetterDefOf.ThreatBig;
 
-                case "blue":
-                case "info":
-                    return LetterDefOf.NeutralEvent; // RimWorld doesn't have a blue letter, use neutral
+                case "orange":
+                case "warning":
+                case "negative":
+                    return LetterDefOf.ThreatSmall;
 
                 case "yellow":
+                    return LetterDefOf.NegativeEvent;
+
+                case "grey":
+                case "gray":
                 case "neutral":
                 default:
                     return LetterDefOf.NeutralEvent;
