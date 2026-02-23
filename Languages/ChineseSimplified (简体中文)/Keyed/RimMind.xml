@@ -1,132 +1,272 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <LanguageData>
     <!-- RimMind Mod Settings -->
-    <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
-    <RimMind_AIProvider>AI 提供商:</RimMind_AIProvider>
-    <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
-    <RimMind_AnthropicDirect>Anthropic (直接 API 密钥)</RimMind_AnthropicDirect>
-    <RimMind_ClaudeCode>Claude Code (Max/Pro 订阅)</RimMind_ClaudeCode>
-    <RimMind_CustomProvider>自定义提供商 (OpenAI 兼容)</RimMind_CustomProvider>
-    <RimMind_CustomProviderSettings>自定义提供商设置</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>支持 OpenAI 兼容 API (Ollama, LM Studio, Groq, Together 等)</RimMind_CustomProviderDesc>
-    <RimMind_EndpointURL>端点 URL:</RimMind_EndpointURL>
-    <RimMind_EndpointURLExamples>示例: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
-    <RimMind_APIKeyOptional>API 密钥 (本地 LLM 可选):</RimMind_APIKeyOptional>
-    <RimMind_ModelName>模型名称:</RimMind_ModelName>
-    <RimMind_ModelNameExamples>示例: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
-    <RimMind_ClaudeCodeAvailable>检测到 Claude Code 凭据。您的订阅将被自动使用。</RimMind_ClaudeCodeAvailable>
-    <RimMind_ClaudeCodeNotAvailable>Claude Code 未登录。在终端中运行 'claude login'。</RimMind_ClaudeCodeNotAvailable>
-    <RimMind_AnthropicAPIKey>Anthropic API 密钥:</RimMind_AnthropicAPIKey>
-    <RimMind_GetAPIKeyAnthropic>在 console.anthropic.com 获取 API 密钥</RimMind_GetAPIKeyAnthropic>
-    <RimMind_OpenRouterAPIKey>OpenRouter API 密钥:</RimMind_OpenRouterAPIKey>
-    <RimMind_GetAPIKeyOpenRouter>在 openrouter.ai 获取 API 密钥</RimMind_GetAPIKeyOpenRouter>
-    <RimMind_ModelID>模型 ID (例如 anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
-    <RimMind_ModelIDAnthropic>模型 ID (例如 claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
-    <RimMind_Temperature>温度: {0}</RimMind_Temperature>
-    <RimMind_MaxTokens>最大令牌: {0}</RimMind_MaxTokens>
-    <RimMind_EnableChatCompanion>启用聊天伴侣</RimMind_EnableChatCompanion>
-    <RimMind_AutoDetectDirectives>自动检测指令</RimMind_AutoDetectDirectives>
-    <RimMind_AutoDetectDirectivesDesc>启用后，AI 将在对话中检测游戏风格偏好并提议将其保存为殖民地指令。</RimMind_AutoDetectDirectivesDesc>
-    
+    <!-- EN: RimMind AI -->
+  <RimMind_SettingsCategory>RimMind AI</RimMind_SettingsCategory>
+    <!-- EN: AI Provider: -->
+  <RimMind_AIProvider>AI 提供商:</RimMind_AIProvider>
+    <!-- EN: OpenRouter -->
+  <RimMind_OpenRouter>OpenRouter</RimMind_OpenRouter>
+    <!-- EN: Anthropic (Direct API Key) -->
+  <RimMind_AnthropicDirect>Anthropic (直接 API 密钥)</RimMind_AnthropicDirect>
+    <!-- EN: Claude Code (Max/Pro Subscription) -->
+  <RimMind_ClaudeCode>Claude Code (Max/Pro 订阅)</RimMind_ClaudeCode>
+    <!-- EN: Custom Provider (OpenAI-Compatible) -->
+  <RimMind_CustomProvider>自定义提供商 (OpenAI 兼容)</RimMind_CustomProvider>
+    <!-- EN: Custom Provider Settings -->
+  <RimMind_CustomProviderSettings>自定义提供商设置</RimMind_CustomProviderSettings>
+    <!-- EN: Supports OpenAI-compatible APIs (Ollama, LM Studio, Groq, Together, etc.). Requires a provider that supports function/tool calling for full colony management features. -->
+  <RimMind_CustomProviderDesc>支持 OpenAI 兼容 API (Ollama, LM Studio, Groq, Together 等)。需要支持函数/工具调用的提供商以使用完整的殖民地管理功能。</RimMind_CustomProviderDesc>
+    <!-- EN: Endpoint URL: -->
+  <RimMind_EndpointURL>端点 URL:</RimMind_EndpointURL>
+    <!-- EN: Examples: http://localhost:11434/v1, https://api.groq.com/openai/v1 -->
+  <RimMind_EndpointURLExamples>示例: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
+    <!-- EN: API Key (optional for local LLMs): -->
+  <RimMind_APIKeyOptional>API 密钥 (本地 LLM 可选):</RimMind_APIKeyOptional>
+    <!-- EN: Model Name: -->
+  <RimMind_ModelName>模型名称:</RimMind_ModelName>
+    <!-- EN: Examples: llama3.2, llama-3.3-70b-versatile, deepseek-r1 -->
+  <RimMind_ModelNameExamples>示例: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <!-- EN: Supports tool/function calling -->
+  <RimMind_SupportsToolCalling>注意：需要支持工具/函数调用</RimMind_SupportsToolCalling>
+    <!-- EN: RimMind requires tool/function calling to query and manage your colony. Disable only if your provider does not support it — this will break all colony features and leave the AI unable to help beyond basic chat. -->
+  <RimMind_SupportsToolCallingDesc>RimMind 需要您的模型支持工具/函数调用才能查询和管理殖民地。如果不支持，所有殖民地功能将不可用，AI 只能提供基本聊天。</RimMind_SupportsToolCallingDesc>
+    <!-- EN: Claude Code credentials detected. Your subscription will be used automatically. -->
+  <RimMind_ClaudeCodeAvailable>检测到 Claude Code 凭据。您的订阅将被自动使用。</RimMind_ClaudeCodeAvailable>
+    <!-- EN: Claude Code not logged in. Run 'claude login' in a terminal. -->
+  <RimMind_ClaudeCodeNotAvailable>Claude Code 未登录。在终端中运行 'claude login'。</RimMind_ClaudeCodeNotAvailable>
+    <!-- EN: Anthropic API Key: -->
+  <RimMind_AnthropicAPIKey>Anthropic API 密钥:</RimMind_AnthropicAPIKey>
+    <!-- EN: Get an API key at console.anthropic.com -->
+  <RimMind_GetAPIKeyAnthropic>在 console.anthropic.com 获取 API 密钥</RimMind_GetAPIKeyAnthropic>
+    <!-- EN: OpenRouter API Key: -->
+  <RimMind_OpenRouterAPIKey>OpenRouter API 密钥:</RimMind_OpenRouterAPIKey>
+    <!-- EN: Get an API key at openrouter.ai -->
+  <RimMind_GetAPIKeyOpenRouter>在 openrouter.ai 获取 API 密钥</RimMind_GetAPIKeyOpenRouter>
+    <!-- EN: Model ID (e.g. anthropic/claude-sonnet-4-5, openai/gpt-4o): -->
+  <RimMind_ModelID>模型 ID (例如 anthropic/claude-sonnet-4-5, openai/gpt-4o):</RimMind_ModelID>
+    <!-- EN: Model ID (e.g. claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6): -->
+  <RimMind_ModelIDAnthropic>模型 ID (例如 claude-haiku-4-5, claude-sonnet-4-5, claude-opus-4-6):</RimMind_ModelIDAnthropic>
+    <!-- EN: Temperature: {0} -->
+  <RimMind_Temperature>温度: {0}</RimMind_Temperature>
+    <!-- EN: Max Tokens: {0} -->
+  <RimMind_MaxTokens>最大令牌: {0}</RimMind_MaxTokens>
+    <!-- EN: Enable Chat Companion -->
+  <RimMind_EnableChatCompanion>启用聊天伴侣</RimMind_EnableChatCompanion>
+    <!-- EN: Auto-detect Directives -->
+  <RimMind_AutoDetectDirectives>自动提炼指令</RimMind_AutoDetectDirectives>
+    <!-- EN: When enabled, the AI will detect playstyle preferences during conversation and offer to save them as colony directives. -->
+  <RimMind_AutoDetectDirectivesDesc>启用后，AI 将在对话中检测游戏风格偏好并提议将其保存为殖民地准则。</RimMind_AutoDetectDirectivesDesc>
+
     <!-- Event Automation -->
-    <RimMind_EventAutomation>事件自动化</RimMind_EventAutomation>
-    <RimMind_EnableEventAutomation>启用事件自动化</RimMind_EnableEventAutomation>
-    <RimMind_EnableEventAutomationDesc>启用后，RimMind 可以自动响应游戏事件并发送配置的提示。</RimMind_EnableEventAutomationDesc>
-    <RimMind_ConfigureAutomationRules>配置自动化规则...</RimMind_ConfigureAutomationRules>
-    <RimMind_EventAutomationEnabled>事件自动化已启用。在下方配置规则。</RimMind_EventAutomationEnabled>
-    <RimMind_EventAutomationDesc>启用后，RimMind 将在特定游戏事件发生时自动向 AI 发送配置的提示。每个事件都可以有自定义提示和冷却时间以防止刷屏。</RimMind_EventAutomationDesc>
-    <RimMind_SelectEventToConfigure>← 选择事件类型以配置自动化</RimMind_SelectEventToConfigure>
-    <RimMind_UseDefault>使用默认</RimMind_UseDefault>
-    <RimMind_Clear>清除</RimMind_Clear>
-    <RimMind_SaveChanges>保存更改</RimMind_SaveChanges>
-    <RimMind_SavedAutomationRule>已保存 {0} 的自动化规则</RimMind_SavedAutomationRule>
-    <RimMind_Enabled>启用</RimMind_Enabled>
-    <RimMind_Cooldown>冷却时间: {0} 秒</RimMind_Cooldown>
-    <RimMind_CustomPrompt>自定义提示:</RimMind_CustomPrompt>
-    <RimMind_EventActive>活跃</RimMind_EventActive>
-    <RimMind_EventNoPrompt>无提示</RimMind_EventNoPrompt>
-    
+    <!-- EN: Event Automation -->
+  <RimMind_EventAutomation>自动应对事件</RimMind_EventAutomation>
+    <!-- EN: Enable Event Automation -->
+  <RimMind_EnableEventAutomation>启用自动应对事件</RimMind_EnableEventAutomation>
+    <!-- EN: When enabled, RimMind can automatically respond to game events with configured prompts. -->
+  <RimMind_EnableEventAutomationDesc>启用后，RimMind 可以自动响应游戏事件并发送配置的提示。</RimMind_EnableEventAutomationDesc>
+    <!-- EN: Configure Automation Rules... -->
+  <RimMind_ConfigureAutomationRules>配置自动化规则...</RimMind_ConfigureAutomationRules>
+    <!-- EN: Event automation enabled. Configure rules below. -->
+  <RimMind_EventAutomationEnabled>自动应对事件已启用。在下方配置规则。</RimMind_EventAutomationEnabled>
+    <!-- EN: When enabled, RimMind will automatically send configured prompts to the AI when specific game events occur.\nEach event can have a custom prompt and cooldown period to prevent spam. -->
+  <RimMind_EventAutomationDesc>启用后，RimMind 将在特定游戏事件发生时自动向 AI 发送配置的提示。每个事件都可以有自定义提示和冷却时间以防止刷屏。</RimMind_EventAutomationDesc>
+    <!-- EN: ← Select an event type\nto configure automation -->
+  <RimMind_SelectEventToConfigure>← 选择事件以设置自动应对</RimMind_SelectEventToConfigure>
+    <!-- EN: Use Default -->
+  <RimMind_UseDefault>使用默认</RimMind_UseDefault>
+    <!-- EN: Clear -->
+  <RimMind_Clear>清空</RimMind_Clear>
+    <!-- EN: Save Changes -->
+  <RimMind_SaveChanges>保存更改</RimMind_SaveChanges>
+    <!-- EN: Saved automation rule for {0} -->
+  <RimMind_SavedAutomationRule>已保存 {0} 的自动化规则</RimMind_SavedAutomationRule>
+    <!-- EN: Enabled -->
+  <RimMind_Enabled>启用</RimMind_Enabled>
+    <!-- EN: Cooldown: {0} seconds -->
+  <RimMind_Cooldown>冷却时间: {0} 秒</RimMind_Cooldown>
+    <!-- EN: Custom Prompt: -->
+  <RimMind_CustomPrompt>自定义提示:</RimMind_CustomPrompt>
+    <!-- EN: Active -->
+  <RimMind_EventActive>激活</RimMind_EventActive>
+    <!-- EN: No prompt -->
+  <RimMind_EventNoPrompt>无提示</RimMind_EventNoPrompt>
+
     <!-- Automation Categories -->
-    <RimMind_CategoryCombat>战斗与威胁</RimMind_CategoryCombat>
-    <RimMind_CategoryEmergencies>紧急情况</RimMind_CategoryEmergencies>
-    <RimMind_CategoryMedical>医疗与心理</RimMind_CategoryMedical>
-    <RimMind_CategorySocial>社交与事件</RimMind_CategorySocial>
-    <RimMind_CategoryTrade>贸易与外交</RimMind_CategoryTrade>
-    <RimMind_CategoryResources>资源</RimMind_CategoryResources>
-    <RimMind_CategoryOther>其他</RimMind_CategoryOther>
-    
+    <!-- EN: Combat & Threats -->
+  <RimMind_CategoryCombat>战斗与威胁</RimMind_CategoryCombat>
+    <!-- EN: Emergencies -->
+  <RimMind_CategoryEmergencies>紧急情况</RimMind_CategoryEmergencies>
+    <!-- EN: Medical & Mental -->
+  <RimMind_CategoryMedical>医疗与心理</RimMind_CategoryMedical>
+    <!-- EN: Social & Events -->
+  <RimMind_CategorySocial>社交与事件</RimMind_CategorySocial>
+    <!-- EN: Trade & Diplomacy -->
+  <RimMind_CategoryTrade>贸易与外交</RimMind_CategoryTrade>
+    <!-- EN: Resources -->
+  <RimMind_CategoryResources>资源</RimMind_CategoryResources>
+    <!-- EN: Other -->
+  <RimMind_CategoryOther>其他</RimMind_CategoryOther>
+
     <!-- Chat Window -->
-    <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
-    <RimMind_ChatClear>清除</RimMind_ChatClear>
-    <RimMind_ChatPrompts>提示</RimMind_ChatPrompts>
-    <RimMind_ChatAuto>自动</RimMind_ChatAuto>
-    <RimMind_ChatDirectives>指令</RimMind_ChatDirectives>
-    <RimMind_ChatContext>上下文</RimMind_ChatContext>
-    <RimMind_ChatTokensIn>令牌: {0} 输入 / {1} 输出 ({2} 总计)</RimMind_ChatTokensIn>
-    <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
-    <RimMind_ChatQuickPrompts>快速提示 (点击插入):</RimMind_ChatQuickPrompts>
-    <RimMind_ChatSend>发送</RimMind_ChatSend>
-    <RimMind_ChatYou>你: {0}</RimMind_ChatYou>
-    <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
-    <RimMind_ChatErrorPrefix>[错误]</RimMind_ChatErrorPrefix>
-    
+    <!-- EN: RimMind AI -->
+  <RimMind_ChatTitle>RimMind AI</RimMind_ChatTitle>
+    <!-- EN: Clear -->
+  <RimMind_ChatClear>清空</RimMind_ChatClear>
+    <!-- EN: Prompts -->
+  <RimMind_ChatPrompts>提示</RimMind_ChatPrompts>
+    <!-- EN: Auto -->
+  <RimMind_ChatAuto>自动</RimMind_ChatAuto>
+    <!-- EN: Directives -->
+  <RimMind_ChatDirectives>指令</RimMind_ChatDirectives>
+    <!-- EN: Context -->
+  <RimMind_ChatContext>上下文</RimMind_ChatContext>
+    <!-- EN: Tokens: {0} in / {1} out ({2} total) -->
+  <RimMind_ChatTokensIn>令牌: {0} 输入 / {1} 输出 ({2} 总计)</RimMind_ChatTokensIn>
+    <!-- EN: {0} -->
+  <RimMind_ChatStatus>{0}</RimMind_ChatStatus>
+    <!-- EN: Quick prompts (click to insert): -->
+  <RimMind_ChatQuickPrompts>快速提示 (点击插入):</RimMind_ChatQuickPrompts>
+    <!-- EN: Send -->
+  <RimMind_ChatSend>发送</RimMind_ChatSend>
+    <!-- EN: You: {0} -->
+  <RimMind_ChatYou>你: {0}</RimMind_ChatYou>
+    <!-- EN: RimMind: {0} -->
+  <RimMind_ChatRimMind>RimMind: {0}</RimMind_ChatRimMind>
+    <!-- EN: [Error] -->
+  <RimMind_ChatErrorPrefix>[错误]</RimMind_ChatErrorPrefix>
+
     <!-- Directives Window -->
-    <RimMind_DirectivesTitle>殖民地指令</RimMind_DirectivesTitle>
-    <RimMind_DirectivesDesc>告诉 AI 您的游戏风格、规则和偏好。这些将包含在每次 AI 交互中。</RimMind_DirectivesDesc>
-    <RimMind_DirectivesChars>字符数: {0}</RimMind_DirectivesChars>
-    <RimMind_DirectivesCharsLarge>字符数: {0} (大型指令文本可能会增加响应时间)</RimMind_DirectivesCharsLarge>
-    <RimMind_DirectivesSave>保存</RimMind_DirectivesSave>
-    <RimMind_DirectivesCancel>取消</RimMind_DirectivesCancel>
-    
+    <!-- EN: Colony Directives -->
+  <RimMind_DirectivesTitle>殖民地准则</RimMind_DirectivesTitle>
+    <!-- EN: Tell the AI about your playstyle, rules, and preferences. These will be included in every AI interaction. -->
+  <RimMind_DirectivesDesc>告诉 AI 您的游戏风格、规则和偏好。这些将包含在每次 AI 交互中。</RimMind_DirectivesDesc>
+    <!-- EN: Characters: {0} -->
+  <RimMind_DirectivesChars>字符数: {0}</RimMind_DirectivesChars>
+    <!-- EN: Characters: {0} (large directive text may increase response time) -->
+  <RimMind_DirectivesCharsLarge>字数：{0} (指令文本过长可能增加响应时间)</RimMind_DirectivesCharsLarge>
+    <!-- EN: Save -->
+  <RimMind_DirectivesSave>保存</RimMind_DirectivesSave>
+    <!-- EN: Cancel -->
+  <RimMind_DirectivesCancel>取消</RimMind_DirectivesCancel>
+
     <!-- Context Window -->
-    <RimMind_ContextTitle>上下文检查器</RimMind_ContextTitle>
-    <RimMind_ContextRefresh>刷新</RimMind_ContextRefresh>
-    <RimMind_ContextTotal>总计: {0} (约 {1} 令牌)</RimMind_ContextTotal>
-    <RimMind_ContextLastAPI>上次 API: {0} 输入 + {1} 输出 = {2} 实际</RimMind_ContextLastAPI>
-    <RimMind_ContextTabSystem>系统 ({0})</RimMind_ContextTabSystem>
-    <RimMind_ContextTabTools>工具 ({0}, {1})</RimMind_ContextTabTools>
-    <RimMind_ContextTabChat>聊天 ({0} 条消息, {1})</RimMind_ContextTabChat>
-    <RimMind_ContextEmpty>(空)</RimMind_ContextEmpty>
-    
+    <!-- EN: Context Inspector -->
+  <RimMind_ContextTitle>上下文检查器</RimMind_ContextTitle>
+    <!-- EN: Refresh -->
+  <RimMind_ContextRefresh>刷新</RimMind_ContextRefresh>
+    <!-- EN: Total: {0} (~{1} tokens est.) -->
+  <RimMind_ContextTotal>总计: {0} (约 {1} 令牌)</RimMind_ContextTotal>
+    <!-- EN: Last API: {0} in + {1} out = {2} actual -->
+  <RimMind_ContextLastAPI>上次 API: {0} 输入 + {1} 输出 = {2} 实际</RimMind_ContextLastAPI>
+    <!-- EN: System ({0}) -->
+  <RimMind_ContextTabSystem>系统 ({0})</RimMind_ContextTabSystem>
+    <!-- EN: Tools ({0}, {1}) -->
+  <RimMind_ContextTabTools>工具 ({0}, {1})</RimMind_ContextTabTools>
+    <!-- EN: Chat ({0} msgs, {1}) -->
+  <RimMind_ContextTabChat>聊天 ({0} 条消息, {1})</RimMind_ContextTabChat>
+    <!-- EN: (empty) -->
+  <RimMind_ContextEmpty>(空)</RimMind_ContextEmpty>
+
     <!-- Event Display Names -->
-    <RimMind_Event_RaidEnemy>敌人袭击</RimMind_Event_RaidEnemy>
-    <RimMind_Event_RaidFriendly>友方袭击</RimMind_Event_RaidFriendly>
-    <RimMind_Event_PredatorsDeadlyHunt>食人猎手</RimMind_Event_PredatorsDeadlyHunt>
-    <RimMind_Event_Siege>围攻</RimMind_Event_Siege>
-    <RimMind_Event_MechanoidCluster>机械族集群</RimMind_Event_MechanoidCluster>
-    <RimMind_Event_FireStarted>火灾</RimMind_Event_FireStarted>
-    <RimMind_Event_Infestation>虫巢</RimMind_Event_Infestation>
-    <RimMind_Event_ToxicFallout>毒尘</RimMind_Event_ToxicFallout>
-    <RimMind_Event_SolarFlare>太阳耀斑</RimMind_Event_SolarFlare>
-    <RimMind_Event_Eclipse>日食</RimMind_Event_Eclipse>
-    <RimMind_Event_ColdSnap>寒流</RimMind_Event_ColdSnap>
-    <RimMind_Event_HeatWave>热浪</RimMind_Event_HeatWave>
-    <RimMind_Event_MentalBreakExtreme>极端精神崩溃</RimMind_Event_MentalBreakExtreme>
-    <RimMind_Event_MentalBreakMajor>严重精神崩溃</RimMind_Event_MentalBreakMajor>
-    <RimMind_Event_MentalBreakMinor>轻微精神崩溃</RimMind_Event_MentalBreakMinor>
-    <RimMind_Event_DiseaseContracted>感染疾病</RimMind_Event_DiseaseContracted>
-    <RimMind_Event_DiseaseOutbreak>疫病爆发</RimMind_Event_DiseaseOutbreak>
-    <RimMind_Event_Death>殖民者死亡</RimMind_Event_Death>
-    <RimMind_Event_WandererJoin>流浪者加入</RimMind_Event_WandererJoin>
-    <RimMind_Event_RefugeeChased>被追逐的难民</RimMind_Event_RefugeeChased>
-    <RimMind_Event_StrangerInBlackJoin>神秘黑衣人</RimMind_Event_StrangerInBlackJoin>
-    <RimMind_Event_Marriage>婚礼</RimMind_Event_Marriage>
-    <RimMind_Event_TraderArrival>商人到来</RimMind_Event_TraderArrival>
-    <RimMind_Event_CaravanRequest>商队请求</RimMind_Event_CaravanRequest>
-    <RimMind_Event_ResearchProjectFinished>研究完成</RimMind_Event_ResearchProjectFinished>
+    <!-- EN: Enemy Raid -->
+  <RimMind_Event_RaidEnemy>敌人袭击</RimMind_Event_RaidEnemy>
+    <!-- EN: Friendly Raid -->
+  <RimMind_Event_RaidFriendly>友方袭击</RimMind_Event_RaidFriendly>
+    <!-- EN: Predator Manhunter -->
+  <RimMind_Event_PredatorsDeadlyHunt>疯狂捕猎</RimMind_Event_PredatorsDeadlyHunt>
+    <!-- EN: Siege -->
+  <RimMind_Event_Siege>围攻</RimMind_Event_Siege>
+    <!-- EN: Mechanoid Cluster -->
+  <RimMind_Event_MechanoidCluster>机械族集群</RimMind_Event_MechanoidCluster>
+    <!-- EN: Fire -->
+  <RimMind_Event_FireStarted>火灾</RimMind_Event_FireStarted>
+    <!-- EN: Infestation -->
+  <RimMind_Event_Infestation>虫巢</RimMind_Event_Infestation>
+    <!-- EN: Toxic Fallout -->
+  <RimMind_Event_ToxicFallout>毒尘</RimMind_Event_ToxicFallout>
+    <!-- EN: Solar Flare -->
+  <RimMind_Event_SolarFlare>太阳耀斑</RimMind_Event_SolarFlare>
+    <!-- EN: Eclipse -->
+  <RimMind_Event_Eclipse>日食</RimMind_Event_Eclipse>
+    <!-- EN: Cold Snap -->
+  <RimMind_Event_ColdSnap>寒流</RimMind_Event_ColdSnap>
+    <!-- EN: Heat Wave -->
+  <RimMind_Event_HeatWave>热浪</RimMind_Event_HeatWave>
+    <!-- EN: Extreme Mental Break -->
+  <RimMind_Event_MentalBreakExtreme>极端精神崩溃</RimMind_Event_MentalBreakExtreme>
+    <!-- EN: Major Mental Break -->
+  <RimMind_Event_MentalBreakMajor>严重精神崩溃</RimMind_Event_MentalBreakMajor>
+    <!-- EN: Minor Mental Break -->
+  <RimMind_Event_MentalBreakMinor>轻微精神崩溃</RimMind_Event_MentalBreakMinor>
+    <!-- EN: Disease Contracted -->
+  <RimMind_Event_DiseaseContracted>感染疾病</RimMind_Event_DiseaseContracted>
+    <!-- EN: Disease Outbreak -->
+  <RimMind_Event_DiseaseOutbreak>疫病爆发</RimMind_Event_DiseaseOutbreak>
+    <!-- EN: Colonist Death -->
+  <RimMind_Event_Death>殖民者死亡</RimMind_Event_Death>
+    <!-- EN: Wanderer Joins -->
+  <RimMind_Event_WandererJoin>流浪者加入</RimMind_Event_WandererJoin>
+    <!-- EN: Chased Refugee -->
+  <RimMind_Event_RefugeeChased>被追逐的难民</RimMind_Event_RefugeeChased>
+    <!-- EN: Stranger in Black -->
+  <RimMind_Event_StrangerInBlackJoin>神秘黑衣人</RimMind_Event_StrangerInBlackJoin>
+    <!-- EN: Marriage -->
+  <RimMind_Event_Marriage>婚礼</RimMind_Event_Marriage>
+    <!-- EN: Trader Arrival -->
+  <RimMind_Event_TraderArrival>商人到来</RimMind_Event_TraderArrival>
+    <!-- EN: Caravan Request -->
+  <RimMind_Event_CaravanRequest>商队请求</RimMind_Event_CaravanRequest>
+    <!-- EN: Research Complete -->
+  <RimMind_Event_ResearchProjectFinished>研究完成</RimMind_Event_ResearchProjectFinished>
 
     <!-- Quick Prompt Buttons -->
-    <RimMind_Prompt_Bedroom>卧室</RimMind_Prompt_Bedroom>
-    <RimMind_Prompt_DiningKitchen>餐厅+厨房</RimMind_Prompt_DiningKitchen>
-    <RimMind_Prompt_Barracks>兵营</RimMind_Prompt_Barracks>
-    <RimMind_Prompt_PowerSetup>电力设施</RimMind_Prompt_PowerSetup>
-    <RimMind_Prompt_Workshop>工作间</RimMind_Prompt_Workshop>
-    <RimMind_Prompt_Hospital>医务室</RimMind_Prompt_Hospital>
-    <RimMind_Prompt_Killbox>杀戮箱</RimMind_Prompt_Killbox>
-    <RimMind_Prompt_BaseLayout>基地布局</RimMind_Prompt_BaseLayout>
-    <RimMind_Prompt_ColonyStatus>殖民地状态</RimMind_Prompt_ColonyStatus>
-    <RimMind_Prompt_MapScout>地图侦察</RimMind_Prompt_MapScout>
+    <!-- EN: Bedroom -->
+  <RimMind_Prompt_Bedroom>卧室</RimMind_Prompt_Bedroom>
+    <!-- EN: Dining+Kitchen -->
+  <RimMind_Prompt_DiningKitchen>餐厅+厨房</RimMind_Prompt_DiningKitchen>
+    <!-- EN: Barracks -->
+  <RimMind_Prompt_Barracks>兵营</RimMind_Prompt_Barracks>
+    <!-- EN: Power Setup -->
+  <RimMind_Prompt_PowerSetup>电力设施</RimMind_Prompt_PowerSetup>
+    <!-- EN: Workshop -->
+  <RimMind_Prompt_Workshop>工作间</RimMind_Prompt_Workshop>
+    <!-- EN: Hospital -->
+  <RimMind_Prompt_Hospital>医务室</RimMind_Prompt_Hospital>
+    <!-- EN: Killbox -->
+  <RimMind_Prompt_Killbox>杀戮区</RimMind_Prompt_Killbox>
+    <!-- EN: Base Layout -->
+  <RimMind_Prompt_BaseLayout>基地布局</RimMind_Prompt_BaseLayout>
+    <!-- EN: Colony Status -->
+  <RimMind_Prompt_ColonyStatus>殖民地状态</RimMind_Prompt_ColonyStatus>
+    <!-- EN: Map Scout -->
+  <RimMind_Prompt_MapScout>地图侦察</RimMind_Prompt_MapScout>
 
     <!-- Main Button -->
-    <RimMind_MainButton>RimMind</RimMind_MainButton>
+    <!-- EN: RimMind -->
+  <RimMind_MainButton>RimMind</RimMind_MainButton>
+
+    <!-- Ping Location -->
+    <!-- EN: RimMind -->
+  <RimMind_PingTitle>RimMind</RimMind_PingTitle>
+    <!-- EN: Location marked at ({0}, {1}) -->
+  <RimMind_PingTextDefault>已标记位置 ({0}, {1})</RimMind_PingTextDefault>
+    <!-- EN: {0}\n\nLocation: ({1}, {2}) -->
+  <RimMind_PingTextWithLabel>{0}\n\n位置: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <!-- EN: Ask RimMind -->
+  <RimMind_DesignatorLabel>询问 RimMind</RimMind_DesignatorLabel>
+    <!-- EN: Click a location on the map to send a request to the RimMind AI about that spot. -->
+  <RimMind_DesignatorDesc>点击地图上的位置，向 RimMind AI 发送关于该位置的请求。</RimMind_DesignatorDesc>
+    <!-- EN: RimMind — ({0}, {1}) -->
+  <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <!-- EN: Describe what you want at this location... -->
+  <RimMind_LocationQueryHint>描述你想在这个位置做什么...</RimMind_LocationQueryHint>
+    <!-- EN: Send -->
+  <RimMind_LocationQuerySend>发送</RimMind_LocationQuerySend>
+    <!-- EN: Copy -->
+  <RimMind_CopyChatMessage>复制</RimMind_CopyChatMessage>
+    <!-- EN: Copy message to clipboard -->
+  <RimMind_CopyChatMessageTip>复制消息到剪贴板</RimMind_CopyChatMessageTip>
 </LanguageData>

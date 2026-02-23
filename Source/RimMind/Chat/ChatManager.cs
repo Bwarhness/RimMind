@@ -163,13 +163,18 @@ namespace RimMind.Chat
                 messages.Add(conversationHistory[i]);
             }
 
+            // Conditionally include tools: always for non-custom providers,
+            // only if customProviderSupportsTools is true for custom providers
+            bool isCustom = RimMindMod.Settings.IsCustom;
+            bool includeTools = !isCustom || RimMindMod.Settings.customProviderSupportsTools;
+
             return new ChatRequest
             {
                 model = RimMindMod.Settings.ActiveModelId,
                 messages = messages,
                 temperature = RimMindMod.Settings.temperature,
                 max_tokens = RimMindMod.Settings.maxTokens,
-                tools = ToolDefinitions.GetAllTools().ConvertAll(t => (JSONNode)t)
+                tools = includeTools ? ToolDefinitions.GetAllTools().ConvertAll(t => (JSONNode)t) : null
             };
         }
 

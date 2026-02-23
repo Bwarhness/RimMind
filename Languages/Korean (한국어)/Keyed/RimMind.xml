@@ -8,12 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Max/Pro 구독)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>사용자 지정 제공자 (OpenAI 호환)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>사용자 지정 제공자 설정</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>OpenAI 호환 API 지원 (Ollama, LM Studio, Groq, Together 등)</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>OpenAI 호환 API(Ollama, LM Studio, Groq, Together 등)를 지원합니다. 완전한 식민지 관리 기능을 사용하려면 함수/도구 호출을 지원하는 공급자가 필요합니다.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>엔드포인트 URL:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>예: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>API 키 (로컬 LLM은 선택사항):</RimMind_APIKeyOptional>
     <RimMind_ModelName>모델 이름:</RimMind_ModelName>
     <RimMind_ModelNameExamples>예: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_SupportsToolCalling>참고: 도구/함수 호출 지원 필요</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>RimMind가 식민지를 조회하고 관리하려면 모델이 도구/함수 호출을 지원해야 합니다. 지원하지 않으면 모든 식민지 기능을 사용할 수 없으며 AI는 기본 채팅만 제공할 수 있습니다.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code 자격 증명이 감지되었습니다. 구독이 자동으로 사용됩니다.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code에 로그인되지 않았습니다. 터미널에서 'claude login'을 실행하세요.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API 키:</RimMind_AnthropicAPIKey>
@@ -129,4 +131,19 @@
 
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
+
+    <!-- Ping Location -->
+    <RimMind_PingTitle>RimMind</RimMind_PingTitle>
+    <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
+    <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <RimMind_DesignatorLabel>RimMind에게 질문</RimMind_DesignatorLabel>
+    <RimMind_DesignatorDesc>지도에서 위치를 클릭하여 해당 장소에 대해 RimMind AI에 요청을 보냅니다.</RimMind_DesignatorDesc>
+    <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <RimMind_LocationQueryHint>이 위치에서 원하는 것을 설명하세요...</RimMind_LocationQueryHint>
+    <RimMind_LocationQuerySend>전송</RimMind_LocationQuerySend>
+    <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
+    <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
+
 </LanguageData>

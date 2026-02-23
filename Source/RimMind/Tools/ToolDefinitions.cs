@@ -406,17 +406,26 @@ namespace RimMind.Tools
                 MakeParam("colonist", "string", "The colonist's name")));
 
             // Designation Tools (Hunting/Taming/Resource Gathering)
-            tools.Add(MakeTool("designate_hunt", "Mark wild animals for hunting. Best workflow: call get_wild_animals first, then use the animal's id for precise targeting. Alternatively use animal name/species with count for bulk operations.",
-                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
-                MakeOptionalParam("animal", "string", "Animal name or species to hunt (e.g., 'Hare', 'Muffalo'). Used with count for bulk."),
-                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
-            tools.Add(MakeTool("designate_tame", "Mark wild animals for taming. Best workflow: call get_wild_animals first, then use the animal's id to tame specific individuals (e.g., one male and one female for breeding). Alternatively use animal name/species with count for bulk.",
-                MakeOptionalParam("id", "integer", "Unique animal ID from get_wild_animals for precise targeting (preferred)"),
-                MakeOptionalParam("animal", "string", "Animal name or species to tame (e.g., 'Muffalo', 'Alpaca'). Used with count for bulk."),
-                MakeOptionalParam("count", "integer", "How many to designate when using animal name: 1 (default), N = exactly N, -1 = all matching")));
-            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal. Use id for precise targeting or animal name to search.",
+            tools.Add(MakeTool("designate_hunt",
+                "Mark specific wild animals for hunting by their IDs. REQUIRED WORKFLOW: First call get_wild_animals to see animals with IDs, then pass those exact IDs here. Do not guess — always use IDs from get_wild_animals to target specific animals.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for hunting (from get_wild_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to hunt every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("designate_tame",
+                "Mark specific wild animals for taming by their IDs. REQUIRED WORKFLOW: First call get_wild_animals to see animals with IDs, then pass those exact IDs here. Do not guess — always use IDs from get_wild_animals to target specific animals.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for taming (from get_wild_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to tame every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("designate_slaughter",
+                "Mark specific tamed animals for slaughter by their IDs. Only works on colony-owned animals. REQUIRED WORKFLOW: First call list_animals to see animals with IDs, then pass those exact IDs here. Returns estimated meat yield.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for slaughter (from list_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to slaughter every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt, tame, or slaughter designation on an animal. Use id for precise targeting or animal name to search.",
                 MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
                 MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
+            tools.Add(MakeTool("get_animal_designations", "Query which animals are currently designated for hunt, tame, or slaughter. Use after designate_hunt/tame/slaughter to verify the designation applied correctly.",
+                MakeOptionalParam("type", "string", "Filter by type: 'hunt', 'tame', 'slaughter', or 'all' (default)")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
                 MakeParam("x1", "integer", "Start X coordinate"),
                 MakeParam("z1", "integer", "Start Z coordinate"),
@@ -500,6 +509,12 @@ namespace RimMind.Tools
                 MakeOptionalParam("x2", "integer", "End X for area approval"),
                 MakeOptionalParam("z2", "integer", "End Z for area approval"),
                 MakeOptionalParam("all", "boolean", "Set true to approve ALL AI-proposed blueprints")));
+            tools.Add(MakeTool("deconstruct_building", "Mark already-built structures for deconstruction using RimWorld's native designation system. Colonists will deconstruct the marked buildings and recover materials. Works on player-built structures, ancient ruins, and ship chunks. At least one targeting parameter is required.",
+                MakeOptionalParam("x", "integer", "X coordinate of target cell"),
+                MakeOptionalParam("z", "integer", "Z coordinate of target cell"),
+                MakeOptionalParam("x2", "integer", "Second corner X for rectangular area selection"),
+                MakeOptionalParam("z2", "integer", "Second corner Z for rectangular area selection"),
+                MakeOptionalParam("def_name", "string", "Target all buildings of this defName on the entire map (e.g., 'Wall', 'ShipChunk', 'AncientCryptosleepCasket')")));
 
             // Directive Tools
             tools.Add(MakeTool("get_directives", "Get the current player-defined colony directives. These are standing rules, preferences, and playstyle instructions set by the player. Check this before adding new directives to avoid duplicates."));
@@ -512,6 +527,64 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_active_traders", "Get all currently available traders: orbital trade ships, visiting caravans, and allied settlements in comms range. For each trader, returns faction, items in stock with quantities and prices (buy/sell), silver available, and time until departure. Use this to discover trading opportunities."));
             tools.Add(MakeTool("analyze_trade_opportunity", "Analyze trade opportunities with current traders. Compares colony resources against trader inventory to suggest profitable trades: items to buy for urgent needs (medicine, components, food), items to sell for profit (surplus materials), and strategic purchases. Returns recommendations with priority scores and reasoning.",
                 MakeOptionalParam("traderFilter", "string", "Optional filter to analyze specific trader by name, faction, or type (e.g., 'orbital', 'caravan'). If omitted, analyzes all traders.")));
+
+            // Wiki Tools
+            tools.Add(MakeTool("wiki_lookup", "Search the RimWorld wiki for information about game mechanics, items, buildings, events, or strategies. Returns the intro/extract from the best matching wiki page. Use this when players ask 'what is X?', 'how does Y work?', or need factual game information you're unsure about. Examples: 'what is a psychic drone?', 'how do infestations work?', 'what does the volatile trait do?'.",
+                MakeParam("query", "string", "Search query for the RimWorld wiki (e.g., 'psychic drone', 'infestation', 'steel production')")));
+
+            // Item Access Tools
+            tools.Add(MakeTool("set_item_allowed", "Allow or forbid items on the map. Allowed items get hauled by colonists; forbidden items are ignored. " +
+                "TARGETING (checked in priority order — use only ONE): " +
+                "(1) ids: target exact items by ID array. " +
+                "(2) type: fuzzy text match on defName or label (e.g. 'steel', 'flak', 'meal'). " +
+                "(3) category: predefined group. " +
+                "(4) x/z or x1/z1/x2/z2: items at a cell or in a rectangular area. " +
+                "(5) NO targeting params: targets ALL items on the entire map. " +
+                "COMMON PATTERNS: Allow everything: set_item_allowed(allowed:true). " +
+                "Allow all weapons: set_item_allowed(allowed:true, category:'weapons'). " +
+                "Forbid specific items: set_item_allowed(allowed:false, ids:[1234, 5678]). " +
+                "Allow steel: set_item_allowed(allowed:true, type:'steel').",
+                MakeParam("allowed", "boolean", "true = allow (colonists haul), false = forbid (colonists ignore)"),
+                MakeOptionalParam("ids", "array", "Array of item thingIDNumbers for precise targeting (from get_forbidden_items or search_map)"),
+                MakeOptionalParam("type", "string", "Fuzzy text filter — matches defName or label. Examples: 'steel', 'medicine', 'flak vest', 'meal'. Tries exact defName first, then substring match."),
+                MakeOptionalParam("category", "string", "Predefined group: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'"),
+                MakeOptionalParam("x", "integer", "X coordinate of cell (single cell targeting)"),
+                MakeOptionalParam("z", "integer", "Z coordinate of cell (single cell targeting)"),
+                MakeOptionalParam("x1", "integer", "Top-left X of rectangular area"),
+                MakeOptionalParam("z1", "integer", "Top-left Z of rectangular area"),
+                MakeOptionalParam("x2", "integer", "Bottom-right X of rectangular area"),
+                MakeOptionalParam("z2", "integer", "Bottom-right Z of rectangular area")));
+            tools.Add(MakeTool("get_forbidden_items", "List all currently forbidden items on the map. Returns each item's ID, name, defName, position, and stockpile location. " +
+                "Use this FIRST to see what's forbidden before calling set_item_allowed. " +
+                "The returned IDs can be passed directly to set_item_allowed(ids:[...]) for precise targeting.",
+                MakeOptionalParam("category", "string", "Filter: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'. Omit for all items.")));
+
+            // Drafted Pawn Command Tools
+            tools.Add(MakeTool("move_pawn", "Move a drafted pawn to specific coordinates on the map. Pawn must be drafted first (use draft_colonist). The pawn will walk/run to the destination. Returns error if pawn is not drafted, is downed, coordinates are out of bounds, not standable, or destination is unreachable.",
+                MakeParam("pawnName", "string", "Name of the pawn to move"),
+                MakeParam("x", "integer", "X coordinate to move to"),
+                MakeParam("z", "integer", "Z coordinate to move to")));
+            tools.Add(MakeTool("order_attack", "Order a drafted pawn to attack a specific target pawn or animal. Automatically uses ranged or melee attack based on the pawn's equipped weapon. Pawn must be drafted first. Target name supports exact and partial matching. Returns error if pawn is not drafted, is downed, or target is not found on the map.",
+                MakeParam("pawnName", "string", "Name of the pawn to give the attack order to"),
+                MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
+            tools.Add(MakeTool("hold_position", "Order a drafted pawn to hold their current position in combat stance. The pawn will stay in place and auto-attack nearby enemies. Pawn must be drafted first. Returns error if pawn is not drafted or is downed.",
+                MakeParam("pawnName", "string", "Name of the pawn to hold position")));
+            tools.Add(MakeTool("order_group_attack", "Order multiple drafted pawns to all attack a single target. All pawns must be drafted first. Returns per-pawn results — partial success is possible if some pawns fail.",
+                MakeParam("pawnNames", "array", "List of pawn names to give the attack order to"),
+                MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
+            tools.Add(MakeTool("switch_weapon", "Switch a drafted pawn's equipped weapon to another weapon from their inventory. Accepts both defName and partial label match. Pawn must be drafted. Returns available inventory weapons if specified weapon not found.",
+                MakeParam("pawnName", "string", "Name of the pawn whose weapon to switch"),
+                MakeParam("weaponDefName", "string", "DefName or label (partial match) of the weapon to switch to")));
+            tools.Add(MakeTool("set_fire_mode", "Set fire mode for a drafted pawn's ranged weapon (burst/single/auto). NOTE: Not available in vanilla RimWorld — requires Combat Extended mod. Returns an informational error in vanilla.",
+                MakeParam("pawnName", "string", "Name of the pawn"),
+                MakeParam("mode", "string", "Fire mode: 'burst', 'single', or 'auto'")));
+
+            // Ping/Highlight Tools
+            tools.Add(MakeTool("ping_location", "Ping a location on the map to draw the player's attention. Camera jumps to the location immediately and a clickable letter is posted for future reference. Use this to highlight important spots: resource deposits, danger areas, suggested building locations, points of interest, etc.",
+                MakeParam("x", "integer", "X coordinate on the map"),
+                MakeParam("z", "integer", "Z coordinate on the map"),
+                MakeOptionalParam("label", "string", "Text label for the ping (shown in letter). Default: 'Location marked'"),
+                MakeOptionalParam("color", "string", "Letter color: 'grey'/'neutral' (default), 'blue'/'positive'/'info', 'red'/'danger'/'threat', 'orange'/'warning'/'negative', 'yellow'")));
 
             cachedTools = tools;
             return tools;
@@ -609,6 +682,21 @@ namespace RimMind.Tools
 
             var itemSchema = new JSONObject();
             itemSchema["type"] = "string";
+            p["items"] = itemSchema;
+
+            return p;
+        }
+
+        private static JSONObject MakeIntArrayParam(string name, string description, bool required)
+        {
+            var p = new JSONObject();
+            p["name"] = name;
+            p["param_type"] = "array";
+            p["description"] = description;
+            p["required"] = required;
+
+            var itemSchema = new JSONObject();
+            itemSchema["type"] = "integer";
             p["items"] = itemSchema;
 
             return p;

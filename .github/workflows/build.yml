@@ -9,17 +9,39 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-    
+
     - name: Restore dependencies
       run: dotnet restore Source/RimMind/RimMind.csproj
-    
+
     - name: Build
       run: dotnet build Source/RimMind/RimMind.csproj --configuration Release --no-restore
+
+    - name: Stage mod
+      run: |
+        mkdir -p staging/About
+        mkdir -p staging/Assemblies
+        mkdir -p staging/Defs
+
+        cp -r About/* staging/About/
+        cp Assemblies/RimMind.dll staging/Assemblies/
+        cp -r Defs/* staging/Defs/
+        cp -r Languages staging/Languages
+
+    - name: Sanitize ref name for artifact
+      id: ref
+      run: echo "name=$(echo '${{ github.ref_name }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+
+    - name: Upload mod artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RimMind-${{ steps.ref.outputs.name }}
+        path: staging/
+        retention-days: 30

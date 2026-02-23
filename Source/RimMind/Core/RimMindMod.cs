@@ -90,6 +90,9 @@ namespace RimMind.Core
                 listing.Label(RimMindTranslations.Get("RimMind_ModelName"));
                 Settings.customModelId = listing.TextEntry(Settings.customModelId);
                 listing.Label(RimMindTranslations.Get("RimMind_ModelNameExamples"));
+                listing.Gap(8f);
+
+                listing.CheckboxLabeled(RimMindTranslations.Get("RimMind_SupportsToolCalling"), ref Settings.customProviderSupportsTools, RimMindTranslations.Get("RimMind_SupportsToolCallingDesc"));
                 listing.GapLine();
             }
             else if (Settings.IsClaudeCode)

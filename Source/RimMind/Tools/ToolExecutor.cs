@@ -192,9 +192,11 @@ namespace RimMind.Tools
             { "unassign_bed", args => BedTools.UnassignBed(args?["colonist"]?.Value) },
 
             // Designations
-            { "designate_hunt", args => DesignationTools.DesignateHunt(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
-            { "designate_tame", args => DesignationTools.DesignateTame(args?["animal"]?.Value, args?["count"] != null ? args["count"].AsInt : 1, args?["id"] != null ? args["id"].AsInt : -1) },
+            { "designate_hunt", args => DesignationTools.DesignateHunt(args) },
+            { "designate_tame", args => DesignationTools.DesignateTame(args) },
+            { "designate_slaughter", args => DesignationTools.DesignateSlaughter(args) },
             { "cancel_animal_designation", args => DesignationTools.CancelAnimalDesignation(args?["animal"]?.Value, args?["id"] != null ? args["id"].AsInt : -1) },
+            { "get_animal_designations", args => DesignationTools.GetAnimalDesignations(args?["type"]?.Value ?? "all") },
             { "designate_mine", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateMine(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
             { "designate_chop", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateChop(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
             { "designate_harvest", args => args?["x1"] == null || args?["z1"] == null || args?["x2"] == null || args?["z2"] == null ? JsonError("'x1', 'z1', 'x2', 'z2' coordinates are required.") : DesignationTools.DesignateHarvest(args["x1"].AsInt, args["z1"].AsInt, args["x2"].AsInt, args["z2"].AsInt) },
@@ -226,6 +228,26 @@ namespace RimMind.Tools
             // Trade
             { "get_active_traders", args => TradeTools.GetActiveTraders() },
             { "analyze_trade_opportunity", args => TradeTools.AnalyzeTradeOpportunity(args?["traderFilter"]?.Value) },
+
+            // Wiki
+            { "wiki_lookup", args => WikiTools.WikiLookup(args?["query"]?.Value) },
+
+            // Item Access
+            { "set_item_allowed", args => ItemAccessTools.SetItemAllowed(args) },
+            { "get_forbidden_items", args => ItemAccessTools.GetForbiddenItems(args) },
+
+            // Ping/Highlight
+            { "ping_location", args => PingTools.PingLocation(args) },
+
+            // Drafted Pawn Commands
+            { "move_pawn", args => DraftedPawnTools.MovePawn(args?["pawnName"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
+            { "order_attack", args => DraftedPawnTools.OrderAttack(args?["pawnName"]?.Value, args?["targetName"]?.Value) },
+            { "hold_position", args => DraftedPawnTools.HoldPosition(args?["pawnName"]?.Value) },
+            { "order_group_attack", args => DraftedPawnTools.OrderGroupAttack(DraftedPawnTools.ExtractPawnNames(args?["pawnNames"]), args?["targetName"]?.Value) },
+            { "switch_weapon", args => DraftedPawnTools.SwitchWeapon(args?["pawnName"]?.Value, args?["weaponDefName"]?.Value) },
+
+            // Deconstruct
+            { "deconstruct_building", args => BuildingTools.DeconstructBuilding(args) },
         };
 
         public static string Execute(string toolName, string argumentsJson)

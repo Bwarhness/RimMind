@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using RimMind.Languages;
 using RimWorld;
 using UnityEngine;
@@ -19,6 +21,15 @@ namespace RimMind.Chat
         // Cached version title - computed once on first access
         private static string cachedVersionTitle;
         private static bool versionTitleInitialized;
+
+        // GUIStyle for selectable (but read-only) message text — initialized lazily
+        private static GUIStyle _selectableTextStyle;
+
+        // Multi-bubble selection: drag across chat bubbles to select and copy multiple messages
+        private int multiSelectStart = -1;
+        private int multiSelectEnd = -1;
+        private bool multiSelectActive;
+        private readonly List<string> visibleMessageTexts = new List<string>();
 
         public static ChatWindow Instance => instance;
         public ChatManager Manager => chatManager;
@@ -263,18 +274,28 @@ namespace RimMind.Chat
                 SendCurrentMessage();
             }
 
-            // Focus input only when user clicks inside our window (not every frame)
-            if (Event.current.type == EventType.MouseDown && Mouse.IsOver(inRect))
+            // Re-focus input after sending a message (applied on Layout so Unity processes it correctly)
+            if (refocusInput && Event.current.type == EventType.Layout)
+            {
+                GUI.FocusControl("RimMindInput");
+                refocusInput = false;
+            }
+
+            // Focus input when user clicks in the input area (not the whole window, to allow text selection in chat)
+            if (Event.current.type == EventType.MouseDown && Mouse.IsOver(inputRect))
             {
                 GUI.FocusControl("RimMindInput");
             }
         }
+
+        private bool refocusInput;
 
         private void SendCurrentMessage()
         {
             string msg = inputText.Trim();
             inputText = "";
             chatManager.SendMessage(msg);
+            refocusInput = true;
         }
 
         private void DrawChatMessages(Rect outerRect)
@@ -290,10 +311,33 @@ namespace RimMind.Chat
                 scrollToBottom = false;
             }
 
+            // Lazily initialize a GUIStyle for selectable text.
+            if (_selectableTextStyle == null)
+            {
+                _selectableTextStyle = new GUIStyle(GUI.skin.textArea)
+                {
+                    wordWrap = true,
+                    stretchWidth = false,
+                    stretchHeight = false,
+                };
+                _selectableTextStyle.padding   = new RectOffset(0, 0, 0, 0);
+                _selectableTextStyle.margin    = new RectOffset(0, 0, 0, 0);
+                _selectableTextStyle.border    = new RectOffset(0, 0, 0, 0);
+                _selectableTextStyle.normal.background   = null;
+                _selectableTextStyle.hover.background    = null;
+                _selectableTextStyle.active.background   = null;
+                _selectableTextStyle.focused.background  = null;
+            }
+
+            // Multi-select: detect mouse button state (works regardless of IMGUI hot control)
+            bool mouseHeld = UnityEngine.Input.GetMouseButton(0);
+
             Widgets.BeginScrollView(outerRect, ref scrollPosition, viewRect);
 
             float y = 4f;
             float maxWidth = viewRect.width - 16f;
+            int msgIdx = 0;
+            visibleMessageTexts.Clear();
 
             foreach (var msg in chatManager.History)
             {
@@ -305,33 +349,118 @@ namespace RimMind.Chat
                     continue;
 
                 bool isUser = msg.role == "user";
-                string displayText = isUser 
-                    ? RimMindTranslations.Get("RimMind_ChatYou", msg.content ?? "") 
+                string displayText = isUser
+                    ? RimMindTranslations.Get("RimMind_ChatYou", msg.content ?? "")
                     : RimMindTranslations.Get("RimMind_ChatRimMind", msg.content ?? "");
+                visibleMessageTexts.Add(displayText);
 
                 // Calculate height
                 float textHeight = Text.CalcHeight(displayText, maxWidth - 12f);
                 var bubbleRect = new Rect(4f, y, maxWidth, textHeight + 8f);
+                bool isOver = Mouse.IsOver(bubbleRect);
+
+                // Multi-select tracking: record start on mouse down, update end as mouse drags
+                if (Event.current.type == EventType.MouseDown && isOver)
+                {
+                    multiSelectStart = msgIdx;
+                    multiSelectEnd = msgIdx;
+                    multiSelectActive = false;
+                }
+                if (mouseHeld && multiSelectStart >= 0 && isOver && msgIdx != multiSelectStart)
+                {
+                    multiSelectEnd = msgIdx;
+                    multiSelectActive = true;
+                }
+
+                // Determine if this bubble is in the multi-select range
+                bool inMultiSelect = false;
+                if (multiSelectActive)
+                {
+                    int lo = Math.Min(multiSelectStart, multiSelectEnd);
+                    int hi = Math.Max(multiSelectStart, multiSelectEnd);
+                    inMultiSelect = msgIdx >= lo && msgIdx <= hi;
+                }
 
                 // Background
                 Color bgColor = isUser ? new Color(0.2f, 0.25f, 0.35f, 0.9f) : new Color(0.15f, 0.3f, 0.2f, 0.9f);
 
-                // Check for error messages
                 if (!isUser && msg.content != null && msg.content.StartsWith("[Error]"))
                     bgColor = new Color(0.35f, 0.15f, 0.15f, 0.9f);
 
+                // Brighten background for multi-selected bubbles
+                if (inMultiSelect)
+                    bgColor = new Color(bgColor.r + 0.15f, bgColor.g + 0.15f, bgColor.b + 0.2f, 0.95f);
+
                 Widgets.DrawBoxSolid(bubbleRect, bgColor);
+
+                // Draw selection border on multi-selected bubbles
+                if (inMultiSelect)
+                {
+                    GUI.color = new Color(0.5f, 0.7f, 1f, 0.7f);
+                    Widgets.DrawBox(bubbleRect);
+                    GUI.color = Color.white;
+                }
 
                 var textRect = new Rect(bubbleRect.x + 6f, bubbleRect.y + 4f, bubbleRect.width - 12f, bubbleRect.height - 8f);
 
-                GUI.color = isUser ? new Color(0.85f, 0.9f, 1f) : new Color(0.85f, 1f, 0.9f);
-                Widgets.Label(textRect, displayText);
+                // Render message as a selectable TextArea (looks like a label, supports Ctrl+C).
+                Color textColor = isUser ? new Color(0.85f, 0.9f, 1f) : new Color(0.85f, 1f, 0.9f);
+                _selectableTextStyle.normal.textColor  = textColor;
+                _selectableTextStyle.hover.textColor   = textColor;
+                _selectableTextStyle.focused.textColor = textColor;
+                _selectableTextStyle.active.textColor  = textColor;
+
                 GUI.color = Color.white;
+                GUI.TextArea(textRect, displayText, _selectableTextStyle);
+
+                // Copy button — visible only while cursor is over this bubble and not multi-selecting
+                if (isOver && !multiSelectActive)
+                {
+                    const float copyBtnW = 50f;
+                    const float copyBtnH = 18f;
+                    var copyBtnRect = new Rect(
+                        bubbleRect.xMax - copyBtnW - 4f,
+                        bubbleRect.y + 2f,
+                        copyBtnW,
+                        copyBtnH
+                    );
+                    GUI.color = new Color(1f, 1f, 1f, 0.85f);
+                    if (Widgets.ButtonText(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessage")))
+                    {
+                        GUIUtility.systemCopyBuffer = msg.content ?? "";
+                    }
+                    GUI.color = Color.white;
+                    TooltipHandler.TipRegion(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessageTip"));
+                }
 
                 y += textHeight + 12f;
+                msgIdx++;
             }
 
             Widgets.EndScrollView();
+
+            // Multi-select: on mouse release, copy all selected messages to clipboard
+            if (!mouseHeld && multiSelectActive)
+            {
+                int lo = Math.Min(multiSelectStart, multiSelectEnd);
+                int hi = Math.Max(multiSelectStart, multiSelectEnd);
+                var sb = new StringBuilder();
+                for (int i = lo; i <= hi && i < visibleMessageTexts.Count; i++)
+                {
+                    if (sb.Length > 0) sb.AppendLine();
+                    sb.Append(visibleMessageTexts[i]);
+                }
+                GUIUtility.systemCopyBuffer = sb.ToString();
+                multiSelectActive = false;
+                multiSelectStart = -1;
+                multiSelectEnd = -1;
+            }
+            else if (!mouseHeld && multiSelectStart >= 0)
+            {
+                // Single-click release — clear multi-select state
+                multiSelectStart = -1;
+                multiSelectEnd = -1;
+            }
         }
 
         private void DrawQuickPrompts(Rect outerRect)

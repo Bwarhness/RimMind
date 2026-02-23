@@ -8,12 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (subskrypcja Max/Pro)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>Dostawca niestandardowy (kompatybilny z OpenAI)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>Ustawienia dostawcy niestandardowego</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>Obsługuje API kompatybilne z OpenAI (Ollama, LM Studio, Groq, Together itp.)</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>Obsługuje API zgodne z OpenAI (Ollama, LM Studio, Groq, Together itp.). Wymaga dostawcy obsługującego wywołania funkcji/narzędzi do pełnego zarządzania kolonią.</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>URL endpointu:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>Przykłady: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>Klucz API (opcjonalny dla lokalnych LLM):</RimMind_APIKeyOptional>
     <RimMind_ModelName>Nazwa modelu:</RimMind_ModelName>
     <RimMind_ModelNameExamples>Przykłady: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_SupportsToolCalling>Uwaga: Wymagana obsługa wywołań narzędzi/funkcji</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>Twój model musi obsługiwać wywołania narzędzi/funkcji, aby RimMind mógł odpytywać i zarządzać kolonią. Bez tego wszystkie funkcje kolonii będą niedostępne, a AI będzie mógł oferować jedynie podstawowy czat.</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Wykryto dane logowania Claude Code. Twoja subskrypcja będzie używana automatycznie.</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code nie jest zalogowany. Uruchom 'claude login' w terminalu.</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Klucz API Anthropic:</RimMind_AnthropicAPIKey>
@@ -129,4 +131,19 @@
 
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
+
+    <!-- Ping Location -->
+    <RimMind_PingTitle>RimMind</RimMind_PingTitle>
+    <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
+    <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <RimMind_DesignatorLabel>Zapytaj RimMind</RimMind_DesignatorLabel>
+    <RimMind_DesignatorDesc>Kliknij lokalizację na mapie, aby wysłać zapytanie do AI RimMind o to miejsce.</RimMind_DesignatorDesc>
+    <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <RimMind_LocationQueryHint>Opisz, co chcesz zrobić w tej lokalizacji...</RimMind_LocationQueryHint>
+    <RimMind_LocationQuerySend>Wyślij</RimMind_LocationQuerySend>
+    <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
+    <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
+
 </LanguageData>

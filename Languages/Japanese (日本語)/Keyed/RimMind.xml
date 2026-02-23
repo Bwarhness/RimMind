@@ -8,12 +8,14 @@
     <RimMind_ClaudeCode>Claude Code (Max/Pro サブスクリプション)</RimMind_ClaudeCode>
     <RimMind_CustomProvider>カスタムプロバイダー (OpenAI 互換)</RimMind_CustomProvider>
     <RimMind_CustomProviderSettings>カスタムプロバイダー設定</RimMind_CustomProviderSettings>
-    <RimMind_CustomProviderDesc>OpenAI 互換 API をサポート (Ollama, LM Studio, Groq, Together など)</RimMind_CustomProviderDesc>
+    <RimMind_CustomProviderDesc>OpenAI互換API（Ollama、LM Studio、Groq、Togetherなど）をサポートします。完全なコロニー管理機能を使用するには、関数/ツール呼び出しをサポートするプロバイダーが必要です。</RimMind_CustomProviderDesc>
     <RimMind_EndpointURL>エンドポイント URL:</RimMind_EndpointURL>
     <RimMind_EndpointURLExamples>例: http://localhost:11434/v1, https://api.groq.com/openai/v1</RimMind_EndpointURLExamples>
     <RimMind_APIKeyOptional>API キー (ローカル LLM は任意):</RimMind_APIKeyOptional>
     <RimMind_ModelName>モデル名:</RimMind_ModelName>
     <RimMind_ModelNameExamples>例: llama3.2, llama-3.3-70b-versatile, deepseek-r1</RimMind_ModelNameExamples>
+    <RimMind_SupportsToolCalling>注意：ツール/関数呼び出しのサポートが必要です</RimMind_SupportsToolCalling>
+    <RimMind_SupportsToolCallingDesc>RimMindがコロニーを照会・管理するには、モデルがツール/関数呼び出しをサポートしている必要があります。サポートがない場合、すべてのコロニー機能は利用できず、AIは基本的なチャットのみ提供できます。</RimMind_SupportsToolCallingDesc>
     <RimMind_ClaudeCodeAvailable>Claude Code の認証情報が検出されました。サブスクリプションが自動的に使用されます。</RimMind_ClaudeCodeAvailable>
     <RimMind_ClaudeCodeNotAvailable>Claude Code にログインしていません。ターミナルで 'claude login' を実行してください。</RimMind_ClaudeCodeNotAvailable>
     <RimMind_AnthropicAPIKey>Anthropic API キー:</RimMind_AnthropicAPIKey>
@@ -129,4 +131,19 @@
 
     <!-- Main Button -->
     <RimMind_MainButton>RimMind</RimMind_MainButton>
+
+    <!-- Ping Location -->
+    <RimMind_PingTitle>RimMind</RimMind_PingTitle>
+    <RimMind_PingTextDefault>Location marked at ({0}, {1})</RimMind_PingTextDefault>
+    <RimMind_PingTextWithLabel>{0}\n\nLocation: ({1}, {2})</RimMind_PingTextWithLabel>
+
+    <!-- Location Query Designator -->
+    <RimMind_DesignatorLabel>RimMindに質問</RimMind_DesignatorLabel>
+    <RimMind_DesignatorDesc>マップ上の場所をクリックして、その場所についてRimMind AIにリクエストを送信します。</RimMind_DesignatorDesc>
+    <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
+    <RimMind_LocationQueryHint>この場所で何をしたいか説明してください...</RimMind_LocationQueryHint>
+    <RimMind_LocationQuerySend>送信</RimMind_LocationQuerySend>
+    <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
+    <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
+
 </LanguageData>
