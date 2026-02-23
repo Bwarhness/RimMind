@@ -359,6 +359,127 @@ namespace RimMind.Tools
         }
 
         /// <summary>
+        /// Move multiple drafted pawns to their respective destinations in a single call.
+        /// Each pawn-destination pair is processed independently; partial success is allowed.
+        /// </summary>
+        public static string MovePawnsBatch(JSONNode movements)
+        {
+            if (movements == null || !movements.IsArray || movements.Count == 0)
+                return ToolExecutor.JsonError("'movements' must be a non-empty array of {pawnName, x, z} objects.");
+
+            var map = Find.CurrentMap;
+            if (map == null)
+                return ToolExecutor.JsonError("No active map.");
+
+            var results = new JSONArray();
+            int successCount = 0;
+            int failCount = 0;
+
+            foreach (var moveNode in movements.Children)
+            {
+                var entry = new JSONObject();
+
+                string pawnName = moveNode["pawnName"]?.Value;
+                if (string.IsNullOrEmpty(pawnName))
+                {
+                    entry["pawnName"] = "(missing)";
+                    entry["success"] = false;
+                    entry["error"] = "pawnName is required.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                entry["pawnName"] = pawnName;
+
+                if (!moveNode.HasKey("x") || !moveNode.HasKey("z"))
+                {
+                    entry["success"] = false;
+                    entry["error"] = "x and z coordinates are required.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                int x = moveNode["x"].AsInt;
+                int z = moveNode["z"].AsInt;
+
+                var pawn = ColonistTools.FindPawnByName(pawnName);
+                if (pawn == null)
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Pawn '" + pawnName + "' not found.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                if (pawn.drafter == null || !pawn.drafter.Drafted)
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Pawn '" + pawnName + "' is not drafted. Use draft_colonist first.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                if (pawn.Downed)
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Pawn '" + pawnName + "' is downed and cannot move.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                var dest = new IntVec3(x, 0, z);
+                if (!dest.InBounds(map))
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Coordinates (" + x + ", " + z + ") are out of map bounds.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                if (!dest.Standable(map))
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Destination (" + x + ", " + z + ") is not standable.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                if (!pawn.CanReach(dest, PathEndMode.OnCell, Danger.Deadly))
+                {
+                    entry["success"] = false;
+                    entry["error"] = "Pawn cannot reach (" + x + ", " + z + ") — blocked path.";
+                    failCount++;
+                    results.Add(entry);
+                    continue;
+                }
+
+                var job = JobMaker.MakeJob(JobDefOf.Goto, new LocalTargetInfo(dest));
+                job.playerForced = true;
+                pawn.jobs.StartJob(job, JobCondition.InterruptForced, null, false, true, null, null, false);
+
+                entry["success"] = true;
+                entry["destination"] = "(" + x + ", " + z + ")";
+                entry["action"] = "moving";
+                successCount++;
+                results.Add(entry);
+            }
+
+            var result = new JSONObject();
+            result["totalOrdered"] = movements.Count;
+            result["successCount"] = successCount;
+            result["failCount"] = failCount;
+            result["movements"] = results;
+            return result.ToString();
+        }
+
+        /// <summary>
         /// Helper to extract pawn names from a JSONNode array (for use in ToolExecutor).
         /// </summary>
         public static string[] ExtractPawnNames(JSONNode node)
