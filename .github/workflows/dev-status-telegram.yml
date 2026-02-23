@@ -1,0 +1,31 @@
+name: Update Dev Status in Telegram
+
+on:
+  push:
+    branches: [dev]
+    paths-ignore:
+      - 'About/About.xml'  # skip auto-version bumps
+
+jobs:
+  update-telegram:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write   # needed to update TELEGRAM_STATUS_MESSAGE_ID variable
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history needed for git log origin/main..HEAD
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Update Telegram dev status
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TELEGRAM_DEV_THREAD_ID: ${{ vars.TELEGRAM_DEV_THREAD_ID }}
+          TELEGRAM_STATUS_MESSAGE_ID: ${{ vars.TELEGRAM_STATUS_MESSAGE_ID }}
+        run: python3 .github/scripts/dev-status.py
