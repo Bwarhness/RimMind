@@ -41,6 +41,7 @@ namespace RimMind.Tools
             { "prioritize_rescue", args => JobTools.PrioritizeRescue(args?["colonist"]?.Value, args?["target"]?.Value) },
             { "prioritize_tend", args => JobTools.PrioritizeTend(args?["doctor"]?.Value, args?["patient"]?.Value) },
             { "prioritize_haul", args => JobTools.PrioritizeHaul(args?["colonist"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
+            { "haul_all_of_type", args => JobTools.HaulAllOfType(args?["colonist"]?.Value, args?["itemType"]?.Value) },
             { "prioritize_repair", args => JobTools.PrioritizeRepair(args?["colonist"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
             { "prioritize_clean", args => JobTools.PrioritizeClean(args?["colonist"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1, args?["radius"]?.AsInt ?? 5) },
 

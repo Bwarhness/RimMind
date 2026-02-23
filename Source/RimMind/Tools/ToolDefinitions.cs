@@ -82,10 +82,13 @@ namespace RimMind.Tools
             tools.Add(MakeTool("prioritize_tend", "Force a doctor to immediately tend to a patient.",
                 MakeParam("doctor", "string", "The doctor's name"),
                 MakeParam("patient", "string", "The patient's name")));
-            tools.Add(MakeTool("prioritize_haul", "Force a colonist to haul a specific item at the given coordinates.",
+            tools.Add(MakeTool("prioritize_haul", "Force a colonist to haul a specific item at the given coordinates. If the colonist is already hauling, the new job is queued after the current one. For hauling all items of a type (e.g. 'haul all silver'), use haul_all_of_type instead — this tool only targets one location at a time.",
                 MakeParam("colonist", "string", "The colonist's name"),
                 MakeParam("x", "integer", "X coordinate of the item"),
                 MakeParam("z", "integer", "Z coordinate of the item")));
+            tools.Add(MakeTool("haul_all_of_type", "Find all items of a given type anywhere on the map and queue haul jobs for all of them. Use this when the player says 'haul all [resource]' or 'clear all [item]'. Jobs are queued in order from nearest to farthest (capped at 30). Returns the full list of items queued with their positions and stack counts.",
+                MakeParam("colonist", "string", "The colonist's name"),
+                MakeParam("itemType", "string", "Item type to haul — matches by label or defName (e.g. 'silver', 'medicine', 'steel')")));
             tools.Add(MakeTool("prioritize_repair", "Force a colonist to repair a damaged building at the given coordinates.",
                 MakeParam("colonist", "string", "The colonist's name"),
                 MakeParam("x", "integer", "X coordinate of the building"),
