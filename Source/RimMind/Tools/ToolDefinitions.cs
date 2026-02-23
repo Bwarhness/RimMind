@@ -560,14 +560,14 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'. Omit for all items.")));
 
             // Drafted Pawn Command Tools
-            tools.Add(MakeTool("move_pawn", "Move a drafted pawn to specific coordinates on the map. Pawn must be drafted first (use draft_colonist). The pawn will walk/run to the destination. Returns error if pawn is not drafted, is downed, coordinates are out of bounds, not standable, or destination is unreachable.",
+            tools.Add(MakeTool("move_pawn", "Move a drafted pawn to specific coordinates on the map. Pawn must be drafted first (use draft_colonist). The pawn will walk/run to the destination and automatically hold position on arrival — do NOT call hold_position immediately after move_pawn, as it will interrupt the movement before the pawn takes a single step. Only call hold_position as a separate action when the pawn is already at their destination. Returns error if pawn is not drafted, is downed, coordinates are out of bounds, not standable, or destination is unreachable.",
                 MakeParam("pawnName", "string", "Name of the pawn to move"),
                 MakeParam("x", "integer", "X coordinate to move to"),
                 MakeParam("z", "integer", "Z coordinate to move to")));
             tools.Add(MakeTool("order_attack", "Order a drafted pawn to attack a specific target pawn or animal. Automatically uses ranged or melee attack based on the pawn's equipped weapon. Pawn must be drafted first. Target name supports exact and partial matching. Returns error if pawn is not drafted, is downed, or target is not found on the map.",
                 MakeParam("pawnName", "string", "Name of the pawn to give the attack order to"),
                 MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
-            tools.Add(MakeTool("hold_position", "Order a drafted pawn to hold their current position in combat stance. The pawn will stay in place and auto-attack nearby enemies. Pawn must be drafted first. Returns error if pawn is not drafted or is downed.",
+            tools.Add(MakeTool("hold_position", "Order a drafted pawn to hold their current position in combat stance. The pawn will stay in place and auto-attack nearby enemies. Pawn must be drafted first. WARNING: Do not call this immediately after move_pawn — movement commands are interrupted instantly, so hold_position will cancel the move before the pawn moves at all. Use this only when the pawn is already stationary at their intended position. Returns error if pawn is not drafted or is downed.",
                 MakeParam("pawnName", "string", "Name of the pawn to hold position")));
             tools.Add(MakeTool("order_group_attack", "Order multiple drafted pawns to all attack a single target. All pawns must be drafted first. Returns per-pawn results — partial success is possible if some pawns fail.",
                 MakeParam("pawnNames", "array", "List of pawn names to give the attack order to"),
