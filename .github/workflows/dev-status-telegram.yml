@@ -2,7 +2,7 @@ name: Update Dev Status in Telegram
 
 on:
   push:
-    branches: [dev]
+    branches: [dev, main]
     paths-ignore:
       - 'About/About.xml'  # skip auto-version bumps
 
