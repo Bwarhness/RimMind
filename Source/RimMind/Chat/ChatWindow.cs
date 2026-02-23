@@ -411,24 +411,34 @@ namespace RimMind.Chat
                 _selectableTextStyle.active.textColor  = textColor;
 
                 GUI.color = Color.white;
+
+                // Copy button — visible only while cursor is over this bubble and not multi-selecting.
+                // IMPORTANT: compute the button rect and intercept the MouseDown event BEFORE drawing
+                // GUI.TextArea, because TextArea's rect overlaps the button area and would otherwise
+                // consume the click first, making the button appear to do nothing.
+                bool showCopyBtn = isOver && !multiSelectActive;
+                const float copyBtnW = 50f;
+                const float copyBtnH = 18f;
+                var copyBtnRect = new Rect(
+                    bubbleRect.xMax - copyBtnW - 4f,
+                    bubbleRect.y + 2f,
+                    copyBtnW,
+                    copyBtnH
+                );
+                if (showCopyBtn
+                    && Event.current.type == EventType.MouseDown
+                    && copyBtnRect.Contains(Event.current.mousePosition))
+                {
+                    GUIUtility.systemCopyBuffer = msg.content ?? "";
+                    Event.current.Use(); // prevent TextArea from stealing this click
+                }
+
                 GUI.TextArea(textRect, displayText, _selectableTextStyle);
 
-                // Copy button — visible only while cursor is over this bubble and not multi-selecting
-                if (isOver && !multiSelectActive)
+                if (showCopyBtn)
                 {
-                    const float copyBtnW = 50f;
-                    const float copyBtnH = 18f;
-                    var copyBtnRect = new Rect(
-                        bubbleRect.xMax - copyBtnW - 4f,
-                        bubbleRect.y + 2f,
-                        copyBtnW,
-                        copyBtnH
-                    );
                     GUI.color = new Color(1f, 1f, 1f, 0.85f);
-                    if (Widgets.ButtonText(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessage")))
-                    {
-                        GUIUtility.systemCopyBuffer = msg.content ?? "";
-                    }
+                    Widgets.ButtonText(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessage")); // visual only — click handled above
                     GUI.color = Color.white;
                     TooltipHandler.TipRegion(copyBtnRect, RimMindTranslations.Get("RimMind_CopyChatMessageTip"));
                 }
