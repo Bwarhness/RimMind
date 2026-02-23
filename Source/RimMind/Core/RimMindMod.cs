@@ -24,6 +24,9 @@ namespace RimMind.Core
                 // attribute-based patching causes AmbiguousMatchException)
                 Automation.LetterAutomationPatch.Apply(harmony);
 
+                // Patch JobDriver.EndJobWith to fire deferred callbacks (draft/undraft after equip/haul)
+                Core.JobCompletionPatch.Apply(harmony);
+
                 var patched = harmony.GetPatchedMethods();
                 int count = 0;
                 foreach (var m in patched) count++;
