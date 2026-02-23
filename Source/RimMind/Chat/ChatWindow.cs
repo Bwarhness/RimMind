@@ -429,7 +429,7 @@ namespace RimMind.Chat
                     && Event.current.type == EventType.MouseDown
                     && copyBtnRect.Contains(Event.current.mousePosition))
                 {
-                    GUIUtility.systemCopyBuffer = msg.content ?? "";
+                    CopyToClipboard(msg.content ?? "");
                     Event.current.Use(); // prevent TextArea from stealing this click
                 }
 
@@ -460,7 +460,7 @@ namespace RimMind.Chat
                     if (sb.Length > 0) sb.AppendLine();
                     sb.Append(visibleMessageTexts[i]);
                 }
-                GUIUtility.systemCopyBuffer = sb.ToString();
+                CopyToClipboard(sb.ToString());
                 multiSelectActive = false;
                 multiSelectStart = -1;
                 multiSelectEnd = -1;
@@ -579,6 +579,18 @@ namespace RimMind.Chat
                 y += textHeight + 12f;
             }
             return y;
+        }
+
+        /// <summary>
+        /// Copies <paramref name="text"/> to the system clipboard.
+        /// Uses the TextEditor approach which is more reliable than assigning
+        /// GUIUtility.systemCopyBuffer directly in some Unity/RimWorld builds.
+        /// </summary>
+        private static void CopyToClipboard(string text)
+        {
+            var te = new TextEditor { text = text };
+            te.SelectAll();
+            te.Copy();
         }
     }
 
