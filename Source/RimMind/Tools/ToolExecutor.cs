@@ -241,6 +241,7 @@ namespace RimMind.Tools
 
             // Drafted Pawn Commands
             { "move_pawn", args => DraftedPawnTools.MovePawn(args?["pawnName"]?.Value, args?["x"]?.AsInt ?? -1, args?["z"]?.AsInt ?? -1) },
+            { "move_pawns_batch", args => DraftedPawnTools.MovePawnsBatch(args?["movements"]) },
             { "order_attack", args => DraftedPawnTools.OrderAttack(args?["pawnName"]?.Value, args?["targetName"]?.Value) },
             { "hold_position", args => DraftedPawnTools.HoldPosition(args?["pawnName"]?.Value) },
             { "order_group_attack", args => DraftedPawnTools.OrderGroupAttack(DraftedPawnTools.ExtractPawnNames(args?["pawnNames"]), args?["targetName"]?.Value) },

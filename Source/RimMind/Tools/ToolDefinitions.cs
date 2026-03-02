@@ -564,6 +564,8 @@ namespace RimMind.Tools
                 MakeParam("pawnName", "string", "Name of the pawn to move"),
                 MakeParam("x", "integer", "X coordinate to move to"),
                 MakeParam("z", "integer", "Z coordinate to move to")));
+            tools.Add(MakeTool("move_pawns_batch", "Move multiple drafted pawns to their respective destinations in a single call. Prefer this over multiple move_pawn calls when moving a squad or formation. All pawns must be drafted first. Partial success is allowed — each pawn reports success or failure independently. Same hold_position warning applies: do not call hold_position on any pawn immediately after this call.",
+                MakeParam("movements", "array", "Array of movement objects, each with: pawnName (string), x (integer), z (integer)")));
             tools.Add(MakeTool("order_attack", "Order a drafted pawn to attack a specific target pawn or animal. Automatically uses ranged or melee attack based on the pawn's equipped weapon. Pawn must be drafted first. Target name supports exact and partial matching. Returns error if pawn is not drafted, is downed, or target is not found on the map.",
                 MakeParam("pawnName", "string", "Name of the pawn to give the attack order to"),
                 MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
