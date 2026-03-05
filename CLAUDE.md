@@ -353,6 +353,25 @@ AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
+### ⚠️ Job Queueing — ALWAYS Use the Built-in Queue System
+
+**Any tool that assigns work to a pawn MUST support queueing.** Never use bare `TryTakeOrderedJob(job, tag)` — it interrupts and discards whatever the pawn is currently doing.
+
+**The correct pattern:**
+```csharp
+bool shouldQueue = pawn.CurJob?.playerForced == true
+                || pawn.jobs.jobQueue.Count > 0;
+return pawn.jobs.TryTakeOrderedJob(job, tag, requestQueueing: shouldQueue);
+```
+
+This is RimWorld's native shift-click queue. If the pawn has any player-forced job running, the new job queues after it. If idle, it starts immediately.
+
+**Why this matters:** The AI issues multiple tool calls in a single response. Without queueing, each call cancels the previous one — only the last call executes. With queueing, the pawn works through them in order (haul silver → haul medicine → equip armour, etc.).
+
+**Applies to all job-assigning tools:** haul, wear apparel, equip weapon, tame, rescue, repair, clean, tend — anything touching `TryTakeOrderedJob`.
+
+**Pending:** Centralize this into a shared `JobQueueHelper.TakeOrQueueJob` utility so all tools get it automatically. See `memory/architecture.md`.
+
 ### 🌍 Translations (MANDATORY for all UI)
 **Every user-visible string must be translated.** RimMind ships with 14 language folders — all UI text must go through the keyed translation system, never hardcoded.
 
