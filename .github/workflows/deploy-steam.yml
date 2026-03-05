@@ -49,4 +49,5 @@ jobs:
           appId: 294100
           publishedFileId: ${{ github.ref_name == 'main' && '3666997391' || '3668326181' }}
           path: staging
+          previewPath: staging/About/Preview.png
           changeNote: "${{ github.ref_name == 'dev' && '[DEV] ' || '' }}${{ github.event.head_commit.message }}"
