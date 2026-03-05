@@ -1,0 +1,32 @@
+name: Update Dev Status in Discord
+
+on:
+  push:
+    branches: [dev, main]
+    paths-ignore:
+      - 'About/About.xml'  # skip auto-version bumps
+  workflow_dispatch:       # allow manual trigger
+
+jobs:
+  update-discord:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write   # needed to update DISCORD_STATUS_MESSAGE_ID variable
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history needed for git log origin/main..HEAD
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Update Discord dev status
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_STATUS_CHANNEL_ID: ${{ vars.DISCORD_STATUS_CHANNEL_ID }}
+          DISCORD_STATUS_MESSAGE_ID: ${{ vars.DISCORD_STATUS_MESSAGE_ID }}
+        run: python3 .github/scripts/dev-status-discord.py
