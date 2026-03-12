@@ -73,6 +73,11 @@
     <RimMind_ChatErrorPrefix>[Error]</RimMind_ChatErrorPrefix>
     <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
     <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
+    <RimMind_ExportHtml>Export HTML</RimMind_ExportHtml>
+    <RimMind_ExportTxt>Export TXT</RimMind_ExportTxt>
+    <RimMind_ExportSuccess>Conversation exported to: {0}</RimMind_ExportSuccess>
+    <RimMind_ExportHtmlTip>Export the full conversation as a styled HTML file</RimMind_ExportHtmlTip>
+    <RimMind_ExportTxtTip>Export the full conversation as a plain text file</RimMind_ExportTxtTip>
     
     <!-- Directives Window -->
     <RimMind_DirectivesTitle>Colony Directives</RimMind_DirectivesTitle>
