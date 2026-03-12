@@ -34,6 +34,7 @@ jobs:
           cp Assemblies/RimMind.dll staging/Assemblies/
           cp -r Defs/* staging/Defs/
           cp -r Languages staging/Languages
+          cp thumbnail.png staging/
 
       - name: Patch About.xml for dev
         if: github.ref_name == 'dev'
