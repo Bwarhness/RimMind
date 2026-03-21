@@ -72,7 +72,7 @@ namespace RimMind.API
                     httpRequest.Timeout = 120000;
                     httpRequest.ReadWriteTimeout = 120000;
 
-                    byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
+                    byte[] bodyBytes = Encoding.UTF8.GetBytes(StringUtils.SanitizeForUTF8(jsonBody));
                     httpRequest.ContentLength = bodyBytes.Length;
 
                     using (var stream = httpRequest.GetRequestStream())
