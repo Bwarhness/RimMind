@@ -8,6 +8,20 @@ namespace RimMind.Tools
 {
     public static class EquipmentTools
     {
+        /// <summary>
+        /// Assigns an ordered job to a pawn. If the pawn already has an active ordered job,
+        /// queues this one using RimWorld's native shift-click queueing mechanism.
+        /// </summary>
+        private static bool TakeOrQueueJob(Pawn pawn, Job job, JobTag tag = JobTag.Misc)
+        {
+            bool shouldQueue = pawn.jobs.jobQueue.Count > 0 ||
+                pawn.CurJobDef == JobDefOf.Equip ||
+                pawn.CurJobDef == JobDefOf.Wear ||
+                pawn.CurJobDef == JobDefOf.RemoveApparel;
+
+            return pawn.jobs.TryTakeOrderedJob(job, tag, requestQueueing: shouldQueue);
+        }
+
         public static string EquipWeapon(string colonistName, int x, int z)
         {
             var map = Find.CurrentMap;
@@ -26,13 +40,14 @@ namespace RimMind.Tools
 
             // Create job to equip
             var job = JobMaker.MakeJob(JobDefOf.Equip, weapon);
-            if (pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+            if (TakeOrQueueJob(pawn, job))
             {
                 var result = new JSONObject();
                 result["success"] = true;
                 result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
                 result["weapon"] = weapon.LabelCap.ToString();
                 result["location"] = x + "," + z;
+                result["queued"] = pawn.jobs.jobQueue.Count > 0;
                 return result.ToString();
             }
 
@@ -55,19 +70,21 @@ namespace RimMind.Tools
             var apparel = cell.GetThingList(map).FirstOrDefault(t => t.def.IsApparel);
             if (apparel == null) return ToolExecutor.JsonError("No apparel found at " + x + "," + z);
 
-            // Create job to wear
+            // Create job to wear — use TakeOrQueueJob so batch calls queue sequentially
             var job = JobMaker.MakeJob(JobDefOf.Wear, apparel);
-            if (pawn.jobs.TryTakeOrderedJob(job, JobTag.Misc))
-            {
-                var result = new JSONObject();
-                result["success"] = true;
-                result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
-                result["apparel"] = apparel.LabelCap.ToString();
-                result["location"] = x + "," + z;
-                return result.ToString();
-            }
+            bool queued = pawn.jobs.jobQueue.Count > 0 || pawn.CurJobDef == JobDefOf.Equip
+                || pawn.CurJobDef == JobDefOf.Wear || pawn.CurJobDef == JobDefOf.RemoveApparel;
 
-            return ToolExecutor.JsonError("Failed to assign wear job.");
+            if (!TakeOrQueueJob(pawn, job))
+                return ToolExecutor.JsonError("Failed to assign wear job.");
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+            result["apparel"] = apparel.LabelCap.ToString();
+            result["location"] = x + "," + z;
+            result["status"] = queued ? "queued" : "started";
+            return result.ToString();
         }
 
         public static string DropEquipment(string colonistName)
@@ -111,8 +128,17 @@ namespace RimMind.Tools
                 // Weapon
                 if (pawn.equipment != null && pawn.equipment.Primary != null)
                 {
-                    obj["weapon"] = pawn.equipment.Primary.LabelCap.ToString();
-                    obj["weaponDamage"] = pawn.equipment.Primary.def.Verbs?.FirstOrDefault()?.defaultProjectile?.projectile?.GetDamageAmount(pawn.equipment.Primary, null).ToString() ?? "0";
+                    var weapon = pawn.equipment.Primary;
+                    obj["weapon"] = weapon.LabelCap.ToString();
+                    if (weapon.def.IsRangedWeapon)
+                    {
+                        var projDef = weapon.def.Verbs?.FirstOrDefault(v => v.defaultProjectile != null)?.defaultProjectile;
+                        obj["weaponDamage"] = projDef?.projectile != null ? projDef.projectile.GetDamageAmount(weapon, null).ToString() : "0";
+                    }
+                    else
+                    {
+                        obj["weaponDamage"] = weapon.GetStatValue(StatDefOf.MeleeWeapon_AverageDPS).ToString("F1");
+                    }
                 }
                 else
                 {

@@ -1,4 +1,5 @@
 using RimMind.Core;
+using RimMind.Languages;
 using UnityEngine;
 using Verse;
 
@@ -31,12 +32,12 @@ namespace RimMind.Chat
             // Title
             var titleRect = new Rect(0f, 0f, inRect.width, 30f);
             Text.Font = GameFont.Medium;
-            Widgets.Label(titleRect, "Colony Directives");
+            Widgets.Label(titleRect, RimMindTranslations.Get("RimMind_DirectivesTitle"));
             Text.Font = GameFont.Small;
 
             // Description
             float y = 34f;
-            string desc = "Tell the AI about your playstyle, rules, and preferences. These will be included in every AI interaction.";
+            string desc = RimMindTranslations.Get("RimMind_DirectivesDesc");
             float descHeight = Text.CalcHeight(desc, inRect.width);
             var descRect = new Rect(0f, y, inRect.width, descHeight);
             GUI.color = new Color(0.8f, 0.8f, 0.8f);
@@ -71,12 +72,12 @@ namespace RimMind.Chat
             if (charCount > 10000)
             {
                 GUI.color = new Color(1f, 0.7f, 0.3f);
-                Widgets.Label(counterRect, "Characters: " + charCount + " (large directive text may increase response time)");
+                Widgets.Label(counterRect, RimMindTranslations.Get("RimMind_DirectivesCharsLarge", charCount.ToString()));
             }
             else
             {
                 GUI.color = new Color(0.6f, 0.6f, 0.6f);
-                Widgets.Label(counterRect, "Characters: " + charCount);
+                Widgets.Label(counterRect, RimMindTranslations.Get("RimMind_DirectivesChars", charCount.ToString()));
             }
             GUI.color = Color.white;
             y += counterHeight + 4f;
@@ -90,7 +91,7 @@ namespace RimMind.Chat
             var saveRect = new Rect(buttonX, y, buttonWidth, buttonHeight);
             var cancelRect = new Rect(buttonX + buttonWidth + gap, y, buttonWidth, buttonHeight);
 
-            if (Widgets.ButtonText(saveRect, "Save"))
+            if (Widgets.ButtonText(saveRect, RimMindTranslations.Get("RimMind_DirectivesSave")))
             {
                 var tracker = DirectivesTracker.Instance;
                 if (tracker != null)
@@ -101,7 +102,7 @@ namespace RimMind.Chat
                 Close();
             }
 
-            if (Widgets.ButtonText(cancelRect, "Cancel"))
+            if (Widgets.ButtonText(cancelRect, RimMindTranslations.Get("RimMind_DirectivesCancel")))
             {
                 Close();
             }

@@ -5,8 +5,11 @@ namespace RimMind.Tools
 {
     public static class ToolDefinitions
     {
+        private static List<JSONNode> cachedTools;
+
         public static List<JSONNode> GetAllTools()
         {
+            if (cachedTools != null) return cachedTools;
             var tools = new List<JSONNode>();
 
             // Colonist Tools
@@ -21,6 +24,7 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name")));
             tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
             tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));
+            tools.Add(MakeTool("get_colonist_locations", "Get real-time positions (x, z coordinates) for all colonists. Returns drafted status, downed status, current job, distance from home area, and flags temperature risks. Use this for tactical awareness and locating specific colonists quickly."));
 
             // Social Tools
             tools.Add(MakeTool("get_relationships", "Get a colonist's social relationships: opinions of and from other colonists, relationship types (lover, spouse, rival, friend, etc).",
@@ -67,6 +71,10 @@ namespace RimMind.Tools
                 MakeParam("from", "string", "Source colonist name"),
                 MakeParam("to", "string", "Target colonist name")));
 
+            // Construction & Workflow Intelligence (Phase 2)
+            tools.Add(MakeTool("get_work_queue", "Get pending work designations grouped by type (hauling, construction, mining, planting, repair). Shows total jobs, in-progress, blocked (unreachable or missing materials), and assigned colonists. Use this to diagnose work bottlenecks and understand why tasks aren't getting done."));
+            tools.Add(MakeTool("get_construction_status", "Get status of all blueprints on the map: completion percentage, materials needed vs available, forbidden status (AI-placed awaiting approval), and current builders. Use this to track construction progress and diagnose why buildings aren't being built (missing materials, forbidden, no builders)."));
+
             // Job Prioritization Tools
             tools.Add(MakeTool("prioritize_rescue", "Force a colonist to immediately rescue a downed pawn.",
                 MakeParam("colonist", "string", "The rescuer's name"),
@@ -94,6 +102,7 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by category: 'food', 'materials', 'weapons', 'apparel', 'medicine', or 'all'. Defaults to 'all'.")));
             tools.Add(MakeTool("get_rooms", "Get info about all rooms: type/role, impressiveness, beauty, cleanliness, space, and owner if applicable."));
             tools.Add(MakeTool("get_stockpiles", "Get all stockpile zones: name, priority level, number of cells, and configured item filters."));
+            tools.Add(MakeTool("get_resource_trends", "Track resource consumption trends over time. Returns 'days until depleted' for food, medicine, wood, and steel based on current consumption rate. Calculates burn rates, flags 'running low' vs 'critically low' thresholds, and shows historical trends (last 7 days). Use this for predictive planning and early warning of shortages."));
 
             // Research Tools
             tools.Add(MakeTool("get_research_status", "Get current research status: active project name and progress percentage, colony tech level, and available research benches."));
@@ -101,14 +110,48 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_completed_research", "Get a list of all completed research projects."));
 
             // Military Tools
-            tools.Add(MakeTool("get_threats", "Get active threats on the map: hostile pawns/factions, sieges, infestations, manhunter animals, and mechanoid clusters."));
+            tools.Add(MakeTool("get_threats", "Get active threats on the map with detailed combat analysis: hostile pawns with raid composition breakdown (melee/ranged/grenadiers/special units), weapon and armor analysis for each enemy, dangerous unit identification (centipedes, scythers, sappers, breachers), automatic raid strategy detection (assault/siege/sapper/breach/drop pod) with counter-tactics suggestions, manhunter animals, and active game conditions."));
+            tools.Add(MakeTool("get_fire_support", "Get fire support analysis: colonists and turrets that can provide covering fire, line of fire analysis, recommended firing positions, and suppression opportunities. Use this for coordinating multi-colonist engagements."));
+            tools.Add(MakeTool("get_casualties", "Get combat casualties and medical status: colonists who are downed, dead, or injured. Returns position, injury type, medical priority, and nearest medical station for evacuation. Use this for triage and medical extraction planning."));
             tools.Add(MakeTool("get_defenses", "Get defensive structures: turrets (type, status, ammo), traps, and sandbags/barricades with their locations."));
             tools.Add(MakeTool("get_combat_readiness", "Get combat readiness for each colonist: equipped weapon, armor pieces, shooting skill, melee skill, and any combat-relevant traits."));
+            
+            // Combat Intelligence Tools (Phase 5)
+            tools.Add(MakeTool("get_weapon_stats", "Get detailed weapon statistics for any pawn (colonist or enemy). Returns weapon name, quality, damage type, base damage, DPS, armor penetration, range, accuracy curve (touch/short/medium/long), cooldown, warmup time, and burst shot count. Use this to analyze combat effectiveness and compare weapons.",
+                MakeParam("pawnName", "string", "Name of the pawn (colonist or hostile) to analyze")));
+            tools.Add(MakeTool("get_armor_stats", "Get detailed armor statistics for any pawn (colonist or enemy). Returns overall armor ratings (sharp/blunt/heat protection percentages), individual armor pieces with their quality, coverage (body parts protected), and hit points. Use this to assess defensive capabilities and vulnerability.",
+                MakeParam("pawnName", "string", "Name of the pawn (colonist or hostile) to analyze")));
+            tools.Add(MakeTool("get_enemy_morale", "Analyze enemy morale and predict when they will flee. Returns casualties breakdown (alive/downed/dead), morale percentage, flee threshold, and status prediction. Most raids flee around 40-50% casualties. Use this to determine if you're winning and when enemies will retreat."));
+            tools.Add(MakeTool("get_friendly_fire_risk", "Calculate friendly fire risk for a specific shooter-target engagement. Identifies colonists in the line of fire, calculates friendly fire probability percentage, and provides tactical recommendations (clear/caution/danger). Use this before engaging enemies when colonists are nearby.",
+                MakeParam("shooterName", "string", "Name of the colonist who will shoot"),
+                MakeParam("targetName", "string", "Name of the target (enemy or location)")));
+            tools.Add(MakeTool("get_cover_analysis", "Analyze cover positions in an area. Identifies full cover (75% protection), half cover (25-50% protection), and exposed positions. Returns optimal defensive positions and tactical recommendations. Use this for positioning colonists during combat.",
+                MakeParam("x", "integer", "X coordinate of area center"),
+                MakeParam("z", "integer", "Z coordinate of area center"),
+                MakeOptionalParam("radius", "integer", "Search radius in cells (default: 10)")));
+            tools.Add(MakeTool("get_tactical_pathfinding", "Get tactical combat intelligence and defensive positioning advice. Identifies enemy approach vectors, detects chokepoints (doors, narrow passages), analyzes defensive structures (turrets, sandbags), and provides actionable tactical recommendations. Includes specific advice for killbox design, drop pod defense, and counter-tactics for sappers/breachers. Use this to understand combat flow and optimize defensive positioning."));
+
+            // DLC Combat Intelligence Tools (Phase 6: Royalty & Biotech)
+            tools.Add(MakeTool("get_psycasts", "Get psycast abilities for psycasters (Royalty DLC). Lists available psycasts per psycaster with their effects, neural heat costs, cooldowns, and combat applications. Returns psylink level (1-6), neural heat (current/max), psyfocus level, and tactical combat suggestions. Use this to understand your colony's psychic capabilities and plan psycast usage in combat.",
+                MakeOptionalParam("name", "string", "The psycaster's name. If omitted, lists all psycasters on the map.")));
+            tools.Add(MakeTool("get_genes", "Get xenotype genes for colonists (Biotech DLC). Lists genes per colonist with gene-granted abilities (fire breath, toxic immunity), stat modifiers, and combat bonuses/penalties. Returns xenotype name and identifies combat-relevant genes. Use this to understand genetic advantages and combat capabilities of your colonists.",
+                MakeOptionalParam("name", "string", "The colonist's name. If omitted, lists all colonists with genes.")));
+            tools.Add(MakeTool("get_mechanitor_info", "Get mechanitor control information (Biotech DLC). Lists all controlled mechs per mechanitor with their type, weapons, health, and combat roles. Returns bandwidth usage (current/max) and deployment strategies. Use this to manage your mech army and plan mechanitor combat tactics.",
+                MakeOptionalParam("name", "string", "The mechanitor's name. If omitted, lists all mechanitors on the map.")));
 
             // Map Tools
+            tools.Add(MakeTool("get_semantic_overview", "Get a compact text description of the colony layout including rooms, power, and buildable areas. This provides a high-level overview optimized for understanding base structure without loading full grid data. Use this instead of get_map_region when you need to understand colony layout quickly."));
+            tools.Add(MakeTool("find_buildable_area", "Find buildable area candidates for construction. Returns scored candidates with exact positions, sizes, and notes. AI can ask 'where can I build a 5x4 room near the stockpile?' and get actionable results. Scores areas by distance to target, power availability, and terrain quality.",
+                MakeParam("minWidth", "integer", "Minimum width in cells"),
+                MakeParam("minHeight", "integer", "Minimum height in cells"),
+                MakeOptionalParam("near", "string", "Thing or position to be near (e.g., 'stockpile', '50,60', or building name)"),
+                MakeOptionalParam("maxDistance", "integer", "Maximum distance from 'near' target (default: 999)"),
+                MakeOptionalParam("indoor", "boolean", "Must be roofed/indoors (default: false)"),
+                MakeOptionalParam("requirePower", "boolean", "Must have power conduit nearby (default: false)")));
             tools.Add(MakeTool("get_weather_and_season", "Get current weather, outdoor/indoor temperature, season, and biome type."));
             tools.Add(MakeTool("get_growing_zones", "Get all growing zones: planted crop, average growth percentage, soil fertility, and zone size."));
             tools.Add(MakeTool("get_power_status", "Get power grid status: total generation, total consumption, battery storage levels, and any disconnected devices."));
+            tools.Add(MakeTool("get_temperature_risks", "Check each colonist's current position temperature and compare to their comfortable range. Flag overheating or freezing risks, suggest safe locations to move to. Use this to prevent heatstroke, hypothermia, and keep colonists in safe temperature zones."));
             tools.Add(MakeTool("get_map_region", "Get a character-based grid view of the map showing buildings, pawns, zones, and terrain. Each cell is one character. Use this to understand the colony layout, analyze base design, and identify construction opportunities. Returns a legend of character codes used.",
                 MakeOptionalParam("x", "integer", "Start X coordinate (default: 0)"),
                 MakeOptionalParam("z", "integer", "Start Z coordinate (default: 0)"),
@@ -133,18 +176,106 @@ namespace RimMind.Tools
                 MakeOptionalParam("x2", "integer", "End X of search bounds"),
                 MakeOptionalParam("z2", "integer", "End Z of search bounds")));
 
+            // Environmental Visibility Tools
+            tools.Add(MakeTool("get_light_levels", "Query per-cell light/glow values for illumination analysis. Light levels affect colonist mood and work speed. Returns glow values (0.0-1.0) and descriptions. Single cell or range query (max 15x15). Use to find dark rooms causing mood penalties, verify workspace lighting, or plan lamp placement.",
+                MakeParam("x", "integer", "X coordinate (or start X for range query)"),
+                MakeParam("z", "integer", "Z coordinate (or start Z for range query)"),
+                MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 area = 225 cells)"),
+                MakeOptionalParam("z2", "integer", "End Z coordinate for range query")));
+            tools.Add(MakeTool("get_light_sources", "List all light sources (lamps, torches) on the map with their position, glow radius, color, and powered status. Use to plan lighting coverage, find unpowered lights, or optimize lamp placement for full coverage.",
+                MakeOptionalParam("x1", "integer", "Start X of bounding box filter (optional)"),
+                MakeOptionalParam("z1", "integer", "Start Z of bounding box filter"),
+                MakeOptionalParam("x2", "integer", "End X of bounding box filter"),
+                MakeOptionalParam("z2", "integer", "End Z of bounding box filter"),
+                MakeOptionalParam("filter", "string", "Filter by defName (e.g., 'StandingLamp', 'Torch')")));
+            tools.Add(MakeTool("get_cell_beauty", "Query per-cell beauty values for environment quality analysis. Beauty affects colonist mood (ugly rooms cause debuffs, beautiful rooms boost mood). Returns beauty values and categories (Hideous/VeryUgly/Ugly/Neutral/Pretty/Beautiful/VeryBeautiful). Single cell or range query (max 15x15). Use to identify ugly areas needing art/plants, verify bedroom beauty for mood, or optimize room impressiveness.",
+                MakeParam("x", "integer", "X coordinate (or start X for range query)"),
+                MakeParam("z", "integer", "Z coordinate (or start Z for range query)"),
+                MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 area = 225 cells)"),
+                MakeOptionalParam("z2", "integer", "End Z coordinate for range query")));
+            tools.Add(MakeTool("get_pollution", "Query pollution grid for health and environment tracking. Requires Biotech DLC. Pollution affects colonist health and fertility. Returns per-cell pollution status and nearby pollution percentage within 10-cell radius. Single cell or range query (max 15x15). Use to identify polluted areas affecting colonist health, track pollution spread from wastepack atomizers, or verify clean zones for sensitive colonists.",
+                MakeParam("x", "integer", "X coordinate (or start X for range query)"),
+                MakeParam("z", "integer", "Z coordinate (or start Z for range query)"),
+                MakeOptionalParam("x2", "integer", "End X coordinate for range query (max 15x15 area = 225 cells)"),
+                MakeOptionalParam("z2", "integer", "End Z coordinate for range query")));
+            tools.Add(MakeTool("get_roof_status", "Bulk roof analysis for a rectangular region. Returns roof type breakdown (constructed/natural thin/natural thick/none), total roofed vs unroofed cells, and optional breach detection (unroofed cells under overhead mountain). Use to find unroofed areas in bedrooms (temperature control), detect roof breaches in mountain bases (vacuum exposure risk), identify overhead mountain for infestation risk, verify constructed roof coverage, or plan roof construction.",
+                MakeParam("x1", "integer", "Start X coordinate of region"),
+                MakeParam("z1", "integer", "Start Z coordinate of region"),
+                MakeParam("x2", "integer", "End X coordinate of region"),
+                MakeParam("z2", "integer", "End Z coordinate of region"),
+                MakeOptionalParam("roofType", "string", "Filter by roof type: 'none', 'thin', 'thick', 'constructed' (not yet implemented)"),
+                MakeOptionalParam("detectBreaches", "boolean", "Enable breach detection: find unroofed cells adjacent to thick mountain roof (default: false)")));
+
+            // Anomaly DLC Integration Tools
+            tools.Add(MakeTool("get_anomaly_entities", "Get all anomaly entities in the colony. Returns list of entities with location, type, containment status, and threat level. Use this to track Anomaly DLC entities (glowing bodies, shrines, monoliths, etc.).",
+                MakeOptionalParam("entity_type", "string", "Optional filter by entity type")));
+            tools.Add(MakeTool("get_containment_status", "Get containment facility status. Returns containment buildings, capacity, occupancy, contained entities, and uncontained threats. Use this to monitor Anomaly DLC containment facilities."));
+            tools.Add(MakeTool("analyze_entity_interactions", "Analyze anomaly entity interactions and risks. Returns entity groups, proximity risks between entities, and recommended containment actions."));
+
+            // Power Management Tools
+            tools.Add(MakeTool("analyze_power_grid", "Comprehensive power network analysis. Returns all power networks with their generators, consumers, batteries, and power balance (surplus/deficit). Also identifies buildings that need power but are not connected. Use this to understand the colony's power infrastructure and identify connectivity issues."));
+            tools.Add(MakeTool("check_power_connection", "Check if a specific building or area is connected to the power grid. Returns power status, which network it's connected to (if any), and nearest conduit location. Use this to diagnose why a specific building is not receiving power.",
+                MakeOptionalParam("x", "integer", "X coordinate for single building check"),
+                MakeOptionalParam("z", "integer", "Z coordinate for single building check"),
+                MakeOptionalParam("x1", "integer", "Start X for area scan (alternative to single x/z)"),
+                MakeOptionalParam("z1", "integer", "Start Z for area scan"),
+                MakeOptionalParam("x2", "integer", "End X for area scan"),
+                MakeOptionalParam("z2", "integer", "End Z for area scan")));
+            tools.Add(MakeTool("suggest_power_route", "Suggest a conduit placement path between two points. Uses pathfinding to find an efficient route that avoids walls (optional) and minimizes cost. Returns list of cells where conduits should be placed and total steel cost estimate. Use this before auto_route_power to preview the path.",
+                MakeParam("x1", "integer", "Start X coordinate (e.g., existing power network)"),
+                MakeParam("z1", "integer", "Start Z coordinate"),
+                MakeParam("x2", "integer", "End X coordinate (e.g., unpowered building)"),
+                MakeParam("z2", "integer", "End Z coordinate"),
+                MakeOptionalParam("avoidWalls", "boolean", "Try to route around walls (default: true)"),
+                MakeOptionalParam("minimizeCost", "boolean", "Prefer cheaper terrain (default: true)")));
+            tools.Add(MakeTool("auto_route_power", "Automatically place power conduits to connect a building to the nearest powered conduit. Finds the nearest active power network, calculates optimal path, and places conduit blueprints. Blueprints are placed as forbidden (require approval) unless autoApprove is true. Use this to quickly connect unpowered buildings to the grid.",
+                MakeParam("targetX", "integer", "X coordinate of building to connect"),
+                MakeParam("targetZ", "integer", "Z coordinate of building to connect"),
+                MakeOptionalParam("autoApprove", "boolean", "Immediately approve blueprints for construction (default: false - places as forbidden, requires approval)")));
+
+
             // Animal Tools
-            tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, and training completion status."));
-            tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, and bonded colonist.",
+            tools.Add(MakeTool("list_animals", "List all tamed/colony animals: species, name, assigned master, training completion status, and carrying capacity (for pack animals)."));
+            tools.Add(MakeTool("get_animal_details", "Get detailed info about a specific animal: health, training progress for each skill, food requirements, bonded colonist, carrying capacity (pack animals), and production schedules (shearing, milking, eggs).",
                 MakeParam("name", "string", "The animal's name")));
+            tools.Add(MakeTool("get_animal_stats", "Get detailed statistics for an animal species: carrying capacity (pack animals), movement speed, combat stats (melee damage, armor, DPS), abilities (wool, milk, eggs), wildness level, trainability, filth rate, and market value. Use this to compare animal species for taming, pack use, or combat.",
+                MakeParam("speciesName", "string", "The animal species name (e.g., 'Muffalo', 'Thrumbo', 'Dromedary'). Partial names work.")));
+            tools.Add(MakeTool("get_wild_animals", "Get all wild animals currently on the map: species, location, health, taming difficulty, and value rating. Returns recommendations for taming opportunities (easy/hard/very hard) and hunting targets. Use this to identify rare animals like Thrumbos or plan hunting expeditions.",
+                MakeOptionalParam("speciesFilter", "string", "Optional filter by species name")));
+
+            // Ideology DLC Tools
+            tools.Add(MakeTool("get_ideology_info", "Get colony ideology details including precepts, roles, and rituals (Ideology DLC). Returns ideology name, memes, all precepts with impact levels, role assignments (filled/unfilled slots), and structure. Use this to understand ideological restrictions and requirements.",
+                MakeOptionalParam("name", "string", "Optional colonist name to get personal ideology details")));
+            tools.Add(MakeTool("get_pawn_ideology_status", "Get individual colonist's ideological status (Ideology DLC): assigned role, certainty level, recent certainty factors, and precept comfort. Use to check role assignments and morale factors related to ideology.",
+                MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("get_ritual_status", "Get status of scheduled and active rituals (Ideology DLC): upcoming ritual obligations with countdown, active ritual details, and colonists with pending obligations. Use to plan ritual preparation and ensure ideological compliance."));
+            tools.Add(MakeTool("analyze_ideology_conflicts", "Detect ideological conflicts affecting colony mood (Ideology DLC): colonists at risk of certainty loss, colonists needing roles, and precept-related issues. Use to proactively manage ideological stability."));
+
+            // Prisoner & Slave Tools
+            tools.Add(MakeTool("get_prisoner_status", "Get detailed status for all prisoners: resistance levels, recruitment chances, estimated time to recruit, mental state risks, and available wardens. Use to manage recruitment efforts and prioritize which prisoners to recruit first.",
+                MakeOptionalParam("name", "string", "Optional filter by prisoner name")));
+            tools.Add(MakeTool("get_slave_status", "Get slave suppression and rebellion risk (Ideology DLC): suppression level, rebellion risk scores, interaction mode, and warden coverage. Use to identify at-risk slaves and prevent rebellions.",
+                MakeOptionalParam("name", "string", "Optional filter by slave name")));
+            tools.Add(MakeTool("analyze_prison_risks", "Calculate prison break and recruitment risks: warden-to-prisoner ratio, overall break risk level, high-risk prisoners, and recommended warden assignments. Use to prevent prison breaks by ensuring adequate warden coverage."));
+            tools.Add(MakeTool("get_recruitment_forecast", "Predict recruitment timelines for prisoners: estimated days to zero resistance, current resistance reduction rate, best warden assignment, and success probability on next attempt. Use to plan recruitment efforts.",
+                MakeOptionalParam("name", "string", "Optional prisoner name to forecast")));
 
             // Event Tools
             tools.Add(MakeTool("get_recent_events", "Get recent game events/letters: event type, severity, description, and when it occurred.",
                 MakeOptionalParam("count", "integer", "Number of recent events to return. Defaults to 5.")));
             tools.Add(MakeTool("get_active_alerts", "Get all currently active game alerts (e.g. 'colonist needs rescue', 'starvation', 'tattered apparel', 'idle colonist')."));
+            tools.Add(MakeTool("get_active_events", "Get all currently active weather events and disasters with detailed information: duration remaining, severity, temperature impacts, specific risks, and actionable recommendations. Covers cold snaps, heat waves, toxic fallout, solar flares, eclipses, volcanic winter, flashstorms, psychic drones, and active infestations. Returns event-specific advice like 'harvest crops before they freeze' or 'keep colonists indoors during toxic fallout'. Use this to understand ongoing environmental challenges and get context-specific survival strategies."));
+            tools.Add(MakeTool("get_disaster_risks", "Assess colony-wide disaster risks and get prevention strategies. Analyzes: Infestation Risk (overhead mountain percentage, potential spawn locations, mitigation advice), Zzzt Risk (stored battery power, expected explosion damage, circuit breaker recommendations), and Raid Risk (based on colony wealth). Returns probability levels, specific vulnerabilities, and actionable prevention steps. Use this proactively to understand 'why did this happen' and 'how to prevent it in the future'."));
 
             // Medical Tools
             tools.Add(MakeTool("get_medical_overview", "Get medical overview: patients needing treatment, medicine supply by type, available medical beds, and doctors with their medical skill level."));
+            tools.Add(MakeTool("get_disease_immunity_status", "Get disease immunity progress for all colonists. Returns active diseases, immunity progress (0-100%), time to immunity, severity level, and whether diseases can be tended. Use this to track colony health and predict recovery times.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results.")));
+            tools.Add(MakeTool("get_drug_tolerance", "Get colonist drug tolerances and addiction risks. Returns current addictions, chemical dependency levels, addiction-prone traits, and risk assessment. Use this to identify addiction risks and monitor recovery.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results.")));
+            tools.Add(MakeTool("predict_surgery_success", "Predict surgery success probability for a patient. Returns success probability based on doctor skill, patient health, medicine quality, and risk factors. Use this to determine if surgery is safe and what preparations are needed.",
+                MakeParam("patient_name", "string", "The colonist's name who needs surgery"),
+                MakeOptionalParam("surgery_def", "string", "Optional specific surgery defName. If omitted, analyzes most critical needed surgery.")));
 
             // Health Check Tools
             tools.Add(MakeTool("colony_health_check", "Perform a comprehensive colony diagnostic check. This is the 'doctor's checkup' for your entire colony - a single tool that analyzes all critical systems and returns actionable insights. Use this when asked 'How is my colony doing?' or when you need a complete status overview. Analyzes: Food Security (days remaining, growing capacity), Power Grid (generation vs consumption, battery reserves), Defense Readiness (turrets, armed colonists, weapons), Colonist Wellbeing (injuries, mood risks, needs), Resource Bottlenecks (medicine, steel, components), Research Progress, Housing Quality (bedroom quality, bed assignments), and Production Issues (stalled bills, missing workers). Returns overall status (healthy/stable/warning/critical), per-system breakdowns with issues and recommendations, critical alerts requiring immediate action, and top 5 priority recommendations."));
@@ -153,6 +284,20 @@ namespace RimMind.Tools
             tools.Add(MakeTool("get_mood_risks", "Analyze all colonists for mental break risk. Returns colonists at risk with their current mood level, break thresholds, negative thoughts, risk-affecting traits, and estimated time to mental break. Use this proactively to prevent mental breaks before they happen."));
             tools.Add(MakeTool("suggest_mood_interventions", "Get actionable mood improvement suggestions for a specific colonist. Analyzes their mood issues (recreation, bedroom quality, food, pain, social needs, etc.) and provides concrete steps to improve their mood and prevent mental breaks.",
                 MakeParam("name", "string", "The colonist's name")));
+            tools.Add(MakeTool("get_mood_trends", "Track colonist mood over the last 3 days with trend analysis. Calculates mood velocity (rising/falling/stable), flags colonists trending toward mental break, shows top negative thoughts, and predicts time-to-break (e.g., 'Mira will break in ~4 hours'). Requires 2-3 hours of gameplay data for accurate trends. Use this for early warning of mental break risks and proactive intervention."));
+
+            // Social Tools
+            tools.Add(MakeTool("get_social_risks", "Detect social conflicts between colonists. Finds colonist pairs with negative opinions (< -20), calculates mutual hostility, identifies risk-affecting traits (Abrasive, Volatile, Bloodlust, Psychopath), and provides intervention suggestions (separate work areas, avoid shared recreation, etc.). Use this to prevent social fights and optimize colonist interactions."));
+
+            // Joy & Recreation Tools
+            tools.Add(MakeTool("get_joy_saturation", "Get joy type saturation levels for all colonists. Returns current joy level, joy category (Low/Satisfied/High), per-JoyKind tolerance levels (0-100%), saturated types (>80%), and joy-affected traits. Use this to understand recreation satisfaction and identify colonists who need specific types of recreation.",
+                MakeOptionalParam("pawn_name", "string", "Optional colonist name to filter results. If omitted, returns all colonists.")));
+            tools.Add(MakeTool("analyze_recreation_diversity", "Analyze colony recreation diversity and identify gaps. Returns available joy sources by type, missing joy types, colonists with high saturation (>80%), and specific building recommendations for each missing type. Use this to plan recreation improvements and prevent recreation-related mood issues."));
+            tools.Add(MakeTool("recommend_joy_activities", "Recommend specific joy activities for a colonist based on their current saturation levels. Returns current saturation levels, non-saturated joy types, available activities from nearby buildings, and missing recreation types for this colonist.",
+                MakeParam("pawn_name", "string", "The colonist's name to get recommendations for")));
+
+            // Environment Tools
+            tools.Add(MakeTool("get_environment_quality", "Score each room for beauty, cleanliness, space, and impressiveness. Flags rooms causing negative thoughts, identifies specific issues (poor lighting, extreme temperature, low beauty, cramped space), and suggests concrete improvements (add sculptures, install heaters, expand room, clean floors). Use this for root cause analysis of mood problems and to optimize room quality."));
 
             // Plan Tools
             tools.Add(MakeTool("place_plans", "Place plan designations on the map to mark where structures should be built. Plans are visual markers only — they don't consume resources or trigger construction. Use get_map_region first to understand the layout, then place plans at specific coordinates. Supports shapes: 'single' (one cell), 'rect' (rectangle outline for walls/rooms), 'filled_rect' (solid rectangle), 'line' (line between two points for corridors).",
@@ -231,6 +376,18 @@ namespace RimMind.Tools
             // World & Diplomacy Tools
             tools.Add(MakeTool("list_world_destinations", "List all world settlements that can be visited by caravan, with distances and faction relations."));
             tools.Add(MakeTool("get_caravan_info", "Get info about available colonists and animals for caravan formation. Note: Actual caravan formation requires manual player action."));
+            tools.Add(MakeTool("analyze_caravan_capacity", "Calculate caravan carrying capacity and current load. Returns total capacity, current mass, overload percentage, travel speed impact, and recommendations. Use this to diagnose why caravans are slow or can't carry more.",
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID (defaults to active caravan)")));
+            tools.Add(MakeTool("predict_caravan_travel", "Predict travel time and encounter risks for a caravan route. Returns estimated days, biomes crossed, encounter probability, and ambush risk. Use this to plan safe caravan trips.",
+                MakeOptionalParam("destination_tile", "string", "Destination tile ID"),
+                MakeOptionalParam("destination_name", "string", "Destination settlement name (alternative to tile)"),
+                MakeOptionalParam("caravan_id", "string", "Optional caravan ID")));
+            tools.Add(MakeTool("optimize_caravan_composition", "Suggest optimal caravan composition for a destination based on purpose. Returns recommended colonists, pack animals, supplies, and mass budget. Use this to plan efficient caravans.",
+                MakeParam("destination", "string", "Destination settlement name or tile"),
+                MakeOptionalParam("purpose", "string", "Purpose: 'trade', 'rescue', or 'raid'. Default: 'trade'"),
+                MakeOptionalParam("max_colonists", "integer", "Maximum colonists to include (optional)")));
+            tools.Add(MakeTool("get_trade_settlement_info", "Get detailed info on nearby tradeable settlements. Returns settlement names, factions, distances, trade inventory potential, and faction relations. Use this to find trade partners.",
+                MakeOptionalParam("max_distance_tiles", "integer", "Maximum search radius in tiles (default: 20)")));
             tools.Add(MakeTool("get_trade_status", "Check if a trade session is currently active with a visiting trader."));
             tools.Add(MakeTool("list_trader_inventory", "List items available from current visiting trader. Requires active trade session."));
             tools.Add(MakeTool("list_factions", "List all known factions with their relation status and goodwill."));
@@ -249,15 +406,26 @@ namespace RimMind.Tools
                 MakeParam("colonist", "string", "The colonist's name")));
 
             // Designation Tools (Hunting/Taming/Resource Gathering)
-            tools.Add(MakeTool("designate_hunt", "Mark a wild animal for hunting. Use get_map_region to find animals.",
-                MakeParam("x", "integer", "Animal X coordinate"),
-                MakeParam("z", "integer", "Animal Z coordinate")));
-            tools.Add(MakeTool("designate_tame", "Mark a wild animal for taming. Animal must not be too wild.",
-                MakeParam("x", "integer", "Animal X coordinate"),
-                MakeParam("z", "integer", "Animal Z coordinate")));
-            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt or tame designation on an animal.",
-                MakeParam("x", "integer", "Animal X coordinate"),
-                MakeParam("z", "integer", "Animal Z coordinate")));
+            tools.Add(MakeTool("designate_hunt",
+                "Mark specific wild animals for hunting by their IDs. REQUIRED WORKFLOW: First call get_wild_animals to see animals with IDs, then pass those exact IDs here. Do not guess — always use IDs from get_wild_animals to target specific animals.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for hunting (from get_wild_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to hunt every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("designate_tame",
+                "Mark specific wild animals for taming by their IDs. REQUIRED WORKFLOW: First call get_wild_animals to see animals with IDs, then pass those exact IDs here. Do not guess — always use IDs from get_wild_animals to target specific animals.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for taming (from get_wild_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to tame every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("designate_slaughter",
+                "Mark specific tamed animals for slaughter by their IDs. Only works on colony-owned animals. REQUIRED WORKFLOW: First call list_animals to see animals with IDs, then pass those exact IDs here. Returns estimated meat yield.",
+                MakeIntArrayParam("ids", "Array of animal IDs to designate for slaughter (from list_animals). Preferred — targets exact animals.", false),
+                MakeOptionalParam("animal", "string", "Species name — only use with all:true to slaughter every animal of this species."),
+                MakeOptionalParam("all", "boolean", "Set true to designate ALL animals of the given species. Requires animal parameter.")));
+            tools.Add(MakeTool("cancel_animal_designation", "Cancel hunt, tame, or slaughter designation on an animal. Use id for precise targeting or animal name to search.",
+                MakeOptionalParam("id", "integer", "Unique animal ID for precise targeting"),
+                MakeOptionalParam("animal", "string", "Animal name or species to cancel designation for")));
+            tools.Add(MakeTool("get_animal_designations", "Query which animals are currently designated for hunt, tame, or slaughter. Use after designate_hunt/tame/slaughter to verify the designation applied correctly.",
+                MakeOptionalParam("type", "string", "Filter by type: 'hunt', 'tame', 'slaughter', or 'all' (default)")));
             tools.Add(MakeTool("designate_mine", "Mark rocks for mining in an area.",
                 MakeParam("x1", "integer", "Start X coordinate"),
                 MakeParam("z1", "integer", "Start Z coordinate"),
@@ -301,6 +469,8 @@ namespace RimMind.Tools
                 MakeOptionalParam("category", "string", "Filter by building category (e.g., 'Structure', 'Furniture', 'Production', 'Power', 'Security')")));
             tools.Add(MakeTool("get_building_info", "Get detailed information about a specific building type: description, size, material requirements, available materials, costs, stats, research prerequisites, and passability.",
                 MakeParam("defName", "string", "The building's defName (from list_buildable)")));
+            tools.Add(MakeTool("get_requirements", "Get comprehensive placement requirements for a building. Returns size, power output/consumption, placement rules (special requirements like 'must be on steam geyser'), terrain requirements, resource costs, research prerequisites, and work to build. Use this when you need to know what's required to place a specific building type before attempting placement.",
+                MakeParam("building", "string", "Building defName (e.g., 'ElectricStove', 'GeothermalGenerator', 'Bed')")));
             tools.Add(MakeTool("place_building", "Place building blueprints on the map. Use for individual buildings and furniture. For rooms/walls, prefer place_structure instead.\n\nSINGLE: {defName, x, z, stuff?, rotation?, auto_approve?}\nBATCH: {placements: [{defName, x, z, stuff?, rotation?}, ...], auto_approve?} (max 100)\n\nRotation: 0=North, 1=East, 2=South, 3=West. Stuff examples: WoodLog, BlocksGranite, Steel.\nIf auto_approve is true, colonists start building immediately.",
                 MakeOptionalParam("defName", "string", "Building defName for single placement"),
                 MakeOptionalParam("x", "integer", "X coordinate for single placement"),
@@ -320,6 +490,11 @@ namespace RimMind.Tools
                 MakeOptionalParam("door_offset", "integer", "Door position along wall, 0=leftmost/bottommost inner cell, default=center (room only)"),
                 MakeOptionalParam("door_stuff", "string", "Material for the door, defaults to 'stuff' value (room only)"),
                 MakeOptionalParam("auto_approve", "boolean", "If true, colonists start building immediately. Default: false")));
+            tools.Add(MakeTool("check_placement", "Validate building placement before construction. Returns detailed validation with terrain checks, space checks, power requirements, roof status, and special placement rules. Use this to verify if a building can be placed at a specific location and get actionable feedback if placement fails.",
+                MakeParam("building", "string", "Building defName (e.g., 'ElectricStove', 'Wall', 'Door')"),
+                MakeParam("x", "integer", "X coordinate"),
+                MakeParam("z", "integer", "Z coordinate"),
+                MakeOptionalParam("rotation", "string", "Rotation: 'north', 'south', 'east', 'west' (default: 'north')")));
             tools.Add(MakeTool("remove_building", "Remove AI-proposed building blueprints from the map. Can target specific proposals by ID, an area, or all proposals at once.",
                 MakeStringArrayParam("proposal_ids", "Array of proposal IDs to remove (e.g., ['rm_1', 'rm_2'])", false),
                 MakeOptionalParam("x", "integer", "Start X for area removal"),
@@ -334,6 +509,12 @@ namespace RimMind.Tools
                 MakeOptionalParam("x2", "integer", "End X for area approval"),
                 MakeOptionalParam("z2", "integer", "End Z for area approval"),
                 MakeOptionalParam("all", "boolean", "Set true to approve ALL AI-proposed blueprints")));
+            tools.Add(MakeTool("deconstruct_building", "Mark already-built structures for deconstruction using RimWorld's native designation system. Colonists will deconstruct the marked buildings and recover materials. Works on player-built structures, ancient ruins, and ship chunks. At least one targeting parameter is required.",
+                MakeOptionalParam("x", "integer", "X coordinate of target cell"),
+                MakeOptionalParam("z", "integer", "Z coordinate of target cell"),
+                MakeOptionalParam("x2", "integer", "Second corner X for rectangular area selection"),
+                MakeOptionalParam("z2", "integer", "Second corner Z for rectangular area selection"),
+                MakeOptionalParam("def_name", "string", "Target all buildings of this defName on the entire map (e.g., 'Wall', 'ShipChunk', 'AncientCryptosleepCasket')")));
 
             // Directive Tools
             tools.Add(MakeTool("get_directives", "Get the current player-defined colony directives. These are standing rules, preferences, and playstyle instructions set by the player. Check this before adding new directives to avoid duplicates."));
@@ -347,6 +528,65 @@ namespace RimMind.Tools
             tools.Add(MakeTool("analyze_trade_opportunity", "Analyze trade opportunities with current traders. Compares colony resources against trader inventory to suggest profitable trades: items to buy for urgent needs (medicine, components, food), items to sell for profit (surplus materials), and strategic purchases. Returns recommendations with priority scores and reasoning.",
                 MakeOptionalParam("traderFilter", "string", "Optional filter to analyze specific trader by name, faction, or type (e.g., 'orbital', 'caravan'). If omitted, analyzes all traders.")));
 
+            // Wiki Tools
+            tools.Add(MakeTool("wiki_lookup", "Search the RimWorld wiki for information about game mechanics, items, buildings, events, or strategies. Returns the intro/extract from the best matching wiki page. Use this when players ask 'what is X?', 'how does Y work?', or need factual game information you're unsure about. Examples: 'what is a psychic drone?', 'how do infestations work?', 'what does the volatile trait do?'.",
+                MakeParam("query", "string", "Search query for the RimWorld wiki (e.g., 'psychic drone', 'infestation', 'steel production')")));
+
+            // Item Access Tools
+            tools.Add(MakeTool("set_item_allowed", "Allow or forbid items on the map. Allowed items get hauled by colonists; forbidden items are ignored. " +
+                "TARGETING (checked in priority order — use only ONE): " +
+                "(1) ids: target exact items by ID array. " +
+                "(2) type: fuzzy text match on defName or label (e.g. 'steel', 'flak', 'meal'). " +
+                "(3) category: predefined group. " +
+                "(4) x/z or x1/z1/x2/z2: items at a cell or in a rectangular area. " +
+                "(5) NO targeting params: targets ALL items on the entire map. " +
+                "COMMON PATTERNS: Allow everything: set_item_allowed(allowed:true). " +
+                "Allow all weapons: set_item_allowed(allowed:true, category:'weapons'). " +
+                "Forbid specific items: set_item_allowed(allowed:false, ids:[1234, 5678]). " +
+                "Allow steel: set_item_allowed(allowed:true, type:'steel').",
+                MakeParam("allowed", "boolean", "true = allow (colonists haul), false = forbid (colonists ignore)"),
+                MakeOptionalParam("ids", "array", "Array of item thingIDNumbers for precise targeting (from get_forbidden_items or search_map)"),
+                MakeOptionalParam("type", "string", "Fuzzy text filter — matches defName or label. Examples: 'steel', 'medicine', 'flak vest', 'meal'. Tries exact defName first, then substring match."),
+                MakeOptionalParam("category", "string", "Predefined group: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'"),
+                MakeOptionalParam("x", "integer", "X coordinate of cell (single cell targeting)"),
+                MakeOptionalParam("z", "integer", "Z coordinate of cell (single cell targeting)"),
+                MakeOptionalParam("x1", "integer", "Top-left X of rectangular area"),
+                MakeOptionalParam("z1", "integer", "Top-left Z of rectangular area"),
+                MakeOptionalParam("x2", "integer", "Bottom-right X of rectangular area"),
+                MakeOptionalParam("z2", "integer", "Bottom-right Z of rectangular area")));
+            tools.Add(MakeTool("get_forbidden_items", "List all currently forbidden items on the map. Returns each item's ID, name, defName, position, and stockpile location. " +
+                "Use this FIRST to see what's forbidden before calling set_item_allowed. " +
+                "The returned IDs can be passed directly to set_item_allowed(ids:[...]) for precise targeting.",
+                MakeOptionalParam("category", "string", "Filter: 'weapons', 'apparel', 'medicine', 'food', 'resources', 'corpses'. Omit for all items.")));
+
+            // Drafted Pawn Command Tools
+            tools.Add(MakeTool("move_pawn", "Move a drafted pawn to specific coordinates on the map. Pawn must be drafted first (use draft_colonist). The pawn will walk/run to the destination. Returns error if pawn is not drafted, is downed, coordinates are out of bounds, not standable, or destination is unreachable.",
+                MakeParam("pawnName", "string", "Name of the pawn to move"),
+                MakeParam("x", "integer", "X coordinate to move to"),
+                MakeParam("z", "integer", "Z coordinate to move to")));
+            tools.Add(MakeTool("order_attack", "Order a drafted pawn to attack a specific target pawn or animal. Automatically uses ranged or melee attack based on the pawn's equipped weapon. Pawn must be drafted first. Target name supports exact and partial matching. Returns error if pawn is not drafted, is downed, or target is not found on the map.",
+                MakeParam("pawnName", "string", "Name of the pawn to give the attack order to"),
+                MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
+            tools.Add(MakeTool("hold_position", "Order a drafted pawn to hold their current position in combat stance. The pawn will stay in place and auto-attack nearby enemies. Pawn must be drafted first. Returns error if pawn is not drafted or is downed.",
+                MakeParam("pawnName", "string", "Name of the pawn to hold position")));
+            tools.Add(MakeTool("order_group_attack", "Order multiple drafted pawns to all attack a single target. All pawns must be drafted first. Returns per-pawn results — partial success is possible if some pawns fail.",
+                MakeParam("pawnNames", "array", "List of pawn names to give the attack order to"),
+                MakeParam("targetName", "string", "Name of the target pawn or animal to attack")));
+            tools.Add(MakeTool("switch_weapon", "Switch a drafted pawn's equipped weapon to another weapon from their inventory. Accepts both defName and partial label match. Pawn must be drafted. Returns available inventory weapons if specified weapon not found.",
+                MakeParam("pawnName", "string", "Name of the pawn whose weapon to switch"),
+                MakeParam("weaponDefName", "string", "DefName or label (partial match) of the weapon to switch to")));
+            tools.Add(MakeTool("set_fire_mode", "Set fire mode for a drafted pawn's ranged weapon (burst/single/auto). NOTE: Not available in vanilla RimWorld — requires Combat Extended mod. Returns an informational error in vanilla.",
+                MakeParam("pawnName", "string", "Name of the pawn"),
+                MakeParam("mode", "string", "Fire mode: 'burst', 'single', or 'auto'")));
+
+            // Ping/Highlight Tools
+            tools.Add(MakeTool("ping_location", "Ping a location on the map to draw the player's attention. Camera jumps to the location immediately and a clickable letter is posted for future reference. Use this to highlight important spots: resource deposits, danger areas, suggested building locations, points of interest, etc.",
+                MakeParam("x", "integer", "X coordinate on the map"),
+                MakeParam("z", "integer", "Z coordinate on the map"),
+                MakeOptionalParam("label", "string", "Text label for the ping (shown in letter). Default: 'Location marked'"),
+                MakeOptionalParam("color", "string", "Letter color: 'grey'/'neutral' (default), 'blue'/'positive'/'info', 'red'/'danger'/'threat', 'orange'/'warning'/'negative', 'yellow'")));
+
+            cachedTools = tools;
             return tools;
         }
 
@@ -408,27 +648,6 @@ namespace RimMind.Tools
             return p;
         }
 
-        private static JSONObject MakeArrayParam(string name, string description, bool required)
-        {
-            var p = new JSONObject();
-            p["name"] = name;
-            p["param_type"] = "array";
-            p["description"] = description;
-            p["required"] = required;
-
-            var itemSchema = new JSONObject();
-            itemSchema["type"] = "object";
-            var itemProps = new JSONObject();
-            var xProp = new JSONObject(); xProp["type"] = "integer"; itemProps["x"] = xProp;
-            var zProp = new JSONObject(); zProp["type"] = "integer"; itemProps["z"] = zProp;
-            itemSchema["properties"] = itemProps;
-            var itemRequired = new JSONArray(); itemRequired.Add("x"); itemRequired.Add("z");
-            itemSchema["required"] = itemRequired;
-            p["items"] = itemSchema;
-
-            return p;
-        }
-
         private static JSONObject MakePlacementsArrayParam()
         {
             var p = new JSONObject();
@@ -463,6 +682,21 @@ namespace RimMind.Tools
 
             var itemSchema = new JSONObject();
             itemSchema["type"] = "string";
+            p["items"] = itemSchema;
+
+            return p;
+        }
+
+        private static JSONObject MakeIntArrayParam(string name, string description, bool required)
+        {
+            var p = new JSONObject();
+            p["name"] = name;
+            p["param_type"] = "array";
+            p["description"] = description;
+            p["required"] = required;
+
+            var itemSchema = new JSONObject();
+            itemSchema["type"] = "integer";
             p["items"] = itemSchema;
 
             return p;

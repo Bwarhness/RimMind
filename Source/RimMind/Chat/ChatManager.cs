@@ -53,7 +53,20 @@ namespace RimMind.Chat
 
             DebugLogger.LogToolLoop(toolLoopCount, MAX_TOOL_LOOPS);
 
-            var request = BuildRequest();
+            ChatRequest request;
+            try
+            {
+                request = BuildRequest();
+            }
+            catch (Exception ex)
+            {
+                Log.Error("[RimMind] BuildRequest error: " + ex);
+                conversationHistory.Add(ChatMessage.Assistant("[Error building request: " + ex.Message + "]"));
+                isProcessing = false;
+                StatusMessage = "";
+                OnMessageUpdated?.Invoke();
+                return;
+            }
             DebugLogger.LogAPIRequest(request.messages.Count, request.tools?.Count ?? 0, request.model);
 
             Action<ChatResponse> handleResponse = response =>
@@ -128,6 +141,8 @@ namespace RimMind.Chat
                 ClaudeCodeClient.SendAsync(request, handleResponse);
             else if (RimMindMod.Settings.IsAnthropic)
                 AnthropicClient.SendAsync(request, handleResponse);
+            else if (RimMindMod.Settings.IsCustom)
+                CustomProviderClient.SendAsync(request, handleResponse);
             else
                 OpenRouterClient.SendAsync(request, handleResponse);
         }
@@ -148,13 +163,18 @@ namespace RimMind.Chat
                 messages.Add(conversationHistory[i]);
             }
 
+            // Conditionally include tools: always for non-custom providers,
+            // only if customProviderSupportsTools is true for custom providers
+            bool isCustom = RimMindMod.Settings.IsCustom;
+            bool includeTools = !isCustom || RimMindMod.Settings.customProviderSupportsTools;
+
             return new ChatRequest
             {
                 model = RimMindMod.Settings.ActiveModelId,
                 messages = messages,
                 temperature = RimMindMod.Settings.temperature,
                 max_tokens = RimMindMod.Settings.maxTokens,
-                tools = ToolDefinitions.GetAllTools().ConvertAll(t => (JSONNode)t)
+                tools = includeTools ? ToolDefinitions.GetAllTools().ConvertAll(t => (JSONNode)t) : null
             };
         }
 

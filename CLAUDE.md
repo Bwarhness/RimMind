@@ -2,7 +2,8 @@
 
 ## Project Overview
 **Steam Workshop**: https://steamcommunity.com/sharedfiles/filedetails/?id=3666997391
-RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 51 different colony data tools via function calling.
+**Steam Workshop (Dev)**: https://steamcommunity.com/sharedfiles/filedetails/?id=3668326181
+RimMind is a RimWorld mod that integrates LLM intelligence via OpenRouter. The AI can query 63 different colony data tools via function calling.
 
 ## Build & Development
 
@@ -231,27 +232,218 @@ RimMind/
     └── Chat/          (ChatWindow, ChatManager, ColonyContext)
 ```
 
-## Current Tool Catalog (52 tools)
+## Current Tool Catalog (62 tools)
 - **Colonist** (3): list_colonists, get_colonist_details, get_colonist_health
-- **Social** (2): get_relationships, get_faction_relations
-- **Work** (6): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule
+- **Social** (3): get_relationships, get_faction_relations, get_social_risks
+- **Mood** (4): get_mood_risks, suggest_mood_interventions, get_mood_trends, get_environment_quality
+- **Work** (8): get_work_priorities, set_work_priority, get_bills, get_schedules, set_schedule, copy_schedule, get_work_queue, get_construction_status
 - **Colony** (4): get_colony_overview, get_resources, get_rooms, get_stockpiles
 - **Research** (3): get_research_status, get_available_research, get_completed_research
 - **Military** (3): get_threats, get_defenses, get_combat_readiness
 - **Map** (7): get_weather_and_season, get_growing_zones, get_power_status, get_map_region, get_cell_details, get_blueprints, search_map
-- **Animals** (2): list_animals, get_animal_details
+- **Animals** (4): list_animals, get_animal_details, get_animal_stats, get_wild_animals
+- **Designation** (8): designate_hunt, designate_tame, designate_slaughter, cancel_animal_designation, get_animal_designations, designate_mine, designate_chop, designate_harvest
 - **Events** (2): get_recent_events, get_active_alerts
 - **Medical** (1): get_medical_overview
 - **Directives** (3): get_directives, add_directive, remove_directive
 - **Plan** (3): get_plans, place_plans, remove_plans
 - **Zone** (3): list_zones, create_zone, delete_zone
-- **Building** (6): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings
+- **Building** (7): list_buildable, get_building_info, place_building, place_structure, remove_building, approve_buildings, deconstruct_building
 - **Area** (4): list_areas, get_area_restrictions, restrict_to_area, unrestrict
+- **Wiki** (1): wiki_lookup
+
+## Building & Spatial Planning
+
+For building tasks, use these query tools instead of parsing grids:
+
+### find_buildable_area
+Find where to place new structures.
+- **Parameters**: minWidth, minHeight, near (optional), maxDistance (optional)
+- **Returns**: Scored candidates with positions
+- **Purpose**: Identifies suitable building locations based on size requirements and proximity constraints
+
+### check_placement
+Validate a specific placement before building.
+- **Parameters**: building, x, z, rotation (optional)
+- **Returns**: Valid/invalid with detailed checks
+- **Purpose**: Pre-validates building placement to avoid placement failures
+
+### get_requirements
+Get building specifications.
+- **Parameters**: building (defName)
+- **Returns**: Size, power needs, resources, placement rules
+- **Purpose**: Query building metadata before placement decisions
+
+### Workflow
+1. Use `find_buildable_area` to get placement candidates
+2. Use `check_placement` to validate your choice
+3. Place blueprints with confidence using `place_building` or `place_structure`
+
+**Why use these tools?** They provide direct spatial queries instead of requiring manual grid parsing. This reduces errors, improves placement accuracy, and handles complex validation logic (terrain, existing structures, power requirements) automatically.
+
+## Event-Driven Automation System
+
+RimMind includes a user-scriptable event automation system that allows players to configure custom AI responses to specific game events (raids, fires, mental breaks, etc.).
+
+### Architecture
+
+**Components:**
+- `EventAutomationManager` - GameComponent that tracks cooldowns for each event type
+- `AutomationRule` - Data structure for each configured automation (enabled, prompt, cooldown)
+- `LetterAutomationPatch` - Harmony Postfix on `LetterStack.ReceiveLetter` to detect incoming letters
+- `AutomationSettingsWindow` - UI for configuring automation rules
+- `DefaultAutomationPrompts` - Library of default prompt templates for common events
+
+**Flow:**
+1. Letter arrives (raid, fire, trader, etc.)
+2. Harmony patch intercepts `LetterStack.ReceiveLetter`
+3. Checks if automation is enabled globally
+4. Checks if automation rule exists for this letter type
+5. Checks cooldown via `EventAutomationManager`
+6. Sends custom prompt to `ChatManager` with event context
+7. AI executes using existing tools
+
+**Key Files:**
+- `Source/RimMind/Automation/LetterAutomationPatch.cs` - Harmony patch
+- `Source/RimMind/Automation/EventAutomationManager.cs` - Cooldown tracking
+- `Source/RimMind/Automation/AutomationRule.cs` - Settings data structure
+- `Source/RimMind/Automation/AutomationSettingsWindow.cs` - Configuration UI
+- `Source/RimMind/Automation/DefaultAutomationPrompts.cs` - Default templates
+- `Defs/GameComponentDefs/GameComponents.xml` - GameComponent registration
+
+**Settings Storage:**
+- `RimMindSettings.enableEventAutomation` - Master toggle (bool)
+- `RimMindSettings.automationRules` - Dictionary<string, AutomationRule> saved via ExposeData
+- Per-save cooldown tracking via `EventAutomationManager` (GameComponent)
+
+**User Experience:**
+1. Enable "Event Automation" in mod settings
+2. Click "Configure Automation Rules..." button
+3. Browse categorized event types (Combat, Emergencies, Medical, etc.)
+4. Enable/disable specific events
+5. Edit custom prompts (or use defaults)
+6. Set cooldown periods (10-300 seconds)
+7. When event occurs, AI receives context + custom prompt
+
+**Safety Mechanisms:**
+- Master enable/disable toggle
+- Per-event enable/disable
+- Cooldown system prevents spam
+- Try/catch wraps all automation logic
+- Requires ChatWindow to be instantiated
+- Only fires when chat companion is active
+
+**Example Automation:**
+```
+Event: RaidEnemy
+Enabled: Yes
+Prompt: "Draft all combat-capable colonists. Equip best available weapons. Position behind defensive structures. Close all exterior doors."
+Cooldown: 60 seconds
+```
+
+When raid letter arrives → AI receives:
+```
+[EVENT: Raid arriving]
+
+Draft all combat-capable colonists. Equip best available weapons. Position behind defensive structures. Close all exterior doors.
+```
+
+AI then uses existing tools (`get_colonists`, `draft_colonist`, etc.) to execute the instructions.
 
 ## Development Rules
 - **Keep this file updated.** Every time a feature is built, a bug is fixed, or a tool is added, update the relevant sections of this CLAUDE.md. This file is the living index of the project — future AI sessions rely on it to understand what exists, how it works, and what has changed.
 
+### ⚠️ Job Queueing — ALWAYS Use the Built-in Queue System
+
+**Any tool that assigns work to a pawn MUST support queueing.** Never use bare `TryTakeOrderedJob(job, tag)` — it interrupts and discards whatever the pawn is currently doing.
+
+**The correct pattern:**
+```csharp
+bool shouldQueue = pawn.CurJob?.playerForced == true
+                || pawn.jobs.jobQueue.Count > 0;
+return pawn.jobs.TryTakeOrderedJob(job, tag, requestQueueing: shouldQueue);
+```
+
+This is RimWorld's native shift-click queue. If the pawn has any player-forced job running, the new job queues after it. If idle, it starts immediately.
+
+**Why this matters:** The AI issues multiple tool calls in a single response. Without queueing, each call cancels the previous one — only the last call executes. With queueing, the pawn works through them in order (haul silver → haul medicine → equip armour, etc.).
+
+**Applies to all job-assigning tools:** haul, wear apparel, equip weapon, tame, rescue, repair, clean, tend — anything touching `TryTakeOrderedJob`.
+
+**Pending:** Centralize this into a shared `JobQueueHelper.TakeOrQueueJob` utility so all tools get it automatically. See `memory/architecture.md`.
+
+### 🌍 Translations (MANDATORY for all UI)
+**Every user-visible string must be translated.** RimMind ships with 14 language folders — all UI text must go through the keyed translation system, never hardcoded.
+
+**Language folder structure:** `Languages/<FolderName>/Keyed/RimMind.xml`
+
+RimWorld uses localized folder names (not ISO codes):
+| Folder Name | Language |
+|---|---|
+| `English` | English (source of truth) |
+| `German (Deutsch)` | German |
+| `Spanish (Español(Castellano))` | Spanish |
+| `French (Français)` | French |
+| `Italian (Italiano)` | Italian |
+| `Japanese (日本語)` | Japanese |
+| `Korean (한국어)` | Korean |
+| `Dutch (Nederlands)` | Dutch |
+| `Polish (Polski)` | Polish |
+| `PortugueseBrazilian (Português Brasileiro)` | Portuguese (Brazil) |
+| `Russian (Русский)` | Russian |
+| `Swedish (Svenska)` | Swedish |
+| `Turkish (Türkçe)` | Turkish |
+| `ChineseSimplified (简体中文)` | Chinese Simplified |
+
+**DefInjected translations** (for Def labels/descriptions):
+- Located at `Languages/<FolderName>/DefInjected/<DefType>/` (e.g. `DefInjected/MainButtonDef/MainButtons.xml`)
+- Uses `<DefName.fieldName>` format (e.g. `<RimMind.label>`, `<RimMind.description>`)
+- Currently only Chinese Simplified has DefInjected translations
+
+**Translation comment convention:**
+Each translation line should have an `<!-- EN: ... -->` comment above it showing the English original. This makes it easier for translators to update translations when the English text changes.
+```xml
+    <!-- EN: Colony Directives -->
+  <RimMind_DirectivesTitle>殖民地准则</RimMind_DirectivesTitle>
+```
+
+**In C# code, always use:**
+```csharp
+"RimMind_YourKey".Translate()         // simple string
+"RimMind_YourKey".Translate(arg1)     // with format arg {0}
+```
+
+**Never do this:**
+```csharp
+Widgets.Label(rect, "Click here");    // ❌ hardcoded string
+```
+
+**When adding any new UI feature:**
+1. Add the key + English string to `English/Keyed/RimMind.xml`
+2. Add the same key to **all 13 other language files** — use English as fallback text initially (e.g. `<RimMind_MyKey>My English Text</RimMind_MyKey>`)
+3. Use `"RimMind_MyKey".Translate()` in code
+
+**Key naming convention:** `RimMind_` prefix + PascalCase descriptor
+- Settings: `RimMind_SettingName`
+- Buttons: `RimMind_ButtonLabel`
+- Messages: `RimMind_MessageDescription`
+- Tooltips: `RimMind_TooltipSomething`
+
+This applies to: button labels, window titles, tooltips, settings labels, error messages, status text, and any string a player sees.
+
 ## Changelog
+- **2026-02-22**: **Ideology DLC Intelligence** (issue #65) — Comprehensive rewrite of `IdeologyTools.cs` with full Ideology DLC awareness. `get_ideology_info` now returns ideology name, memes, all precepts with impact/severity levels, ideological roles with filled/unfilled status and assigned pawn, and ritual precepts with pending obligation counts. `get_pawn_ideology_status` now returns certainty level (0–1), certainty status label (devout/stable/wavering/at_risk/critical), assigned role, certainty change factors, pawn-by-pawn compatibility with all colonists (same ideology check, opinion, ideology opinion modifier via `RelationsUtility.Compat_OfIdeo` reflection), and ideology-sourced mood thoughts. `get_ritual_status` now returns all ritual precepts with obligation countdowns in days (derived from `triggerTick - TicksGame`), overdue status, outstanding obligations, quality factors, active rituals via `lordManager` scan, and colonists suffering missed-ritual mood debuffs. `analyze_ideology_conflicts` now detects: (1) colonist pairs with negative ideology opinion modifier (via `RelationsUtility.Compat_OfIdeo` reflection), (2) colonists with certainty < 0.5 with breakdown of negative factors, (3) colonists suffering ideology-sourced mood debuffs (from sourcePrecept thoughts), and (4) unfilled ideological roles. All methods continue to check `ModsConfig.IdeologyActive` first. All reflection access uses graceful null-handling try/catch. Closes #65.
+- **2026-02-22**: **Breaking change to animal designation tools** — `designate_hunt`, `designate_tame`, and `designate_slaughter` now require explicit IDs array as the primary targeting method. Removed `count` parameter. New interface: `designate_hunt(ids: [12, 47, 83])` to target exact animals by ID (from `get_wild_animals` or `list_animals`). Fallback: `designate_hunt(animal: "muffalo", all: true)` only allowed when `all:true` is explicitly set — forces acknowledgment that ALL matching animals will be targeted. This prevents AI from picking arbitrary animals by species/count; the correct workflow is now: (1) call `get_wild_animals`/`list_animals` to see available animals with IDs, (2) pass exact IDs to designation tool. Updated tool definitions, method signatures, and ToolExecutor handlers.
+- **2026-02-22**: Added `get_animal_designations` query tool — AI can now verify which animals are currently designated for hunt, tame, or slaughter. Returns animal name, species, ID, gender, position, designation type, and faction (tamed/wild). Supports filtering by type ('hunt', 'tame', 'slaughter', or 'all'). Use after designate_hunt/tame/slaughter to confirm designations were applied correctly. Closes issue #131 (partial).
+- **2026-02-22**: Added location-aware chat input via Architect panel (issue #130). New RimMind tab in Architect panel with "Ask RimMind" designator. Click any map cell to open a dialog showing terrain, fertility, zone, buildings, and room info. Type a message and it's sent to the AI with full location context in format `[Location: x=45, z=80 | Terrain: RichSoil | Fertility: 140% | Zone: Growing Zone | Buildings: None]`. New files: `Source/RimMind/UI/Designator_RimMindQuery.cs`, `Source/RimMind/UI/Dialog_RimMindLocationQuery.cs`, `Defs/DesignatorDefs/RimMind.xml`. Added translations for all 14 supported languages. Closes issue #130.
+- **2026-02-22**: Added `ping_location` tool — AI can highlight map locations for the player. Camera jumps immediately to the coordinates and a clickable letter is posted in the letter stack (top-right). Uses RimWorld's native letter system for familiarity. Parameters: x/z (required coordinates), label (optional text description), color (optional: yellow/neutral, green/positive, red/negative/danger). Use cases: marking resource deposits, highlighting danger areas, suggesting building locations, pointing out points of interest. New file: `Source/RimMind/Tools/PingTools.cs`. Closes issue #129.
+- **2026-02-22**: Added `deconstruct_building` tool — Mark already-built structures for deconstruction using RimWorld's native designation system. Parameters: x/z (target cell), x2/z2 (rectangular area), def_name (all buildings of type on map). At least one parameter required. Works on player-built structures, ancient ruins, ship chunks, and other deconstructible buildings. Returns designated count, already_designated, skipped, and list of affected structures. Closes issue #128.
+- **2026-02-22**: Added `designate_slaughter` tool — Mark tamed animals for slaughter. Only works on colony-owned animals (not wild). Returns estimated meat yield using `StatDefOf.MeatAmount`. Parameters: `animal` (name/species), `count` (optional, default 1), `id` (optional, specific pawn id). Updated `cancel_animal_designation` to also handle slaughter designations. Closes issue #125.
+- **2026-02-22**: Added `set_item_allowed` and `get_forbidden_items` tools — Manage item forbid/allow status. `set_item_allowed` bulk-allows or forbids items by cell coordinates, defName, or category (medicine, corpses, weapons, apparel, food, resources) with optional location filter (stockpile/ground). `get_forbidden_items` lists all forbidden items with location and stockpile status. Useful for managing loot after raids, controlling item accessibility, and debugging hauling issues. New file: `Source/RimMind/Tools/ItemAccessTools.cs`. Closes issue #123.
+- **2026-02-22**: Added `wiki_lookup` tool — Live RimWorld wiki queries. AI can now search the RimWorld wiki (rimworldwiki.com) via MediaWiki API and return page extracts. Use for game mechanic questions, item/building descriptions, event explanations, or any factual RimWorld information. Returns page title, extract (capped at 800 chars), URL, and related pages. Handles search failures gracefully. New file: `Source/RimMind/Tools/WikiTools.cs`.
+- **2026-02-17**: Phase 8 - Animal Intelligence — Enhanced animal visibility and management. Added `get_animal_stats` tool for comprehensive species data (carrying capacity, movement speed, combat stats, production abilities with intervals, wildness, trainability, filth rate, manhunter chances). Added `get_wild_animals` tool to list all wild animals on map by species with taming difficulty, hunting value, rarity assessment, and recommendations. Enhanced `list_animals` to show current carrying load for pack animals. Enhanced `get_animal_details` to show production schedules (next shearing/milking/egg with ready status). AI can now: identify taming opportunities ("Rare Thrumbo - worth attempting tame"), optimize pack animals for caravans, remind about production readiness ("Muffalo ready for milking"), and advise on hunting targets. Total tools increased from 52 to 54.
+- **2026-02-17**: Added Phase 3 - Social & Mood Intelligence tools. New MoodHistoryTracker GameComponent tracks mood over time with hourly snapshots persisted with save files. New tools: `get_mood_trends` (track mood velocity, predict time-to-break with 3-day history), `get_social_risks` (detect colonist pairs with mutual hostility and volatile traits), `get_environment_quality` (score all rooms for beauty/cleanliness/space/temp/lighting with actionable suggestions). Enhanced `get_colony_overview` with recreation analysis (joy source count, variety, social vs solo, adequacy assessment). Implements all features from issue #56: mood trend analysis with prediction, social conflict detection, actionable interventions (already existed as suggest_mood_interventions), environment quality scoring, and recreation diagnostics.
+- **2026-02-17**: **Phase 2: Construction & Workflow Intelligence** — Added work bottleneck detection and construction progress tracking. New tools: `get_work_queue` (shows pending jobs by type with counts: total/in-progress/blocked/assigned colonists for hauling, construction, mining, planting, repair) and `get_construction_status` (lists all blueprints with completion %, materials needed vs available, forbidden status, current builders). Enhanced `place_building` with material pre-check: now warns if insufficient materials exist before placing blueprints, showing shortages with "need X more steel" format. Addresses issue #55.
 - **2026-02-17**: Enhanced blueprint visibility — AI can now clearly distinguish blueprints from built structures. Added `get_blueprints` tool to query all placed blueprints on the map with defName, position, material, size, and rotation. Updated `get_cell_details` to separate blueprints into dedicated array with "unbuilt" status vs built structures with "built" status. Enhanced system prompt to explain uppercase (built) vs lowercase (blueprint) character codes at the top, not just in building section. Map grid legend already showed "(blueprint)" for lowercase codes. This fixes issue where RimMind couldn't see player-placed blueprints even though they were visible as lowercase characters in the grid.
 - **2026-02-15**: Added `get_map_region` tool — character-grid map visualization with 28 cell codes for buildings, pawns, items, zones, terrain. Supports full map or sub-region queries.
 - **2026-02-15**: Added `get_cell_details` tool — drill-down for single cell or range (up to 15x15). Returns terrain, roof, temperature, fertility, room stats, zone, and all things present.
@@ -274,6 +466,16 @@ RimMind/
 - **2026-02-16**: Added quick prompt buttons to ChatWindow — 10 test prompts (Bedroom, Dining+Kitchen, Barracks, Power Setup, Workshop, Hospital, Killbox, Base Layout, Colony Status, Map Scout) shown in a toggleable scrollable panel. Click to insert prompt text.
 - **2026-02-16**: Added `search_map` tool — search the map for entities by type (colonists, hostiles, animals, items, buildings, minerals, plants) with optional text filter and bounds. Returns exact coordinates instead of requiring grid scanning. Items are grouped by defName with aggregate counts. Minerals filter to ore deposits (mineableThing != null). Also added `pawns` field to `get_map_region` response listing all pawns in the region with name/position/type, so the AI doesn't need to hunt for '@' characters.
 
+- **2026-02-17**: Implemented Event-Driven Automation (Phase 1) — User-scriptable event automation system. When game events occur (raids, fires, mental breaks, etc.), RimMind can automatically send configured prompts to the AI. Features: Harmony Postfix on `LetterStack.ReceiveLetter`, per-event automation rules with custom prompts, cooldown tracking (10-300s) via GameComponent, AutomationSettingsWindow for configuration with categorized event types, 25+ default prompt templates, master enable/disable toggle, per-save persistence via ExposeData. Exposed `ChatWindow.Instance` and `ChatManager` properties for automation system access. Added `Defs/GameComponentDefs/GameComponents.xml` to register EventAutomationManager.
+
+- **2026-02-18**: **Phase 7: Event & Disaster Intelligence** — Enhanced AI understanding of active events and disasters. Tools `get_active_events` and `get_disaster_risks` provide comprehensive event tracking with duration remaining, severity assessment, temperature impacts, specific risks, and actionable recommendations. Event-specific intelligence covers cold snaps, heat waves, toxic fallout, solar flares, eclipses, volcanic winter, nuclear fallout, and more. Disaster risk assessment analyzes infestation probability (overhead mountain tiles, spawn locations), Zzzt risk (stored battery power, explosion damage), and fire risk (flammable materials). Enhanced `get_weather_and_season` to include active events summary with note to use `get_active_events` for detailed information. AI can now explain why disasters happened, predict impacts, and recommend prevention strategies. Addresses issue #61.
+
+## Version Management
+- Auto-bump: GitHub Action increments patch version (`<modVersion>`) in `About/About.xml` on every push to `dev`
+- Version displayed in-game on bottom toolbar button and chat window title
+- `<modVersion>` is the correct RimWorld XML field (not `<version>`)
+
 ## Future Plans (Deferred)
+- Phase 2: Enhanced Automation UI (import/export configs, more event types)
 - Phase 3: LLM-powered colonist dialogue (Harmony patch on social interactions)
 - Phase 4: AI storyteller (custom StorytellerComp querying LLM for event decisions)

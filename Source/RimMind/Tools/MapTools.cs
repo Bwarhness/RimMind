@@ -24,7 +24,50 @@ namespace RimMind.Tools
             obj["hour"] = GenLocalDate.HourInteger(map);
 
             // Growing season info
-            obj["growingSeasonActive"] = map.mapTemperature.SeasonalTemp > 0;
+            obj["growingSeasonActive"] = map.mapTemperature.OutdoorTemp > 0f;
+
+            // Active events summary (Phase 7)
+            try
+            {
+                var activeEventsArr = new JSONArray();
+                var gameConditions = map.gameConditionManager?.ActiveConditions;
+                
+                if (gameConditions != null && gameConditions.Count > 0)
+                {
+                    foreach (var condition in gameConditions)
+                    {
+                        var eventObj = new JSONObject();
+                        eventObj["type"] = condition.def.defName;
+                        eventObj["label"] = condition.LabelCap;
+                        
+                        int ticksRemaining = condition.TicksLeft;
+                        if (ticksRemaining > 0)
+                        {
+                            float daysRemaining = ticksRemaining / 60000f;
+                            eventObj["duration_remaining_days"] = daysRemaining.ToString("F1");
+                        }
+                        else
+                        {
+                            eventObj["duration_remaining_days"] = "unknown";
+                        }
+                        
+                        activeEventsArr.Add(eventObj);
+                    }
+                    
+                    obj["active_events"] = activeEventsArr;
+                    obj["active_event_count"] = activeEventsArr.Count;
+                    obj["note"] = "Use get_active_events for detailed event information, risks, and recommendations";
+                }
+                else
+                {
+                    obj["active_events"] = activeEventsArr;
+                    obj["active_event_count"] = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                obj["events_error"] = "Could not read active events: " + ex.Message;
+            }
 
             return obj.ToString();
         }
@@ -120,7 +163,9 @@ namespace RimMind.Tools
 
             obj["totalGeneration"] = totalGeneration.ToString("F0") + " W";
             obj["totalConsumption"] = totalConsumption.ToString("F0") + " W";
-            obj["surplus"] = (totalGeneration - totalConsumption).ToString("F0") + " W";
+            
+            float surplus = totalGeneration - totalConsumption;
+            obj["surplus"] = surplus.ToString("F0") + " W";
             obj["batteryCount"] = batteryCount;
             obj["storedEnergy"] = totalStored.ToString("F0") + " Wd";
             obj["storageCapacity"] = totalStorageCapacity.ToString("F0") + " Wd";
@@ -129,8 +174,165 @@ namespace RimMind.Tools
             if (totalStorageCapacity > 0)
                 obj["batteryPercentage"] = (totalStored / totalStorageCapacity * 100f).ToString("F1") + "%";
 
+            // Phase 4: Power Failure Prediction
+            // Calculate battery drain rate and time until blackout
+            if (batteryCount > 0)
+            {
+                // Net power flow: negative = draining, positive = charging
+                float netPowerFlow = surplus;
+                
+                // Convert W to Wd/hour (1 hour = 2500 ticks, power is in watts)
+                // Power consumption is continuous, so Wd/hour = W * (2500 ticks/hour / 60000 ticks/day)
+                // Simplified: Wd/hour ≈ W / 24
+                float drainRatePerHour = -netPowerFlow / 24f;
+                
+                if (netPowerFlow < 0)
+                {
+                    // Batteries are draining
+                    obj["batteryDrainRate"] = drainRatePerHour.ToString("F1") + " Wd/hour";
+                    
+                    // Calculate hours until blackout
+                    if (drainRatePerHour > 0)
+                    {
+                        float hoursRemaining = totalStored / drainRatePerHour;
+                        obj["hoursUntilBlackout"] = hoursRemaining.ToString("F1");
+                        
+                        // Critical warning if < 2 hours
+                        if (hoursRemaining < 2f)
+                        {
+                            obj["status"] = "critical";
+                            obj["warning"] = string.Format("⚠️ CRITICAL: Batteries will die in {0:F1} hours without power generation!", hoursRemaining);
+                        }
+                        else if (hoursRemaining < 6f)
+                        {
+                            obj["status"] = "low";
+                            obj["warning"] = string.Format("Low power: {0:F1} hours of battery remaining", hoursRemaining);
+                        }
+                        else
+                        {
+                            obj["status"] = "draining";
+                        }
+                    }
+                    else
+                    {
+                        obj["hoursUntilBlackout"] = "unknown";
+                        obj["status"] = "draining";
+                    }
+                }
+                else if (netPowerFlow > 0)
+                {
+                    // Batteries are charging
+                    float chargeRate = netPowerFlow / 24f;
+                    obj["batteryChargeRate"] = chargeRate.ToString("F1") + " Wd/hour";
+                    obj["status"] = "charging";
+                    
+                    // Calculate time to full charge
+                    float energyNeeded = totalStorageCapacity - totalStored;
+                    if (chargeRate > 0 && energyNeeded > 0)
+                    {
+                        float hoursToFull = energyNeeded / chargeRate;
+                        obj["hoursToFullCharge"] = hoursToFull.ToString("F1");
+                    }
+                }
+                else
+                {
+                    // Perfectly balanced
+                    obj["status"] = "balanced";
+                }
+            }
+            else
+            {
+                // No batteries
+                if (surplus >= 0)
+                    obj["status"] = "stable";
+                else
+                    obj["status"] = "insufficient_generation";
+            }
+
             return obj.ToString();
         }
+
+        public static string GetTemperatureRisks()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var result = new JSONObject();
+            var atRisk = new JSONArray();
+            var safe = new JSONArray();
+
+            var colonists = map.mapPawns.FreeColonistsSpawned;
+            if (colonists == null || colonists.Count == 0)
+            {
+                result["message"] = "No colonists on the map";
+                return result.ToString();
+            }
+
+            // Get ambient temperature
+            float ambientTemp = map.mapTemperature.OutdoorTemp;
+
+            foreach (var colonist in colonists)
+            {
+                var obj = new JSONObject();
+                obj["name"] = colonist.Name.ToStringShort;
+
+                // Get position temperature at colonist's location
+                var position = colonist.Position;
+                var room = position.GetRoom(map);
+                float localTemp = room != null ? room.Temperature : ambientTemp;
+
+                obj["current_temp"] = localTemp.ToString("F1") + "°C";
+                obj["ambient_temp"] = ambientTemp.ToString("F1") + "°C";
+
+                // Get comfortable temperature range
+                float minComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMin, false);
+                float maxComfort = colonist.GetStatValue(StatDefOf.ComfyTemperatureMax, false);
+
+                obj["comfortable_range"] = minComfort.ToString("F0") + "°C to " + maxComfort.ToString("F0") + "°C";
+
+                // Check for risk
+                if (localTemp < minComfort - 5f)
+                {
+                    obj["risk"] = "freezing";
+                    obj["severity"] = (minComfort - localTemp > 15f) ? "critical" : "warning";
+                    obj["action"] = "Move to heated area";
+                    atRisk.Add(obj);
+                }
+                else if (localTemp > maxComfort + 5f)
+                {
+                    obj["risk"] = "overheating";
+                    obj["severity"] = (localTemp - maxComfort > 15f) ? "critical" : "warning";
+                    obj["action"] = "Move to cooled area";
+                    atRisk.Add(obj);
+                }
+                else
+                {
+                    obj["risk"] = "safe";
+                    obj["status"] = "OK";
+                    safe.Add(obj);
+                }
+            }
+
+            result["at_risk"] = atRisk;
+            result["safe"] = safe;
+            result["total_checked"] = colonists.Count;
+
+            // Set overall status
+            if (atRisk.Count > 0)
+            {
+                result["overall_status"] = "warning";
+                result["message"] = atRisk.Count + " colonists at risk from temperature";
+            }
+            else
+            {
+                result["overall_status"] = "safe";
+                result["message"] = "All colonists in safe temperature range";
+            }
+
+            return result.ToString();
+        }
+
+
 
         public static string GetMapRegion(JSONNode args)
         {
@@ -897,6 +1099,7 @@ namespace RimMind.Tools
                     if (matches.Count < MaxResults)
                     {
                         var m = new JSONObject();
+                        m["id"] = pawn.thingIDNumber;
                         m["name"] = pawn.LabelShort;
                         m["x"] = pawn.Position.x;
                         m["z"] = pawn.Position.z;
@@ -936,6 +1139,7 @@ namespace RimMind.Tools
                         if (locs.Count < 10)
                         {
                             var loc = new JSONObject();
+                            loc["id"] = thing.thingIDNumber;
                             loc["x"] = thing.Position.x;
                             loc["z"] = thing.Position.z;
                             if (thing.stackCount > 1) loc["count"] = thing.stackCount;
@@ -1030,6 +1234,485 @@ namespace RimMind.Tools
                 result["note"] = "Results capped at " + MaxResults + ". Use bounds (x1,z1,x2,z2) or a more specific filter to narrow results.";
             result["matches"] = matches;
             return result.ToString();
+        }
+
+        // ===== Environmental Visibility Tools =====
+
+        public static string GetLightLevels(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (args == null || string.IsNullOrEmpty(args["x"]?.Value) || string.IsNullOrEmpty(args["z"]?.Value))
+                return ToolExecutor.JsonError("x and z coordinates are required.");
+
+            int x = args["x"].AsInt;
+            int z = args["z"].AsInt;
+
+            string x2Val = args["x2"]?.Value;
+            string z2Val = args["z2"]?.Value;
+            bool hasRange = !string.IsNullOrEmpty(x2Val) && !string.IsNullOrEmpty(z2Val);
+
+            if (!hasRange)
+            {
+                var cell = new IntVec3(x, 0, z);
+                if (!cell.InBounds(map))
+                    return ToolExecutor.JsonError("Coordinates out of bounds. Map size: " + map.Size.x + "x" + map.Size.z);
+
+                float glow = map.glowGrid.GroundGlowAt(cell, false);
+                var obj = new JSONObject();
+                obj["cell"] = x + "," + z;
+                obj["glowLevel"] = glow.ToString("F2");
+                obj["description"] = GetLightDescription(glow);
+                obj["isDark"] = glow < 0.3f;
+                return obj.ToString();
+            }
+
+            int endX = args["x2"].AsInt;
+            int endZ = args["z2"].AsInt;
+            int minX = Math.Min(x, endX);
+            int maxX = Math.Max(x, endX);
+            int minZ = Math.Min(z, endZ);
+            int maxZ = Math.Max(z, endZ);
+
+            int rangeW = maxX - minX + 1;
+            int rangeH = maxZ - minZ + 1;
+
+            if (rangeW * rangeH > 225)
+                return ToolExecutor.JsonError("Range too large (" + rangeW + "x" + rangeH + " = " + (rangeW * rangeH) + " cells). Max 225 cells (15x15).");
+
+            var result = new JSONObject();
+            result["range"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            result["size"] = rangeW + "x" + rangeH;
+
+            var cells = new JSONArray();
+            float totalGlow = 0;
+            float minGlow = 1f;
+            float maxGlow = 0f;
+            int darkCells = 0;
+
+            for (int cz = minZ; cz <= maxZ; cz++)
+            {
+                for (int cx = minX; cx <= maxX; cx++)
+                {
+                    var cell = new IntVec3(cx, 0, cz);
+                    if (!cell.InBounds(map)) continue;
+
+                    float glow = map.glowGrid.GroundGlowAt(cell, false);
+                    totalGlow += glow;
+                    if (glow < minGlow) minGlow = glow;
+                    if (glow > maxGlow) maxGlow = glow;
+                    if (glow < 0.3f) darkCells++;
+
+                    var cellObj = new JSONObject();
+                    cellObj["x"] = cx;
+                    cellObj["z"] = cz;
+                    cellObj["glowLevel"] = glow.ToString("F2");
+                    cellObj["description"] = GetLightDescription(glow);
+                    cells.Add(cellObj);
+                }
+            }
+
+            int totalCells = rangeW * rangeH;
+            result["cells"] = cells;
+
+            var stats = new JSONObject();
+            stats["averageGlow"] = (totalGlow / totalCells).ToString("F2");
+            stats["minGlow"] = minGlow.ToString("F2");
+            stats["maxGlow"] = maxGlow.ToString("F2");
+            stats["darkCells"] = darkCells;
+            stats["darkPercentage"] = ((darkCells * 100f) / totalCells).ToString("F1") + "%";
+            result["stats"] = stats;
+
+            return result.ToString();
+        }
+
+        public static string GetLightSources(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            bool hasBounds = args?["x1"] != null && args?["z1"] != null && args?["x2"] != null && args?["z2"] != null;
+            int bx1 = hasBounds ? args["x1"].AsInt : 0;
+            int bz1 = hasBounds ? args["z1"].AsInt : 0;
+            int bx2 = hasBounds ? args["x2"].AsInt : map.Size.x - 1;
+            int bz2 = hasBounds ? args["z2"].AsInt : map.Size.z - 1;
+
+            string filterRaw = args?["filter"]?.Value;
+            string filter = (string.IsNullOrEmpty(filterRaw) || filterRaw == "null") ? null : filterRaw.ToLowerInvariant();
+
+            var result = new JSONObject();
+            var lightSources = new JSONArray();
+            int totalCount = 0;
+
+            foreach (var building in map.listerBuildings.allBuildingsColonist)
+            {
+                if (!building.Spawned) continue;
+
+                var glower = building.GetComp<CompGlower>();
+                if (glower == null) continue;
+
+                var pos = building.Position;
+                if (hasBounds && (pos.x < bx1 || pos.x > bx2 || pos.z < bz1 || pos.z > bz2))
+                    continue;
+
+                if (filter != null && !building.def.defName.ToLowerInvariant().Contains(filter)
+                    && !building.LabelCap.ToString().ToLowerInvariant().Contains(filter))
+                    continue;
+
+                totalCount++;
+
+                var obj = new JSONObject();
+                obj["defName"] = building.def.defName;
+                obj["label"] = building.LabelCap.ToString();
+                obj["x"] = pos.x;
+                obj["z"] = pos.z;
+                obj["glowRadius"] = glower.Props.glowRadius.ToString("F1");
+                
+                if (glower.Props.glowColor != null)
+                    obj["glowColor"] = "(" + glower.Props.glowColor.r.ToString("F2") + ", " + 
+                                       glower.Props.glowColor.g.ToString("F2") + ", " + 
+                                       glower.Props.glowColor.b.ToString("F2") + ")";
+
+                // Check if powered
+                var powerComp = building.GetComp<CompPowerTrader>();
+                if (powerComp != null)
+                    obj["powered"] = powerComp.PowerOn;
+
+                lightSources.Add(obj);
+            }
+
+            result["count"] = totalCount;
+            result["lightSources"] = lightSources;
+            
+            if (hasBounds)
+                result["bounds"] = bx1 + "," + bz1 + " to " + bx2 + "," + bz2;
+            if (filter != null)
+                result["filter"] = filter;
+
+            return result.ToString();
+        }
+
+        public static string GetCellBeauty(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (args == null || string.IsNullOrEmpty(args["x"]?.Value) || string.IsNullOrEmpty(args["z"]?.Value))
+                return ToolExecutor.JsonError("x and z coordinates are required.");
+
+            int x = args["x"].AsInt;
+            int z = args["z"].AsInt;
+
+            string x2Val = args["x2"]?.Value;
+            string z2Val = args["z2"]?.Value;
+            bool hasRange = !string.IsNullOrEmpty(x2Val) && !string.IsNullOrEmpty(z2Val);
+
+            if (!hasRange)
+            {
+                var cell = new IntVec3(x, 0, z);
+                if (!cell.InBounds(map))
+                    return ToolExecutor.JsonError("Coordinates out of bounds. Map size: " + map.Size.x + "x" + map.Size.z);
+
+                float beauty = BeautyUtility.AverageBeautyPerceptible(cell, map);
+                var obj = new JSONObject();
+                obj["cell"] = x + "," + z;
+                obj["beauty"] = beauty.ToString("F1");
+                obj["description"] = GetBeautyDescription(beauty);
+                obj["beautyCategory"] = GetBeautyCategory(beauty);
+                return obj.ToString();
+            }
+
+            int endX = args["x2"].AsInt;
+            int endZ = args["z2"].AsInt;
+            int minX = Math.Min(x, endX);
+            int maxX = Math.Max(x, endX);
+            int minZ = Math.Min(z, endZ);
+            int maxZ = Math.Max(z, endZ);
+
+            int rangeW = maxX - minX + 1;
+            int rangeH = maxZ - minZ + 1;
+
+            if (rangeW * rangeH > 225)
+                return ToolExecutor.JsonError("Range too large (" + rangeW + "x" + rangeH + " = " + (rangeW * rangeH) + " cells). Max 225 cells (15x15).");
+
+            var result = new JSONObject();
+            result["range"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            result["size"] = rangeW + "x" + rangeH;
+
+            var cells = new JSONArray();
+            float totalBeauty = 0;
+            float minBeauty = float.MaxValue;
+            float maxBeauty = float.MinValue;
+            int uglyCells = 0;
+
+            for (int cz = minZ; cz <= maxZ; cz++)
+            {
+                for (int cx = minX; cx <= maxX; cx++)
+                {
+                    var cell = new IntVec3(cx, 0, cz);
+                    if (!cell.InBounds(map)) continue;
+
+                    float beauty = BeautyUtility.AverageBeautyPerceptible(cell, map);
+                    totalBeauty += beauty;
+                    if (beauty < minBeauty) minBeauty = beauty;
+                    if (beauty > maxBeauty) maxBeauty = beauty;
+                    if (beauty < -5f) uglyCells++;
+
+                    var cellObj = new JSONObject();
+                    cellObj["x"] = cx;
+                    cellObj["z"] = cz;
+                    cellObj["beauty"] = beauty.ToString("F1");
+                    cellObj["description"] = GetBeautyDescription(beauty);
+                    cells.Add(cellObj);
+                }
+            }
+
+            int totalCells = rangeW * rangeH;
+            result["cells"] = cells;
+
+            var stats = new JSONObject();
+            stats["averageBeauty"] = (totalBeauty / totalCells).ToString("F1");
+            stats["minBeauty"] = minBeauty.ToString("F1");
+            stats["maxBeauty"] = maxBeauty.ToString("F1");
+            stats["uglyCells"] = uglyCells;
+            stats["uglyPercentage"] = ((uglyCells * 100f) / totalCells).ToString("F1") + "%";
+            result["stats"] = stats;
+
+            return result.ToString();
+        }
+
+        public static string GetPollution(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (!ModsConfig.BiotechActive)
+                return ToolExecutor.JsonError("Biotech DLC not active - pollution system not available.");
+
+            if (args == null || string.IsNullOrEmpty(args["x"]?.Value) || string.IsNullOrEmpty(args["z"]?.Value))
+                return ToolExecutor.JsonError("x and z coordinates are required.");
+
+            int x = args["x"].AsInt;
+            int z = args["z"].AsInt;
+
+            string x2Val = args["x2"]?.Value;
+            string z2Val = args["z2"]?.Value;
+            bool hasRange = !string.IsNullOrEmpty(x2Val) && !string.IsNullOrEmpty(z2Val);
+
+            var cell = new IntVec3(x, 0, z);
+            if (!cell.InBounds(map))
+                return ToolExecutor.JsonError("Coordinates out of bounds. Map size: " + map.Size.x + "x" + map.Size.z);
+
+            if (!hasRange)
+            {
+                bool isPolluted = map.pollutionGrid.IsPolluted(cell);
+                
+                // Calculate nearby pollution manually (RimWorld 1.6 API change)
+                int pollutedCount = 0;
+                int totalCount = 0;
+                foreach (IntVec3 c in GenRadial.RadialCellsAround(cell, 10f, true))
+                {
+                    if (!c.InBounds(map)) continue;
+                    totalCount++;
+                    if (map.pollutionGrid.IsPolluted(c)) pollutedCount++;
+                }
+                float nearbyPollution = totalCount > 0 ? (pollutedCount * 100f / totalCount) : 0f;
+
+                var obj = new JSONObject();
+                obj["biotechActive"] = true;
+                obj["cell"] = x + "," + z;
+                obj["isPolluted"] = isPolluted;
+                obj["nearbyPollutionRadius10"] = nearbyPollution.ToString("F1") + "%";
+                return obj.ToString();
+            }
+
+            int endX = args["x2"].AsInt;
+            int endZ = args["z2"].AsInt;
+            int minX = Math.Min(x, endX);
+            int maxX = Math.Max(x, endX);
+            int minZ = Math.Min(z, endZ);
+            int maxZ = Math.Max(z, endZ);
+
+            int rangeW = maxX - minX + 1;
+            int rangeH = maxZ - minZ + 1;
+
+            if (rangeW * rangeH > 225)
+                return ToolExecutor.JsonError("Range too large (" + rangeW + "x" + rangeH + " = " + (rangeW * rangeH) + " cells). Max 225 cells (15x15).");
+
+            var result = new JSONObject();
+            result["biotechActive"] = true;
+            result["range"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            result["size"] = rangeW + "x" + rangeH;
+
+            var cells = new JSONArray();
+            int pollutedCells = 0;
+
+            for (int cz = minZ; cz <= maxZ; cz++)
+            {
+                for (int cx = minX; cx <= maxX; cx++)
+                {
+                    var c = new IntVec3(cx, 0, cz);
+                    if (!c.InBounds(map)) continue;
+
+                    bool isPolluted = map.pollutionGrid.IsPolluted(c);
+                    if (isPolluted) pollutedCells++;
+
+                    var cellObj = new JSONObject();
+                    cellObj["x"] = cx;
+                    cellObj["z"] = cz;
+                    cellObj["isPolluted"] = isPolluted;
+                    cells.Add(cellObj);
+                }
+            }
+
+            int totalCells = rangeW * rangeH;
+            result["cells"] = cells;
+            result["pollutedCells"] = pollutedCells;
+            result["pollutedPercentage"] = ((pollutedCells * 100f) / totalCells).ToString("F1") + "%";
+
+            return result.ToString();
+        }
+
+        public static string GetRoofStatus(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (args == null || string.IsNullOrEmpty(args["x1"]?.Value) || string.IsNullOrEmpty(args["z1"]?.Value)
+                || string.IsNullOrEmpty(args["x2"]?.Value) || string.IsNullOrEmpty(args["z2"]?.Value))
+                return ToolExecutor.JsonError("x1, z1, x2, z2 coordinates are required for region bounds.");
+
+            int x1 = args["x1"].AsInt;
+            int z1 = args["z1"].AsInt;
+            int x2 = args["x2"].AsInt;
+            int z2 = args["z2"].AsInt;
+
+            int minX = Math.Min(x1, x2);
+            int maxX = Math.Max(x1, x2);
+            int minZ = Math.Min(z1, z2);
+            int maxZ = Math.Max(z1, z2);
+
+            string roofTypeFilter = args?["roofType"]?.Value?.ToLowerInvariant();
+            bool detectBreaches = args?["detectBreaches"]?.AsBool ?? false;
+
+            var result = new JSONObject();
+            var region = new JSONObject();
+            region["x1"] = minX;
+            region["z1"] = minZ;
+            region["x2"] = maxX;
+            region["z2"] = maxZ;
+            result["region"] = region;
+
+            int totalCells = 0;
+            int roofed = 0;
+            int unroofed = 0;
+            int constructed = 0;
+            int naturalThin = 0;
+            int naturalThick = 0;
+            var breaches = new JSONArray();
+
+            for (int z = minZ; z <= maxZ; z++)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    var cell = new IntVec3(x, 0, z);
+                    if (!cell.InBounds(map)) continue;
+
+                    totalCells++;
+                    var roof = map.roofGrid.RoofAt(cell);
+
+                    if (roof == null)
+                    {
+                        unroofed++;
+
+                        // Breach detection: check if this unroofed cell has thick roof neighbors
+                        if (detectBreaches)
+                        {
+                            bool hasThickRoofNeighbor = false;
+                            foreach (var neighbor in GenAdj.CellsAdjacent8Way(cell, Rot4.North, IntVec2.One))
+                            {
+                                if (!neighbor.InBounds(map)) continue;
+                                var neighborRoof = map.roofGrid.RoofAt(neighbor);
+                                if (neighborRoof != null && neighborRoof.isThickRoof)
+                                {
+                                    hasThickRoofNeighbor = true;
+                                    break;
+                                }
+                            }
+
+                            if (hasThickRoofNeighbor)
+                            {
+                                var breach = new JSONObject();
+                                breach["x"] = x;
+                                breach["z"] = z;
+                                breach["reason"] = "Unroofed cell under thick mountain roof (potential breach)";
+                                breaches.Add(breach);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        roofed++;
+
+                        if (roof.defName == "RoofConstructed")
+                            constructed++;
+                        else if (roof.isThickRoof)
+                            naturalThick++;
+                        else
+                            naturalThin++;
+                    }
+                }
+            }
+
+            result["totalCells"] = totalCells;
+            result["roofed"] = roofed;
+            result["unroofed"] = unroofed;
+
+            var breakdown = new JSONObject();
+            breakdown["constructed"] = constructed;
+            breakdown["naturalThin"] = naturalThin;
+            breakdown["naturalThick"] = naturalThick;
+            breakdown["none"] = unroofed;
+            result["breakdown"] = breakdown;
+
+            if (detectBreaches && breaches.Count > 0)
+                result["breaches"] = breaches;
+
+            return result.ToString();
+        }
+
+        // Helper methods for environmental tools
+        private static string GetLightDescription(float glow)
+        {
+            if (glow < 0.15f) return "Pitch black";
+            if (glow < 0.3f) return "Very dark";
+            if (glow < 0.5f) return "Dark";
+            if (glow < 0.7f) return "Dim";
+            if (glow < 0.85f) return "Well lit";
+            return "Bright";
+        }
+
+        private static string GetBeautyDescription(float beauty)
+        {
+            if (beauty > 50f) return "Very beautiful";
+            if (beauty > 15f) return "Beautiful";
+            if (beauty > 5f) return "Pretty";
+            if (beauty > -5f) return "Neutral";
+            if (beauty > -20f) return "Ugly";
+            if (beauty > -40f) return "Very ugly";
+            return "Hideous";
+        }
+
+        private static string GetBeautyCategory(float beauty)
+        {
+            if (beauty > 50f) return "VeryBeautiful";
+            if (beauty > 15f) return "Beautiful";
+            if (beauty > 5f) return "Pretty";
+            if (beauty > -5f) return "Neutral";
+            if (beauty > -20f) return "Ugly";
+            if (beauty > -40f) return "VeryUgly";
+            return "Hideous";
         }
     }
 }

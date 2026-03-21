@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using RimMind.API;
+using RimMind.Core;
 using RimWorld;
 using Verse;
 using Verse.AI;
@@ -407,6 +408,162 @@ namespace RimMind.Tools
                 if (priorities.Count > 0)
                     result["urgentActions"] = priorities;
             }
+
+            return result.ToString();
+        }
+
+        public static string GetMoodTrends()
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            var tracker = MoodHistoryTracker.Instance;
+            if (tracker == null) return ToolExecutor.JsonError("Mood history tracker not initialized.");
+
+            var result = new JSONObject();
+            var colonistTrends = new JSONArray();
+
+            int currentTick = Find.TickManager.TicksGame;
+
+            foreach (var pawn in map.mapPawns.FreeColonists)
+            {
+                if (pawn.needs?.mood == null) continue;
+
+                var history = tracker.GetHistory(pawn.ThingID, 3);
+
+                var colonist = new JSONObject();
+                colonist["name"] = pawn.Name?.ToStringShort ?? "Unknown";
+
+                float currentMood = pawn.needs.mood.CurLevel;
+                float breakThreshold = pawn.mindState.mentalBreaker.BreakThresholdExtreme;
+
+                colonist["currentMood"] = pawn.needs.mood.CurLevelPercentage.ToString("P0");
+                colonist["currentMoodValue"] = currentMood.ToString("0.00");
+                colonist["breakThreshold"] = breakThreshold.ToString("0.00");
+                colonist["distanceToBreak"] = (currentMood - breakThreshold).ToString("0.00");
+
+                // Calculate trend if we have enough history
+                if (history.Count >= 2)
+                {
+                    var oldestSnapshot = history[0];
+                    var newestSnapshot = history[history.Count - 1];
+
+                    float moodChange = newestSnapshot.moodLevel - oldestSnapshot.moodLevel;
+                    int ticksElapsed = newestSnapshot.tick - oldestSnapshot.tick;
+                    float daysElapsed = ticksElapsed / 60000f;
+
+                    colonist["dataPoints"] = history.Count;
+                    colonist["trackingDays"] = daysElapsed.ToString("0.1");
+                    colonist["moodChange"] = moodChange.ToString("+0.00;-0.00");
+
+                    // Calculate velocity (mood change per day)
+                    float velocity = daysElapsed > 0 ? moodChange / daysElapsed : 0;
+                    colonist["moodVelocity"] = velocity.ToString("+0.00;-0.00") + " per day";
+
+                    // Determine trend
+                    string trend = "stable";
+                    if (Math.Abs(velocity) < 0.02f)
+                        trend = "stable";
+                    else if (velocity > 0)
+                        trend = "rising";
+                    else
+                        trend = "falling";
+
+                    colonist["trend"] = trend;
+
+                    // Predict time to break if mood is falling
+                    if (velocity < -0.01f && currentMood > breakThreshold)
+                    {
+                        float distanceToBreak = currentMood - breakThreshold;
+                        float daysToBreak = distanceToBreak / Math.Abs(velocity);
+                        float hoursToBreak = daysToBreak * 24f;
+
+                        if (hoursToBreak < 24f)
+                        {
+                            colonist["timeToBreak"] = hoursToBreak.ToString("0.0") + " hours";
+                            colonist["breakRisk"] = hoursToBreak < 4f ? "imminent" : "high";
+                        }
+                        else
+                        {
+                            colonist["timeToBreak"] = daysToBreak.ToString("0.1") + " days";
+                            colonist["breakRisk"] = daysToBreak < 2f ? "high" : "moderate";
+                        }
+                    }
+                    else if (currentMood <= breakThreshold)
+                    {
+                        colonist["timeToBreak"] = "imminent";
+                        colonist["breakRisk"] = "critical";
+                    }
+                    else if (velocity >= 0)
+                    {
+                        colonist["breakRisk"] = "low";
+                    }
+
+                    // Get recent mood history snapshots (last 10)
+                    var recentHistory = new JSONArray();
+                    int startIdx = Math.Max(0, history.Count - 10);
+                    for (int i = startIdx; i < history.Count; i++)
+                    {
+                        var snap = history[i];
+                        var entry = new JSONObject();
+                        float hoursAgo = (currentTick - snap.tick) / 2500f;
+                        entry["hoursAgo"] = hoursAgo.ToString("0.0");
+                        entry["mood"] = snap.moodLevel.ToString("0.00");
+                        recentHistory.Add(entry);
+                    }
+                    colonist["recentHistory"] = recentHistory;
+                }
+                else
+                {
+                    colonist["dataPoints"] = history.Count;
+                    colonist["trend"] = "insufficient_data";
+                    colonist["note"] = "Collecting data... Need ~2-3 hours of gameplay for trend analysis";
+                }
+
+                // Get top negative thoughts
+                var negativeThoughts = new JSONArray();
+                if (pawn.needs.mood.thoughts?.memories?.Memories != null)
+                {
+                    var topNegative = pawn.needs.mood.thoughts.memories.Memories
+                        .Where(m => m.MoodOffset() < 0)
+                        .OrderBy(m => m.MoodOffset())
+                        .Take(5);
+
+                    foreach (var memory in topNegative)
+                    {
+                        var thought = new JSONObject();
+                        thought["label"] = memory.LabelCap.ToString();
+                        thought["moodEffect"] = memory.MoodOffset().ToString("+0.#;-0.#");
+                        negativeThoughts.Add(thought);
+                    }
+                }
+                if (negativeThoughts.Count > 0)
+                    colonist["topNegativeThoughts"] = negativeThoughts;
+
+                colonistTrends.Add(colonist);
+            }
+
+            result["colonistTrends"] = colonistTrends;
+            result["totalColonists"] = colonistTrends.Count;
+
+            // Summary of high-risk colonists
+            var highRisk = new JSONArray();
+            foreach (JSONObject trend in colonistTrends)
+            {
+                var risk = trend["breakRisk"]?.Value;
+                if (risk == "critical" || risk == "imminent" || risk == "high")
+                {
+                    var summary = new JSONObject();
+                    summary["name"] = trend["name"].Value;
+                    summary["risk"] = risk;
+                    if (trend["timeToBreak"] != null)
+                        summary["timeToBreak"] = trend["timeToBreak"].Value;
+                    highRisk.Add(summary);
+                }
+            }
+
+            if (highRisk.Count > 0)
+                result["highRiskColonists"] = highRisk;
 
             return result.ToString();
         }

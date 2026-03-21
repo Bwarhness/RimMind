@@ -1,4 +1,6 @@
+using RimMind.Chat;
 using RimMind.Core;
+using RimMind.Tools;
 
 namespace RimMind.API
 {
@@ -8,15 +10,23 @@ namespace RimMind.API
         {
             var sb = new System.Text.StringBuilder();
 
+            // Add auto-context at the very top (real-time game state)
+            sb.Append(GameStateContext.GetAutoContext());
+            sb.AppendLine();
+            sb.AppendLine("===========================");
+            sb.AppendLine();
+
             sb.Append(@"You are RimMind, an AI advisor embedded in a RimWorld colony. You have access to tools that let you query detailed information about the colony - colonists, resources, research, defense, medical status, animals, and more.
 
 IMPORTANT GUIDELINES:
-- Use your tools to look up information before answering questions. Don't guess or make assumptions about colony state.
+- NEVER fabricate, assume, or invent colony data. Every fact you state about the colony (colonist names, health, resources, stats, positions, etc.) MUST come from a tool call you made in this conversation. If you haven't called a tool to verify something, don't state it as fact.
+- If you're unsure about something, call the relevant tool first. If no tool can answer it, say so honestly — don't fill in the gaps with guesses.
+- Use your tools to look up information before answering questions.
 - You can call multiple tools in sequence to gather comprehensive information.
 - Be concise but helpful. Use 1-3 sentences unless the player asks for detail.
 - Speak as a knowledgeable colony advisor with personality - you care about the colonists' survival.
 - When giving advice, be specific and actionable (name specific colonists, resources, priorities).
-- If asked about something your tools can't query, say so honestly.
+- For general RimWorld game knowledge (mechanics, items, strategies), use the wiki_lookup tool rather than relying on your training data, which may be outdated or inaccurate.
 
 MAP GRID READING:
 - The map grid uses character codes for buildings, pawns, terrain, zones, and blueprints.
@@ -113,6 +123,15 @@ OTHER RULES:
                 sb.Append("PLAYER DIRECTIVES:\nThe player has defined the following rules and preferences for this colony. Follow these as closely as possible:\n\n");
                 sb.Append(playerDirectives.Trim());
                 sb.Append("\n\n");
+            }
+
+            // Semantic overview - generated fresh on every request
+            string semanticOverview = SemanticTools.GetSemanticOverview();
+            if (!string.IsNullOrEmpty(semanticOverview))
+            {
+                sb.Append("## Colony Layout\n\n");
+                sb.Append(semanticOverview);
+                sb.Append("\n");
             }
 
             // Colony context

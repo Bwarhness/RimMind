@@ -2,7 +2,7 @@ name: Deploy to Steam Workshop
 
 on:
   push:
-    branches: [master, dev]
+    branches: [main, dev]
   workflow_dispatch:
 
 jobs:
@@ -33,6 +33,8 @@ jobs:
           cp -r About/* staging/About/
           cp Assemblies/RimMind.dll staging/Assemblies/
           cp -r Defs/* staging/Defs/
+          cp -r Languages staging/Languages
+          cp thumbnail.png staging/
 
       - name: Patch About.xml for dev
         if: github.ref_name == 'dev'
@@ -46,6 +48,7 @@ jobs:
           username: ${{ secrets.STEAM_USERNAME }}
           configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
           appId: 294100
-          publishedFileId: ${{ github.ref_name == 'master' && '3666997391' || '3668326181' }}
+          publishedFileId: ${{ github.ref_name == 'main' && '3666997391' || '3668326181' }}
           path: staging
+          previewPath: staging/About/Preview.png
           changeNote: "${{ github.ref_name == 'dev' && '[DEV] ' || '' }}${{ github.event.head_commit.message }}"

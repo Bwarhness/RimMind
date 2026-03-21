@@ -25,7 +25,7 @@ namespace RimMind.Tools
 
                 if (bed.def.building != null)
                 {
-                    obj["sleepingSlotsCount"] = bed.def.building.bed_maxBodySize > 1.0f ? 2 : 1;
+                    obj["sleepingSlotsCount"] = bed.SleepingSlotsCount;
                 }
 
                 var owners = bed.OwnersForReading;
@@ -82,7 +82,7 @@ namespace RimMind.Tools
 
             // Check if bed is full
             var currentOwners = bed.OwnersForReading;
-            int maxOwners = bed.def.building.bed_maxBodySize > 1.0f ? 2 : 1;
+            int maxOwners = bed.SleepingSlotsCount;
             
             if (currentOwners != null && currentOwners.Count >= maxOwners && !currentOwners.Contains(pawn))
                 return ToolExecutor.JsonError("Bed is full (max " + maxOwners + " owners).");

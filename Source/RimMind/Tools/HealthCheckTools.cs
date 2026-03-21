@@ -93,7 +93,7 @@ namespace RimMind.Tools
             // Growing zones
             int growingZones = map.zoneManager.AllZones.OfType<Zone_Growing>().Count();
             int activeGrowingZones = map.zoneManager.AllZones.OfType<Zone_Growing>()
-                .Count(z => z.GetPlantDefToGrow() != null && map.mapTemperature.SeasonalTemp > 0);
+                .Count(z => z.GetPlantDefToGrow() != null && map.mapTemperature.OutdoorTemp > 0f);
 
             // Hunting capability (wild animals on map)
             int huntableAnimals = map.mapPawns.AllPawnsSpawned
@@ -263,7 +263,7 @@ namespace RimMind.Tools
 
             // Weapon stockpile
             int weaponStock = map.listerThings.ThingsInGroup(ThingRequestGroup.Weapon)
-                .Count(t => t.Faction == Faction.OfPlayer || !t.Position.Fogged(map));
+                .Count(t => t.Faction == Faction.OfPlayer || (t.Faction == null && !t.Position.Fogged(map)));
 
             // Determine status
             string status = "healthy";

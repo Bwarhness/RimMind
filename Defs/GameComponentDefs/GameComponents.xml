@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+    <!-- GameComponents (EventAutomationManager, ResourceTracker, etc.) are auto-registered -->
+    <!-- by RimWorld via constructor injection - no XML Defs needed. -->
+</Defs>
