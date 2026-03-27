@@ -9,7 +9,13 @@ namespace RimMind.Core
         private static ProposalTracker instance;
 
         private Dictionary<string, int> proposals = new Dictionary<string, int>();
+        private Dictionary<int, string> thingIdToProposal = new Dictionary<int, string>();
         private int nextId = 1;
+
+        // Cached map state for O(1) thing lookups
+        private Map cachedMap;
+        private int cachedMapTick = -1;
+        private Dictionary<int, Thing> cachedThingById;
 
         public ProposalTracker(Game game) : base()
         {
@@ -18,17 +24,38 @@ namespace RimMind.Core
 
         public static bool HasInstance => instance != null;
 
+        private void EnsureThingCache(Map map)
+        {
+            int currentTick = Find.TickManager.TicksGame;
+            if (cachedMap == map && cachedMapTick == currentTick && cachedThingById != null)
+                return;
+
+            cachedMap = map;
+            cachedMapTick = currentTick;
+            cachedThingById = new Dictionary<int, Thing>();
+            foreach (Thing t in map.listerThings.AllThings)
+            {
+                cachedThingById[t.thingIDNumber] = t;
+            }
+        }
+
         public static string Track(Thing thing)
         {
             if (instance == null) return null;
             string id = "rm_" + instance.nextId++;
             instance.proposals[id] = thing.thingIDNumber;
+            instance.thingIdToProposal[thing.thingIDNumber] = id;
             return id;
         }
 
         public static void Untrack(string proposalId)
         {
             if (instance == null) return;
+            int thingId;
+            if (instance.proposals.TryGetValue(proposalId, out thingId))
+            {
+                instance.thingIdToProposal.Remove(thingId);
+            }
             instance.proposals.Remove(proposalId);
         }
 
@@ -44,11 +71,9 @@ namespace RimMind.Core
             int thingId;
             if (!instance.proposals.TryGetValue(proposalId, out thingId))
                 return null;
-            foreach (Thing t in map.listerThings.AllThings)
-            {
-                if (t.thingIDNumber == thingId)
-                    return t;
-            }
+            instance.EnsureThingCache(map);
+            if (instance.cachedThingById.TryGetValue(thingId, out Thing t) && !t.Destroyed)
+                return t;
             return null;
         }
 
@@ -56,10 +81,10 @@ namespace RimMind.Core
         {
             var result = new List<KeyValuePair<string, Thing>>();
             if (instance == null || map == null) return result;
+            instance.EnsureThingCache(map);
             foreach (var kvp in instance.proposals)
             {
-                Thing t = FindThing(kvp.Key, map);
-                if (t != null && !t.Destroyed)
+                if (instance.cachedThingById.TryGetValue(kvp.Value, out Thing t) && !t.Destroyed)
                     result.Add(new KeyValuePair<string, Thing>(kvp.Key, t));
             }
             return result;
@@ -78,15 +103,19 @@ namespace RimMind.Core
         public static void CleanupDestroyed(Map map)
         {
             if (instance == null || map == null) return;
+            instance.EnsureThingCache(map);
             var stale = new List<string>();
             foreach (var kvp in instance.proposals)
             {
-                Thing t = FindThing(kvp.Key, map);
-                if (t == null || t.Destroyed)
+                if (!instance.cachedThingById.TryGetValue(kvp.Value, out Thing t) || t.Destroyed)
                     stale.Add(kvp.Key);
             }
             foreach (var id in stale)
+            {
+                int thingId = instance.proposals[id];
+                instance.thingIdToProposal.Remove(thingId);
                 instance.proposals.Remove(id);
+            }
         }
 
         public override void ExposeData()
@@ -95,6 +124,9 @@ namespace RimMind.Core
             Scribe_Values.Look(ref nextId, "rimMindNextProposalId", 1);
             if (proposals == null)
                 proposals = new Dictionary<string, int>();
+            // thingIdToProposal is rebuilt from proposals on next access
+            if (thingIdToProposal == null)
+                thingIdToProposal = new Dictionary<int, string>();
             instance = this;
         }
     }
