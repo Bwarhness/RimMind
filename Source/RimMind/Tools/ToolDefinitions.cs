@@ -288,6 +288,10 @@ namespace RimMind.Tools
             tools.Add(MakeTool("suggest_mood_interventions", "Get actionable mood improvement suggestions for a specific colonist. Analyzes their mood issues (recreation, bedroom quality, food, pain, social needs, etc.) and provides concrete steps to improve their mood and prevent mental breaks.",
                 MakeParam("name", "string", "The colonist's name")));
             tools.Add(MakeTool("get_mood_trends", "Track colonist mood over the last 3 days with trend analysis. Calculates mood velocity (rising/falling/stable), flags colonists trending toward mental break, shows top negative thoughts, and predicts time-to-break (e.g., 'Mira will break in ~4 hours'). Requires 2-3 hours of gameplay data for accurate trends. Use this for early warning of mental break risks and proactive intervention."));
+            tools.Add(MakeTool("get_mental_break_risks", "Lists colonists at risk of mental break with their current mental state, recovery time estimates, and recommended interventions. Extends get_mood_risks with mental break specific analysis including active mental states and actionable recommendations."));
+            tools.Add(MakeTool("handle_mental_break", "Intervenes when a colonist is having a mental break. Execute an intervention action to help the colonist recover. Actions: send_to_bed (send to their bed), cancel (cancel current job), recreation (assign recreation activity), restrain (restrain the colonist), arrest (have warden arrest).",
+                MakeParam("colonist", "string", "The colonist's name experiencing the mental break"),
+                MakeParam("action", "string", "Intervention action: send_to_bed, cancel, recreation, restrain, or arrest")));
 
             // Social Tools
             tools.Add(MakeTool("get_social_risks", "Detect social conflicts between colonists. Finds colonist pairs with negative opinions (< -20), calculates mutual hostility, identifies risk-affecting traits (Abrasive, Volatile, Bloodlust, Psychopath), and provides intervention suggestions (separate work areas, avoid shared recreation, etc.). Use this to prevent social fights and optimize colonist interactions."));
@@ -460,9 +464,11 @@ namespace RimMind.Tools
             tools.Add(MakeTool("assign_outfit", "Assign a clothing policy/outfit to a colonist.",
                 MakeParam("colonist", "string", "The colonist's name"),
                 MakeParam("outfitName", "string", "Outfit name (e.g., 'Worker', 'Soldier', 'Nudist')")));
+            tools.Add(MakeTool("list_outfits", "Lists all outfit definitions and which colonists use them. Returns outfit name, assigned colonists, allowed clothing categories, and what work types each outfit covers."));
             tools.Add(MakeTool("assign_drug_policy", "Assign a drug policy to a colonist.",
                 MakeParam("colonist", "string", "The colonist's name"),
                 MakeParam("policyName", "string", "Drug policy name")));
+            tools.Add(MakeTool("list_drug_policies", "Lists all drug policies and which colonists use them. Returns policy name, assigned colonists, and what drugs are allowed in each policy."));
             tools.Add(MakeTool("assign_food_restriction", "Assign a food restriction to a colonist.",
                 MakeParam("colonist", "string", "The colonist's name"),
                 MakeParam("restrictionName", "string", "Food restriction name")));
