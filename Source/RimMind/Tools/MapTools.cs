@@ -9,6 +9,10 @@ namespace RimMind.Tools
 {
     public static class MapTools
     {
+        // Cached cell codes for ClassifyCell optimization - invalidated per tick
+        private static Map cachedCellMap;
+        private static int cachedCellTick = -1;
+        private static Dictionary<IntVec3, char> cachedCellCodes;
         public static string GetWeatherAndSeason()
         {
             var map = Find.CurrentMap;
@@ -546,6 +550,41 @@ namespace RimMind.Tools
         {
             if (!cell.InBounds(map)) return ' ';
 
+            // Use cached cell codes if available and valid
+            int currentTick = Find.TickManager.TicksGame;
+            if (cachedCellMap == map && cachedCellTick == currentTick && cachedCellCodes != null)
+            {
+                if (cachedCellCodes.TryGetValue(cell, out char cachedCode))
+                    return cachedCode;
+                // If not in cache (shouldn't happen), compute and cache
+            }
+
+            // Build cache if needed
+            if (cachedCellMap != map || cachedCellTick != currentTick)
+            {
+                cachedCellMap = map;
+                cachedCellTick = currentTick;
+                cachedCellCodes = new Dictionary<IntVec3, char>();
+                // Pre-compute for the entire map (or a reasonable area)
+                foreach (var t in map.listerThings.AllThings)
+                {
+                    var pos = t.Position;
+                    if (!cachedCellCodes.ContainsKey(pos))
+                        cachedCellCodes[pos] = ClassifyCellDirect(pos, map);
+                }
+            }
+
+            // Try cache again after building
+            if (cachedCellCodes.TryGetValue(cell, out char code))
+                return code;
+
+            // Fallback: compute directly
+            return ClassifyCellDirect(cell, map);
+        }
+
+        // Direct classification without caching - for cache building
+        private static char ClassifyCellDirect(IntVec3 cell, Map map)
+        {
             var things = cell.GetThingList(map);
             Building building = null;
             Thing blueprint = null;

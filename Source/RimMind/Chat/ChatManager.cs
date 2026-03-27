@@ -12,6 +12,9 @@ namespace RimMind.Chat
         private const int MAX_TOOL_LOOPS = 50;
         private const int MAX_HISTORY_MESSAGES = 500;
 
+        // Cached tool nodes to avoid ConvertAll allocation on every API request
+        private static List<JSONNode> cachedToolNodes;
+
         private readonly List<ChatMessage> conversationHistory = new List<ChatMessage>();
         private bool isProcessing;
 
@@ -174,7 +177,7 @@ namespace RimMind.Chat
                 messages = messages,
                 temperature = RimMindMod.Settings.temperature,
                 max_tokens = RimMindMod.Settings.maxTokens,
-                tools = includeTools ? ToolDefinitions.GetAllTools().ConvertAll(t => (JSONNode)t) : null
+                tools = includeTools ? GetCachedTools() : null
             };
         }
 
@@ -188,6 +191,13 @@ namespace RimMind.Chat
         {
             if (string.IsNullOrEmpty(name)) return "data";
             return name.Replace("_", " ");
+        }
+
+        private static List<JSONNode> GetCachedTools()
+        {
+            if (cachedToolNodes != null) return cachedToolNodes;
+            cachedToolNodes = ToolDefinitions.GetAllTools().ConvertAll(t => (JSONNode)t);
+            return cachedToolNodes;
         }
     }
 }
