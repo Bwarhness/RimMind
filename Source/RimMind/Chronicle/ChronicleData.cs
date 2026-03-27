@@ -13,14 +13,21 @@ namespace RimMind.Chronicle
         public int gameDay;
         public string season;
         public int year;
+        public int realYear;        // Real-world year when this was generated
+        public int realWeekNumber;  // Real-world week number
         public string topHeadline;
         public string leadParagraph;
         public List<ChronicleSection> sections = new List<ChronicleSection>();
         public List<ColonyEvent> events = new List<ColonyEvent>();
         public List<ColonistQuote> quotes = new List<ColonistQuote>();
+        public List<ColonistInterview> interviews = new List<ColonistInterview>();
         public List<string> milestones = new List<string>();
+        public List<string> runningJokes = new List<string>(); // Last 4 weeks of running jokes
+        public string runningJokeCurrent; // The active running joke for this week
+        public List<Prediction> predictions = new List<Prediction>();
+        public string editorial; // "FROM THE EDITOR'S DESK" content
         public string weatherPoem;
-        public string prediction;
+        public string oneYearAgoSummary; // "ON THIS DAY, ONE YEAR AGO" content
         public bool isGenerated;
 
         public WeeklyChronicle()
@@ -33,7 +40,20 @@ namespace RimMind.Chronicle
             this.gameDay = gameDay;
             this.season = season;
             this.year = year;
+            this.realYear = DateTime.Now.Year;
+            this.realWeekNumber = GetRealWeekNumber();
             this.isGenerated = false;
+        }
+
+        private static int GetRealWeekNumber()
+        {
+            var now = DateTime.Now;
+            var jan1 = new DateTime(now.Year, 1, 1);
+            var daysOffset = (int)jan1.DayOfWeek - (int)DayOfWeek.Monday;
+            if (daysOffset < 0) daysOffset += 7;
+            var weekStart = jan1.AddDays(-daysOffset);
+            var weekDiff = now.Subtract(weekStart).Days / 7;
+            return weekDiff + 1;
         }
     }
 
@@ -105,6 +125,129 @@ namespace RimMind.Chronicle
     }
 
     /// <summary>
+    /// A procedural colonist "interview" generated from their traits and current state.
+    /// </summary>
+    public class ColonistInterview
+    {
+        public string colonistName;
+        public string age;
+        public string currentJob;
+        public string daysOnColony;
+        public string question;
+        public string answer;
+
+        public ColonistInterview()
+        {
+        }
+
+        public ColonistInterview(string colonistName, string age, string currentJob, string daysOnColony, string question, string answer)
+        {
+            this.colonistName = colonistName;
+            this.age = age;
+            this.currentJob = currentJob;
+            this.daysOnColony = daysOnColony;
+            this.question = question;
+            this.answer = answer;
+        }
+    }
+
+    /// <summary>
+    /// A prediction for the upcoming week with confidence scoring.
+    /// </summary>
+    public class Prediction
+    {
+        public string eventDescription;
+        public int confidencePct;  // 10-95
+        public string basis;      // "historical data", "current mood", "raid frequency", "weather patterns"
+        public string reason;
+
+        public Prediction()
+        {
+        }
+
+        public Prediction(string eventDescription, int confidencePct, string basis, string reason)
+        {
+            this.eventDescription = eventDescription;
+            this.confidencePct = Math.Clamp(confidencePct, 10, 95);
+            this.basis = basis;
+            this.reason = reason;
+        }
+
+        /// <summary>
+        /// Returns an ASCII progress bar for the confidence level.
+        /// </summary>
+        public string GetConfidenceBar()
+        {
+            int barWidth = 10;
+            int filledWidth = (confidencePct * barWidth) / 100;
+            string bar = new string('█', filledWidth) + new string('░', barWidth - filledWidth);
+            return $"[{bar}] {confidencePct}%";
+        }
+    }
+
+    /// <summary>
+    /// Archived chronicle data for "Last Year on This Day" feature.
+    /// Stored to disk with year stamp for cross-year comparisons.
+    /// </summary>
+    public class ChronicleArchive
+    {
+        public int realYear;
+        public int realWeekNumber;
+        public int weekNumber;
+        public string colonyName;
+        public string headline;
+        public string summary; // Brief recap for "one year ago" display
+        public int deaths;
+        public int colonists;
+        public float wealth;
+
+        public ChronicleArchive()
+        {
+        }
+
+        public ChronicleArchive(WeeklyChronicle chronicle, string colonyName)
+        {
+            this.realYear = chronicle.realYear;
+            this.realWeekNumber = chronicle.realWeekNumber;
+            this.weekNumber = chronicle.weekNumber;
+            this.colonyName = colonyName;
+            this.headline = chronicle.topHeadline;
+            this.summary = BuildSummary(chronicle);
+            this.deaths = chronicle.events?.FindAll(e => e.type == "death").Count ?? 0;
+            this.colonists = chronicle.events?.Count ?? 0;
+            this.wealth = 0f; // Will be filled if available
+        }
+
+        private string BuildSummary(WeeklyChronicle chronicle)
+        {
+            var parts = new List<string>();
+
+            if (!string.IsNullOrEmpty(chronicle.leadParagraph))
+            {
+                // Truncate to ~100 chars for archive
+                var lead = chronicle.leadParagraph;
+                if (lead.Length > 100)
+                    lead = lead.Substring(0, 97) + "...";
+                parts.Add(lead);
+            }
+
+            if (chronicle.events != null && chronicle.events.Count > 0)
+            {
+                var eventSummary = $"{chronicle.events.Count} notable event(s)";
+                if (chronicle.sections != null)
+                {
+                    var battleSection = chronicle.sections.Find(s => s.title.Contains("BATTLE"));
+                    if (battleSection != null && !string.IsNullOrEmpty(battleSection.content))
+                        eventSummary += $". {battleSection.content}";
+                }
+                parts.Add(eventSummary);
+            }
+
+            return string.Join(" ", parts);
+        }
+    }
+
+    /// <summary>
     /// Tracks event data accumulated throughout the current week.
     /// Used internally by ChronicleTracker to build the weekly report.
     /// </summary>
@@ -130,6 +273,9 @@ namespace RimMind.Chronicle
         public int researchCompleted;
         public int animalsTamed;
         public int itemsCrafted;
+        public int fires;
+        public int mentalBreakCount;
+        public int failedRecipes;
 
         // Weather tracking
         public List<string> weatherEvents = new List<string>();
@@ -141,6 +287,10 @@ namespace RimMind.Chronicle
         public int lowestColonistCount;
         public string mostExtremeMoodColonist;
         public float mostExtremeMoodValue;
+
+        // Running joke tracking
+        public Dictionary<string, int> fireCausesByColonist = new Dictionary<string, int>();
+        public Dictionary<string, int> mentalBreakCountByColonist = new Dictionary<string, int>();
 
         public WeeklyEventLog()
         {
@@ -176,6 +326,9 @@ namespace RimMind.Chronicle
             researchCompleted = 0;
             animalsTamed = 0;
             itemsCrafted = 0;
+            fires = 0;
+            mentalBreakCount = 0;
+            failedRecipes = 0;
 
             weatherEvents.Clear();
 
@@ -185,6 +338,9 @@ namespace RimMind.Chronicle
             lowestColonistCount = int.MaxValue;
             mostExtremeMoodColonist = null;
             mostExtremeMoodValue = 0.5f;
+
+            fireCausesByColonist.Clear();
+            mentalBreakCountByColonist.Clear();
         }
 
         public string BuildContextSummary()
@@ -249,6 +405,21 @@ namespace RimMind.Chronicle
             sb.AppendLine($"Research Completed: {researchCompleted}");
             sb.AppendLine($"Animals Tamed: {animalsTamed}");
             sb.AppendLine($"Items Crafted: {itemsCrafted}");
+            sb.AppendLine($"Fires: {fires}");
+
+            sb.AppendLine();
+            sb.AppendLine("-- FIRE CAUSE TRACKING (for running jokes) --");
+            if (fireCausesByColonist.Count > 0)
+            {
+                foreach (var kvp in fireCausesByColonist)
+                {
+                    sb.AppendLine($"  {kvp.Key}: {kvp.Value} fire(s) caused");
+                }
+            }
+            else
+            {
+                sb.AppendLine("  No fire incidents tracked.");
+            }
 
             sb.AppendLine();
             sb.AppendLine("-- WEATHER --");
