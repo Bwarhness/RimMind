@@ -221,6 +221,24 @@ namespace RimMind.Chat
                     Find.WindowStack.Add(new ContextViewWindow(chatManager));
             }
 
+            // Chronicle button (Colony Chronicle weekly newspaper)
+            btnX -= btnW + 4f;
+            GUI.color = Color.white;
+            if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Chronicle"))
+            {
+                var existing = Find.WindowStack.WindowOfType<Chronicle.ChronicleTab>();
+                if (existing != null)
+                {
+                    Find.WindowStack.TryRemove(existing);
+                }
+                else
+                {
+                    var chronicleTab = new Chronicle.ChronicleTab();
+                    Find.WindowStack.Add(chronicleTab);
+                }
+            }
+            TooltipHandler.TipRegion(new Rect(btnX, btnY, btnW, btnH), "Open the Colony Chronicle - a newspaper-style weekly report");
+
             // Vision button (Spatial Vision debug window)
             btnX -= btnW + 4f;
             if (Widgets.ButtonText(new Rect(btnX, btnY, btnW, btnH), "Vision"))
