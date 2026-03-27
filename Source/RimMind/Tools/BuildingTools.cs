@@ -49,7 +49,7 @@ namespace RimMind.Tools
 
         // --- Forwarding stub for extracted validation tool ---
         public static string CheckPlacement(JSONNode args)
-            => BuildingPlacementTools.CheckPlacement(args);
+            => BuildingValidationTools.CheckPlacement(args);
 
     }
 }
