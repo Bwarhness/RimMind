@@ -216,14 +216,14 @@ namespace RimMind.Tools
             { "assign_food_restriction", args => EquipmentTools.AssignFoodRestriction(args?["colonist"]?.Value, args?["restrictionName"]?.Value) },
 
             // Building
-            { "list_buildable", args => BuildingTools.ListBuildable(args) },
-            { "get_building_info", args => BuildingTools.GetBuildingInfo(args) },
-            { "get_requirements", args => BuildingTools.GetRequirements(args) },
+            { "list_buildable", args => BuildingQueryTools.ListBuildable(args) },
+            { "get_building_info", args => BuildingQueryTools.GetBuildingInfo(args) },
+            { "get_requirements", args => BuildingQueryTools.GetRequirements(args) },
             { "place_building", args => BuildingTools.PlaceBuilding(args) },
             { "place_structure", args => BuildingTools.PlaceStructure(args) },
             { "check_placement", args => BuildingTools.CheckPlacement(args) },
-            { "remove_building", args => BuildingTools.RemoveBuilding(args) },
-            { "approve_buildings", args => BuildingTools.ApproveBuildings(args) },
+            { "remove_building", args => BuildingDeconstructTools.RemoveBuilding(args) },
+            { "approve_buildings", args => BuildingDeconstructTools.ApproveBuildings(args) },
 
             // Directives
             { "get_directives", args => DirectiveTools.GetDirectives() },
@@ -252,7 +252,7 @@ namespace RimMind.Tools
             { "switch_weapon", args => DraftedPawnTools.SwitchWeapon(args?["pawnName"]?.Value, args?["weaponDefName"]?.Value) },
 
             // Deconstruct
-            { "deconstruct_building", args => BuildingTools.DeconstructBuilding(args) },
+            { "deconstruct_building", args => BuildingDeconstructTools.DeconstructBuilding(args) },
         };
 
         public static string Execute(string toolName, string argumentsJson)
