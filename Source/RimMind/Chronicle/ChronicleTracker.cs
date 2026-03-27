@@ -12,11 +12,13 @@ namespace RimMind.Chronicle
     /// <summary>
     /// GameComponent that tracks colony events throughout each week and generates
     /// the weekly Colony Chronicle when a new week begins.
+    /// Phase 2 adds real event detection: deaths, raids, milestones.
     /// </summary>
     public class ChronicleTracker : GameComponent
     {
         private const int TICKS_PER_DAY = 60000;
         private const int DAYS_PER_WEEK = 7;
+        private const int MILESTONE_CHECK_INTERVAL = 6000; // Check milestones every ~1 in-game day
 
         public static ChronicleTracker Instance => Current.Game?.GetComponent<ChronicleTracker>();
 
@@ -44,6 +46,19 @@ namespace RimMind.Chronicle
         // Track deaths detected via letters to avoid duplicates
         private HashSet<string> processedDeathLetterIds = new HashSet<string>();
 
+        // Phase 2: Milestone tracking (cumulative across colony lifetime)
+        private bool hasRecordedFirstDeath = false;
+        private bool hasSurvivedFirstRaid = false;
+        private bool hasFirstMechanoidKill = false;
+        private bool hasFirstBanishment = false;
+        private int peakColonistCount = 0;
+        private HashSet<string> skilledColonists = new HashSet<string>(); // Track colonists with skill 20
+
+        // Phase 2: Weekly tracking
+        private int lastMilestoneCheckDay = 0;
+        private HashSet<string> weekMechanoidKills = new HashSet<string>();
+        private bool weekBanishmentRecorded = false;
+
         public ChronicleTracker(Game game)
         {
         }
@@ -58,6 +73,7 @@ namespace RimMind.Chronicle
             {
                 int currentDay = GenLocalDate.DayOfYear(map);
                 lastProcessedDay = currentDay;
+                lastMilestoneCheckDay = currentDay;
 
                 int weekNumber = (currentDay - 1) / DAYS_PER_WEEK + 1;
                 int startDay = (weekNumber - 1) * DAYS_PER_WEEK + 1;
@@ -73,6 +89,13 @@ namespace RimMind.Chronicle
 
                 TrackInitialColonists(map);
                 TakeInitialSnapshot(map);
+
+                // Phase 2: Initialize colonist count tracking
+                peakColonistCount = map.mapPawns.FreeColonists.Count;
+                currentWeekLog.colonistCountStart = peakColonistCount;
+
+                // Check for colony size milestones on init
+                CheckColonySizeMilestones(peakColonistCount);
             }
         }
 
@@ -90,6 +113,7 @@ namespace RimMind.Chronicle
             {
                 OnNewDay(map, currentDay);
                 lastProcessedDay = currentDay;
+                lastMilestoneCheckDay = currentDay;
             }
 
             // Take periodic snapshots for the day
@@ -97,6 +121,21 @@ namespace RimMind.Chronicle
             {
                 TakePeriodicSnapshot(map);
             }
+
+            // Phase 2: Check milestones periodically
+            if (Find.TickManager.TicksGame % MILESTONE_CHECK_INTERVAL == 0 && currentDay != lastMilestoneCheckDay)
+            {
+                CheckMilestones(map);
+                lastMilestoneCheckDay = currentDay;
+            }
+        }
+
+        /// <summary>
+        /// Called from ChronicleEventPatches when a raid letter is received.
+        /// </summary>
+        public static void OnRaidLetter(Letter letter)
+        {
+            ChronicleEventPatches.OnRaidLetterReceived(letter);
         }
 
         private void OnNewDay(Map map, int newDay)
@@ -143,18 +182,24 @@ namespace RimMind.Chronicle
 
         private void CheckForNewColonists(Map map)
         {
+            int currentDay = GenLocalDate.DayOfYear(map);
+
             foreach (var colonist in map.mapPawns.FreeColonists)
             {
                 if (!trackedColonistIds.Contains(colonist.thingIDNumber))
                 {
                     trackedColonistIds.Add(colonist.thingIDNumber);
 
+                    // Phase 2: Use proper join record
+                    var join = new ColonistJoin(colonist.Name.ToStringShort, "recruit", currentDay);
+                    RecordColonistJoin(join);
+
                     currentWeekLog?.milestones.Add($"{colonist.Name.ToStringShort} joined the colony!");
                     currentWeekLog?.events.Add(new ColonyEvent(
                         "recruitment",
                         $"{colonist.Name.ToStringShort} has joined the colony!",
                         colonist.Name.ToStringShort,
-                        GenLocalDate.DayOfYear(map)
+                        currentDay
                     ));
                 }
             }
@@ -214,18 +259,287 @@ namespace RimMind.Chronicle
             if (colonistCount < currentWeekLog.lowestColonistCount)
                 currentWeekLog.lowestColonistCount = colonistCount;
 
-            // Track mood extremes
+            // Phase 2: Track mood extremes (best and worst mood)
             foreach (var colonist in map.mapPawns.FreeColonists)
             {
                 if (colonist.needs?.mood == null) continue;
 
                 float mood = colonist.needs.mood.CurLevel;
-                float deviation = Math.Abs(mood - 0.5f); // Deviation from neutral
+                string name = colonist.Name?.ToStringShort ?? "Unknown";
 
-                if (deviation > Math.Abs(currentWeekLog.mostExtremeMoodValue - 0.5f))
+                // Track best mood (happiest colonist)
+                if (mood > currentWeekLog.bestMoodValue)
                 {
-                    currentWeekLog.mostExtremeMoodColonist = colonist.Name.ToStringShort;
-                    currentWeekLog.mostExtremeMoodValue = mood;
+                    currentWeekLog.bestMoodColonist = name;
+                    currentWeekLog.bestMoodValue = mood;
+                }
+
+                // Track worst mood (most troubled colonist)
+                if (mood < currentWeekLog.worstMoodValue)
+                {
+                    currentWeekLog.worstMoodColonist = name;
+                    currentWeekLog.worstMoodValue = mood;
+                }
+            }
+
+            // Also update from MoodHistoryTracker if available
+            if (MoodHistoryTracker.Instance != null)
+            {
+                var recentHistory = MoodHistoryTracker.Instance.GetAllRecentHistory(1);
+                if (recentHistory.Count > 0)
+                {
+                    var worstSnapshot = recentHistory.OrderBy(s => s.moodLevel).FirstOrDefault();
+                    var bestSnapshot = recentHistory.OrderByDescending(s => s.moodLevel).FirstOrDefault();
+
+                    if (worstSnapshot != null && worstSnapshot.moodLevel < currentWeekLog.worstMoodValue)
+                    {
+                        currentWeekLog.worstMoodColonist = worstSnapshot.pawnId;
+                        currentWeekLog.worstMoodValue = worstSnapshot.moodLevel;
+                    }
+
+                    if (bestSnapshot != null && bestSnapshot.moodLevel > currentWeekLog.bestMoodValue)
+                    {
+                        currentWeekLog.bestMoodColonist = bestSnapshot.pawnId;
+                        currentWeekLog.bestMoodValue = bestSnapshot.moodLevel;
+                    }
+                }
+            }
+        }
+
+        // ========================
+        // PHASE 2: EVENT RECORDING
+        // ========================
+
+        /// <summary>
+        /// Records a colonist death event.
+        /// </summary>
+        public void RecordColonistDeath(ColonistDeath death)
+        {
+            if (currentWeekLog == null) return;
+
+            currentWeekLog.deathsList.Add(death);
+            currentWeekLog.deaths++;
+            currentWeekLog.colonistDeaths++;
+            currentWeekLog.deathlessWeek = false;
+            currentWeekLog.totalColonistDeaths++;
+
+            // Check for first death milestone
+            if (!hasRecordedFirstDeath)
+            {
+                hasRecordedFirstDeath = true;
+                currentWeekLog.firstDeath = true;
+                currentWeekLog.milestoneFlags.Add("FIRST DEATH: Colony experienced its first death");
+                currentWeekLog.milestones.Add($"First Death: {death.name} has passed away");
+            }
+
+            // Add to events for LLM
+            currentWeekLog.events.Add(new ColonyEvent(
+                "death",
+                $"{death.name} died from {death.cause}",
+                death.name,
+                death.day,
+                $"Killed by: {death.killer}"
+            ));
+        }
+
+        /// <summary>
+        /// Records a raid event.
+        /// </summary>
+        public void RecordRaid(RaidEvent raid)
+        {
+            if (currentWeekLog == null) return;
+
+            currentWeekLog.raidsList.Add(raid);
+            currentWeekLog.raids++;
+            currentWeekLog.raidsThisWeek++;
+
+            // Check for raid marathon (3+ raids in one week)
+            if (currentWeekLog.raidsThisWeek >= 3 && !currentWeekLog.raidMarathon)
+            {
+                currentWeekLog.raidMarathon = true;
+                currentWeekLog.milestoneFlags.Add("RAID MARATHON: Survived 3+ raids in one week!");
+                currentWeekLog.milestones.Add("Raid Marathon: Survived 3+ raids in a single week!");
+            }
+
+            // Add event
+            currentWeekLog.events.Add(new ColonyEvent(
+                "raid",
+                $"Raid by {raid.enemyFaction} - {(raid.survived ? "SURVIVED" : "DEFEAT")}",
+                null,
+                raid.day,
+                $"Enemies: {raid.enemyCount}, Outcome: {(raid.survived ? "Survived" : "Lost")}"
+            ));
+        }
+
+        /// <summary>
+        /// Records a mechanoid kill.
+        /// </summary>
+        public void RecordMechanoidKill(string colonistName)
+        {
+            if (currentWeekLog == null) return;
+
+            if (!weekMechanoidKills.Contains(colonistName))
+            {
+                weekMechanoidKills.Add(colonistName);
+            }
+
+            if (!hasFirstMechanoidKill)
+            {
+                hasFirstMechanoidKill = true;
+                currentWeekLog.firstMechanoidKill = true;
+                currentWeekLog.milestoneFlags.Add("FIRST MECHANOID KILL: First mechanoid destroyed!");
+                currentWeekLog.milestones.Add($"First Mechanoid Kill: {colonistName} destroyed a mechanoid!");
+            }
+        }
+
+        /// <summary>
+        /// Records a colonist banishment.
+        /// </summary>
+        public void RecordBanishment(string colonistName)
+        {
+            if (currentWeekLog == null) return;
+
+            if (!weekBanishmentRecorded)
+            {
+                weekBanishmentRecorded = true;
+
+                if (!hasFirstBanishment)
+                {
+                    hasFirstBanishment = true;
+                    currentWeekLog.firstBanishment = true;
+                    currentWeekLog.milestoneFlags.Add("FIRST BANISHMENT: First colonist banished from the colony!");
+                    currentWeekLog.milestones.Add($"First Banishment: {colonistName} was banished from the colony");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Records a colonist joining the colony.
+        /// </summary>
+        public void RecordColonistJoin(ColonistJoin join)
+        {
+            if (currentWeekLog == null) return;
+
+            currentWeekLog.joins.Add(join);
+
+            // Check for skill milestone (passion level 20 in any skill)
+            CheckSkillMilestones(join.name);
+
+            // Check colony size milestones
+            var map = Find.Maps?.FirstOrDefault(m => m.IsPlayerHome);
+            if (map != null)
+            {
+                int count = map.mapPawns.FreeColonists.Count;
+                if (count > peakColonistCount)
+                {
+                    peakColonistCount = count;
+                }
+                CheckColonySizeMilestones(count);
+            }
+        }
+
+        // ========================
+        // PHASE 2: MILESTONE CHECKS
+        // ========================
+
+        private void CheckMilestones(Map map)
+        {
+            if (currentWeekLog == null) return;
+
+            int currentDay = GenLocalDate.DayOfYear(map);
+
+            // Check for day milestones (100, 200, etc.)
+            CheckDayMilestones(currentDay);
+
+            // Check skill milestones for all colonists
+            foreach (var colonist in map.mapPawns.FreeColonists)
+            {
+                CheckSkillMilestones(colonist.Name?.ToStringShort);
+            }
+
+            // Check raid survival milestone
+            if (currentWeekLog.raidsThisWeek > 0 && !hasSurvivedFirstRaid)
+            {
+                // Check if any raid was survived
+                bool anySurvived = currentWeekLog.raidsList.Any(r => r.survived);
+                if (anySurvived)
+                {
+                    hasSurvivedFirstRaid = true;
+                    currentWeekLog.survivedFirstRaid = true;
+                    currentWeekLog.milestoneFlags.Add("FIRST RAID SURVIVED: The colony survived its first raid!");
+                    currentWeekLog.milestones.Add("First Raid Survived: The colony has proven itself in battle!");
+                }
+            }
+        }
+
+        private void CheckDayMilestones(int currentDay)
+        {
+            if (currentWeekLog == null) return;
+
+            // 100-day milestone
+            if (currentDay >= 100 && currentDay % 100 < 7)
+            {
+                int milestone = (currentDay / 100) * 100;
+                string key = $"day_{milestone}";
+                if (!currentWeekLog.milestoneFlags.Any(m => m.Contains(key)))
+                {
+                    currentWeekLog.milestoneFlags.Add($"DAY {milestone}: Colony reached {milestone} days!");
+                    currentWeekLog.milestones.Add($"Day {milestone} Milestone: The colony has endured for {milestone} days!");
+                }
+            }
+        }
+
+        private void CheckColonySizeMilestones(int count)
+        {
+            if (currentWeekLog == null) return;
+
+            if (count >= 5 && !currentWeekLog.hasReached5Colonists)
+            {
+                currentWeekLog.hasReached5Colonists = true;
+                currentWeekLog.milestoneFlags.Add("COLONY OF 5: Reached 5 colonists!");
+                currentWeekLog.milestones.Add("Colony Milestone: The colony has grown to 5 colonists!");
+            }
+
+            if (count >= 10 && !currentWeekLog.hasReached10Colonists)
+            {
+                currentWeekLog.hasReached10Colonists = true;
+                currentWeekLog.milestoneFlags.Add("COLONY OF 10: Reached 10 colonists!");
+                currentWeekLog.milestones.Add("Colony Milestone: The colony has grown to 10 colonists!");
+            }
+
+            if (count >= 20 && !currentWeekLog.hasReached20Colonists)
+            {
+                currentWeekLog.hasReached20Colonists = true;
+                currentWeekLog.milestoneFlags.Add("COLONY OF 20: Reached 20 colonists!");
+                currentWeekLog.milestones.Add("Colony Milestone: The colony has grown to 20 colonists!");
+            }
+        }
+
+        private void CheckSkillMilestones(string colonistName)
+        {
+            if (currentWeekLog == null || string.IsNullOrEmpty(colonistName)) return;
+
+            string key = $"skill20_{colonistName}";
+            if (skilledColonists.Contains(key)) return;
+
+            var map = Find.Maps?.FirstOrDefault(m => m.IsPlayerHome);
+            if (map == null) return;
+
+            foreach (var colonist in map.mapPawns.FreeColonists)
+            {
+                if (colonist.Name?.ToStringShort != colonistName) continue;
+                if (colonist.skills == null) continue;
+
+                foreach (var skill in colonist.skills.skills)
+                {
+                    // Skill level 20 = true mastery
+                    if (skill.Level >= 20)
+                    {
+                        skilledColonists.Add(key);
+                        currentWeekLog.milestoneFlags.Add($"SKILL MASTER: {colonistName} reached level 20 in {skill.def.label}!");
+                        currentWeekLog.milestones.Add($"Skill Master: {colonistName} has achieved level 20 in {skill.def.LabelCap}!");
+                        break; // Only record once per colonist
+                    }
                 }
             }
         }
@@ -270,6 +584,12 @@ namespace RimMind.Chronicle
                 currentWeekLog.lowestColonistCount = colonistCountSnapshots.Min();
             }
 
+            // Phase 2: Finalize colonist counts
+            currentWeekLog.colonistCountEnd = map?.mapPawns?.FreeColonists?.Count ?? 0;
+
+            // Phase 2: Finalize achievement flags
+            FinalizeWeekAchievements();
+
             // Create a log copy for generation (since currentWeekLog will be reset)
             var logForGeneration = currentWeekLog;
 
@@ -278,6 +598,28 @@ namespace RimMind.Chronicle
 
             // Generate the Chronicle via LLM
             GenerateChronicleAsync(logForGeneration);
+
+            // Reset week-specific tracking for next week
+            ResetWeekTracking();
+        }
+
+        private void FinalizeWeekAchievements()
+        {
+            if (currentWeekLog == null) return;
+
+            // Check for deathless week
+            if (currentWeekLog.deathlessWeek && currentWeekLog.raidsThisWeek > 0)
+            {
+                currentWeekLog.milestoneFlags.Add("DEATHLESS WEEK: No colonists died this week!");
+                currentWeekLog.milestones.Add("Deathless Week: The colony survived without losing anyone!");
+            }
+        }
+
+        private void ResetWeekTracking()
+        {
+            // Reset week-specific tracking
+            weekMechanoidKills.Clear();
+            weekBanishmentRecorded = false;
         }
 
         private void SendChronicleNotification(WeeklyEventLog log)
@@ -399,6 +741,23 @@ Use creative, entertaining language. This is a fictional newspaper for a harsh f
             chronicle.milestones = new List<string>(log.milestones);
             chronicle.weatherPoem = "Weather was uneventful this week.";
 
+            // Phase 2: Populate extended fields
+            chronicle.colonistCountStart = log.colonistCountStart;
+            chronicle.colonistCountEnd = log.colonistCountEnd;
+            chronicle.raidsThisWeek = log.raidsThisWeek;
+            chronicle.raidMarathon = log.raidMarathon;
+            chronicle.deathlessWeek = log.deathlessWeek;
+            chronicle.firstDeath = log.firstDeath;
+            chronicle.survivedFirstRaid = log.survivedFirstRaid;
+            chronicle.colonistDeaths = log.colonistDeaths;
+            chronicle.deaths = new List<ColonistDeath>(log.deathsList);
+            chronicle.milestoneFlags = new List<string>(log.milestoneFlags);
+            chronicle.raids = new List<RaidEvent>(log.raidsList);
+            chronicle.bestMoodColonist = log.bestMoodColonist;
+            chronicle.bestMoodValue = log.bestMoodValue;
+            chronicle.worstMoodColonist = log.worstMoodColonist;
+            chronicle.worstMoodValue = log.worstMoodValue;
+
             // Parse the content into sections
             // The LLM should format it with [SECTION:name:emoji] markers
             // But we'll parse what we can from plain text
@@ -466,17 +825,67 @@ Use creative, entertaining language. This is a fictional newspaper for a harsh f
             // If we couldn't parse sections, create some default ones
             if (chronicle.sections.Count == 0)
             {
-                chronicle.sections.Add(new ChronicleSection("BATTLE REPORT", "⚔️",
-                    log.raids > 0 ? $"{log.raids} raid(s) occurred this week." : "A quiet week on the battlefield."));
+                // Phase 2: Richer battle report
+                string battleReport;
+                if (log.raidsList.Count > 0)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    foreach (var raid in log.raidsList)
+                    {
+                        string outcome = raid.survived ? "survived" : "was defeated by";
+                        sb.AppendLine($"Day {raid.day}: {raid.enemyFaction} attacked ({raid.enemyCount} enemies) - colony {outcome}");
+                        sb.AppendLine($"  Our colonists: {raid.colonistsInvolved} | Enemies slain: {raid.enemiesKilled} | Colonists lost: {raid.colonistsKilled}");
+                    }
+                    if (log.raidMarathon)
+                        sb.AppendLine("\n⚠️ RAID MARATHON: 3+ raids in one week!");
+                    battleReport = sb.ToString();
+                }
+                else
+                {
+                    battleReport = "A quiet week on the battlefield.";
+                }
+                chronicle.sections.Add(new ChronicleSection("BATTLE REPORT", "⚔️", battleReport));
 
-                chronicle.sections.Add(new ChronicleSection("OBITUARIES", "😢",
-                    log.deaths > 0 ? $"{log.deaths} colonist(s) passed away." : "No deaths this week. A blessing."));
+                // Phase 2: Richer obituaries
+                string obituaries;
+                if (log.deathsList.Count > 0)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    foreach (var death in log.deathsList)
+                    {
+                        sb.AppendLine($"Day {death.day}: {death.name} died from {death.cause}");
+                        if (!string.IsNullOrEmpty(death.killer) && death.killer != "unknown")
+                            sb.AppendLine($"  Claimed by: {death.killer}");
+                        if (!string.IsNullOrEmpty(death.lastWords))
+                            sb.AppendLine($"  Last words: \"{death.lastWords}\"");
+                    }
+                    obituaries = sb.ToString();
+                }
+                else if (log.deathlessWeek)
+                {
+                    obituaries = "No deaths this week. A blessing from the gods above.\n🙏 Deathless Week achieved!";
+                }
+                else
+                {
+                    obituaries = "No deaths this week.";
+                }
+                chronicle.sections.Add(new ChronicleSection("OBITUARIES", "😢", obituaries));
 
                 chronicle.sections.Add(new ChronicleSection("ECONOMY", "📦",
                     $"Colony wealth: {log.highestWealth:N0} silver. {log.trades} trade(s) conducted."));
 
-                chronicle.sections.Add(new ChronicleSection("MILESTONES", "🏆",
-                    log.milestones.Count > 0 ? string.Join("\n", log.milestones) : "No major milestones."));
+                // Phase 2: Richer milestones with achievement flags
+                var allMilestones = new List<string>(log.milestones);
+                allMilestones.AddRange(log.milestoneFlags);
+                string milestoneSection = allMilestones.Count > 0 ? string.Join("\n", allMilestones) : "No major milestones.";
+
+                // Add mood extremes to milestones
+                if (!string.IsNullOrEmpty(log.bestMoodColonist))
+                    milestoneSection += $"\n\nHappiest colonist: {log.bestMoodColonist} ({log.bestMoodValue:P0} mood)";
+                if (!string.IsNullOrEmpty(log.worstMoodColonist))
+                    milestoneSection += $"\nMost troubled: {log.worstMoodColonist} ({log.worstMoodValue:P0} mood)";
+
+                chronicle.sections.Add(new ChronicleSection("MILESTONES", "🏆", milestoneSection));
 
                 if (log.weatherEvents.Count > 0)
                 {
@@ -498,20 +907,84 @@ Use creative, entertaining language. This is a fictional newspaper for a harsh f
                 log.year
             );
 
+            // Phase 2: Populate extended fields
+            chronicle.colonistCountStart = log.colonistCountStart;
+            chronicle.colonistCountEnd = log.colonistCountEnd;
+            chronicle.raidsThisWeek = log.raidsThisWeek;
+            chronicle.raidMarathon = log.raidMarathon;
+            chronicle.deathlessWeek = log.deathlessWeek;
+            chronicle.firstDeath = log.firstDeath;
+            chronicle.survivedFirstRaid = log.survivedFirstRaid;
+            chronicle.colonistDeaths = log.colonistDeaths;
+            chronicle.deaths = new List<ColonistDeath>(log.deathsList);
+            chronicle.milestoneFlags = new List<string>(log.milestoneFlags);
+            chronicle.raids = new List<RaidEvent>(log.raidsList);
+            chronicle.bestMoodColonist = log.bestMoodColonist;
+            chronicle.bestMoodValue = log.bestMoodValue;
+            chronicle.worstMoodColonist = log.worstMoodColonist;
+            chronicle.worstMoodValue = log.worstMoodValue;
+
             chronicle.topHeadline = $"Week {log.weekNumber}: The Colony Endures";
             chronicle.leadParagraph = $"As Day {log.endDay} closes, the colonists of this settlement reflect on a week of challenges and small victories. The {log.season} season brings its own trials.";
 
-            chronicle.sections.Add(new ChronicleSection("BATTLE REPORT", "⚔️",
-                log.raids > 0 ? $"{log.raids} raid(s) tested our defenses." : "The enemy held back this week. Enjoy the peace while it lasts."));
+            // Phase 2: Richer battle report
+            string battleReport;
+            if (log.raidsList.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder();
+                foreach (var raid in log.raidsList)
+                {
+                    string outcome = raid.survived ? "survived" : "was defeated by";
+                    sb.AppendLine($"Day {raid.day}: {raid.enemyFaction} attacked ({raid.enemyCount} enemies) - colony {outcome}");
+                }
+                if (log.raidMarathon)
+                    sb.AppendLine("\n⚠️ RAID MARATHON: 3+ raids in one week!");
+                battleReport = sb.ToString();
+            }
+            else
+            {
+                battleReport = "The enemy held back this week. Enjoy the peace while it lasts.";
+            }
+            chronicle.sections.Add(new ChronicleSection("BATTLE REPORT", "⚔️", battleReport));
 
-            chronicle.sections.Add(new ChronicleSection("OBITUARIES", "😢",
-                log.deaths > 0 ? $"{log.deaths} soul(s) departed this mortal colony." : "No deaths recorded. The Reaper takes a holiday."));
+            // Phase 2: Richer obituaries
+            string obituaries;
+            if (log.deathsList.Count > 0)
+            {
+                var sb = new System.Text.StringBuilder();
+                foreach (var death in log.deathsList)
+                {
+                    sb.AppendLine($"Day {death.day}: {death.name} died from {death.cause}");
+                    if (!string.IsNullOrEmpty(death.killer) && death.killer != "unknown")
+                        sb.AppendLine($"  Claimed by: {death.killer}");
+                }
+                obituaries = sb.ToString();
+            }
+            else if (log.deathlessWeek)
+            {
+                obituaries = "No deaths this week. A blessing from the gods above.\n🙏 Deathless Week achieved!";
+            }
+            else
+            {
+                obituaries = "No deaths recorded. The Reaper takes a holiday.";
+            }
+            chronicle.sections.Add(new ChronicleSection("OBITUARIES", "😢", obituaries));
 
             chronicle.sections.Add(new ChronicleSection("ECONOMY", "📦",
                 $"Wealth peaked at {log.highestWealth:N0} silver. {log.trades} caravan(s) visited our trade depots."));
 
-            chronicle.sections.Add(new ChronicleSection("MILESTONES", "🏆",
-                log.milestones.Count > 0 ? string.Join("\n", log.milestones) : "The colony grows, one day at a time."));
+            // Phase 2: Richer milestones
+            var allMilestones = new List<string>(log.milestones);
+            allMilestones.AddRange(log.milestoneFlags);
+            string milestoneSection = allMilestones.Count > 0 ? string.Join("\n", allMilestones) : "The colony grows, one day at a time.";
+
+            // Add mood extremes
+            if (!string.IsNullOrEmpty(log.bestMoodColonist))
+                milestoneSection += $"\n\nHappiest colonist: {log.bestMoodColonist} ({log.bestMoodValue:P0} mood)";
+            if (!string.IsNullOrEmpty(log.worstMoodColonist))
+                milestoneSection += $"\nMost troubled: {log.worstMoodColonist} ({log.worstMoodValue:P0} mood)";
+
+            chronicle.sections.Add(new ChronicleSection("MILESTONES", "🏆", milestoneSection));
 
             if (log.weatherEvents.Count > 0)
             {
