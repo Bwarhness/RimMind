@@ -22,6 +22,13 @@ namespace RimMind.Chat
         // Cached version title - computed once on first access
         private static string cachedVersionTitle;
         private static bool versionTitleInitialized;
+        private static bool cachedIsDev;
+
+        /// <summary>
+        /// Cached ModMetaData resolved once at first access. Shared by GetVersionTitle()
+        /// and MainButtonLabelPatch to avoid triple ModLister lookup.
+        /// </summary>
+        public static ModMetaData CachedModMetaData { get; private set; }
 
         // GUIStyle for selectable (but read-only) message text — initialized lazily
         private static GUIStyle _selectableTextStyle;
@@ -59,18 +66,18 @@ namespace RimMind.Chat
             if (!versionTitleInitialized)
             {
                 // Try to find the mod - check both production and dev package IDs
-                ModMetaData mod = ModLister.GetActiveModWithIdentifier("rimmind.ai") 
+                CachedModMetaData = ModLister.GetActiveModWithIdentifier("rimmind.ai")
                                ?? ModLister.GetActiveModWithIdentifier("rimmind.ai.dev");
-                
-                string version = mod?.ModVersion ?? "";
-                bool isDev = ModLister.GetActiveModWithIdentifier("rimmind.ai.dev") != null;
-                
+                cachedIsDev = ModLister.GetActiveModWithIdentifier("rimmind.ai.dev") != null;
+
+                string version = CachedModMetaData?.ModVersion ?? "";
+
                 string title = RimMindTranslations.Get("RimMind_ChatTitle");
                 if (!string.IsNullOrEmpty(version))
                     title += " v" + version;
-                if (isDev)
+                if (cachedIsDev)
                     title += " [DEV]";
-                
+
                 cachedVersionTitle = title;
                 versionTitleInitialized = true;
             }

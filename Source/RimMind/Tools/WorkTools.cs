@@ -310,10 +310,10 @@ namespace RimMind.Tools
                 return ToolExecutor.JsonError("'workbench' parameter required.");
 
             // Find the workbench
-            var workbench = FindWorkbench(workbenchName);
+            var workbench = FindWorkbenchByName(workbenchName, map);
             if (workbench == null)
             {
-                string suggestions = FindSimilarWorkbenches(workbenchName);
+                string suggestions = FindSimilarWorkbenches(workbenchName, map);
                 string msg = "Workbench '" + workbenchName + "' not found.";
                 if (suggestions != null)
                     msg += " Did you mean: " + suggestions + "?";
@@ -414,10 +414,10 @@ namespace RimMind.Tools
                 return ToolExecutor.JsonError("Either 'recipe' or 'index' parameter required to identify the bill.");
 
             // Find the workbench
-            var workbench = FindWorkbench(workbenchName);
+            var workbench = FindWorkbenchByName(workbenchName, map);
             if (workbench == null)
             {
-                string suggestions = FindSimilarWorkbenches(workbenchName);
+                string suggestions = FindSimilarWorkbenches(workbenchName, map);
                 string msg = "Workbench '" + workbenchName + "' not found.";
                 if (suggestions != null)
                     msg += " Did you mean: " + suggestions + "?";
@@ -425,30 +425,17 @@ namespace RimMind.Tools
             }
 
             // Find the bill
-            Bill targetBill = null;
-            if (billIndex >= 0)
+            Bill targetBill = FindBill(workbench, recipeName, billIndex);
+            if (targetBill == null)
             {
-                if (billIndex >= workbench.BillStack.Bills.Count)
+                if (billIndex >= 0 && billIndex >= workbench.BillStack.Bills.Count)
                     return ToolExecutor.JsonError("Bill index " + billIndex + " out of range. Workbench has " + workbench.BillStack.Bills.Count + " bills.");
-                targetBill = workbench.BillStack.Bills[billIndex];
-            }
-            else
-            {
-                // Find by recipe name
-                string recipeLower = recipeName.ToLower();
-                foreach (var bill in workbench.BillStack.Bills)
-                {
-                    if (bill.recipe == null) continue;
-                    if (bill.recipe.defName.ToLower() == recipeLower ||
-                        bill.recipe.label?.ToLower() == recipeLower)
-                    {
-                        targetBill = bill;
-                        break;
-                    }
-                }
 
-                if (targetBill == null)
-                    return ToolExecutor.JsonError("Bill for recipe '" + recipeName + "' not found at " + workbench.LabelCap + ".");
+                string suggestions = FindSimilarRecipes(recipeName, workbench);
+                string msg = "Bill for recipe '" + recipeName + "' not found at " + workbench.LabelCap + ".";
+                if (suggestions != null)
+                    msg += " Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
             }
 
             // Apply modifications
@@ -535,10 +522,10 @@ namespace RimMind.Tools
                 return ToolExecutor.JsonError("Either 'recipe' or 'index' parameter required to identify the bill.");
 
             // Find the workbench
-            var workbench = FindWorkbench(workbenchName);
+            var workbench = FindWorkbenchByName(workbenchName, map);
             if (workbench == null)
             {
-                string suggestions = FindSimilarWorkbenches(workbenchName);
+                string suggestions = FindSimilarWorkbenches(workbenchName, map);
                 string msg = "Workbench '" + workbenchName + "' not found.";
                 if (suggestions != null)
                     msg += " Did you mean: " + suggestions + "?";
@@ -546,30 +533,17 @@ namespace RimMind.Tools
             }
 
             // Find the bill
-            Bill targetBill = null;
-            if (billIndex >= 0)
+            Bill targetBill = FindBill(workbench, recipeName, billIndex);
+            if (targetBill == null)
             {
-                if (billIndex >= workbench.BillStack.Bills.Count)
+                if (billIndex >= 0 && billIndex >= workbench.BillStack.Bills.Count)
                     return ToolExecutor.JsonError("Bill index " + billIndex + " out of range. Workbench has " + workbench.BillStack.Bills.Count + " bills.");
-                targetBill = workbench.BillStack.Bills[billIndex];
-            }
-            else
-            {
-                // Find by recipe name
-                string recipeLower = recipeName.ToLower();
-                foreach (var bill in workbench.BillStack.Bills)
-                {
-                    if (bill.recipe == null) continue;
-                    if (bill.recipe.defName.ToLower() == recipeLower ||
-                        bill.recipe.label?.ToLower() == recipeLower)
-                    {
-                        targetBill = bill;
-                        break;
-                    }
-                }
 
-                if (targetBill == null)
-                    return ToolExecutor.JsonError("Bill for recipe '" + recipeName + "' not found at " + workbench.LabelCap + ".");
+                string suggestions = FindSimilarRecipes(recipeName, workbench);
+                string msg = "Bill for recipe '" + recipeName + "' not found at " + workbench.LabelCap + ".";
+                if (suggestions != null)
+                    msg += " Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
             }
 
             string deletedRecipe = targetBill.recipe?.LabelCap.ToString() ?? "Unknown";
@@ -590,9 +564,8 @@ namespace RimMind.Tools
 
         // Helper methods for workbench and recipe resolution
 
-        private static Building_WorkTable FindWorkbench(string name)
+        private static Building_WorkTable FindWorkbenchByName(string name, Map map)
         {
-            var map = Find.CurrentMap;
             if (map == null) return null;
 
             string nameLower = name.ToLower();
@@ -622,9 +595,8 @@ namespace RimMind.Tools
             return null;
         }
 
-        private static string FindSimilarWorkbenches(string name)
+        private static string FindSimilarWorkbenches(string name, Map map)
         {
-            var map = Find.CurrentMap;
             if (map == null || string.IsNullOrEmpty(name)) return null;
 
             var matches = new List<string>();
@@ -702,6 +674,37 @@ namespace RimMind.Tools
             }
 
             return matches.Count > 0 ? string.Join(", ", matches) : null;
+        }
+
+        /// <summary>
+        /// Finds a bill on a workbench by recipe name (fuzzy) or by bill index.
+        /// Returns null if not found.
+        /// </summary>
+        private static Bill FindBill(Building_WorkTable workbench, string recipeName, int billIndex)
+        {
+            if (workbench == null) return null;
+
+            if (billIndex >= 0)
+            {
+                // Index-based lookup: validate range
+                if (billIndex >= workbench.BillStack.Bills.Count)
+                    return null;
+                return workbench.BillStack.Bills[billIndex];
+            }
+
+            // Find by recipe name (fuzzy)
+            string recipeLower = recipeName.ToLower();
+            foreach (var bill in workbench.BillStack.Bills)
+            {
+                if (bill.recipe == null) continue;
+                if (bill.recipe.defName.ToLower() == recipeLower ||
+                    bill.recipe.label?.ToLower() == recipeLower)
+                {
+                    return bill;
+                }
+            }
+
+            return null;
         }
 
         // Phase 2: Construction & Workflow Intelligence

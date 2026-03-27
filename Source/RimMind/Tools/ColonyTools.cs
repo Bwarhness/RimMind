@@ -253,92 +253,16 @@ namespace RimMind.Tools
                 var steelBurnRate = CalculateBurnRate(resourceTracker, "steel");
 
                 // Food analysis
-                var food = new JSONObject();
-                food["current"] = currentFood;
-                food["burn_rate_per_day"] = foodBurnRate;
-                if (foodBurnRate > 0 && currentFood > 0)
-                {
-                    float daysRemaining = currentFood / foodBurnRate;
-                    food["days_remaining"] = daysRemaining.ToString("F1");
-                    food["status"] = GetResourceStatus(daysRemaining);
-                }
-                else if (currentFood > 0)
-                {
-                    food["days_remaining"] = "unknown";
-                    food["status"] = "unknown";
-                }
-                else
-                {
-                    food["days_remaining"] = "0";
-                    food["status"] = "critical";
-                }
-                result["food"] = food;
+                result["food"] = AnalyzeResource("food", currentFood, foodBurnRate);
 
                 // Medicine analysis
-                var medicine = new JSONObject();
-                medicine["current"] = currentMedicine;
-                medicine["burn_rate_per_day"] = medicineBurnRate;
-                if (medicineBurnRate > 0 && currentMedicine > 0)
-                {
-                    float daysRemaining = currentMedicine / medicineBurnRate;
-                    medicine["days_remaining"] = daysRemaining.ToString("F1");
-                    medicine["status"] = GetResourceStatus(daysRemaining);
-                }
-                else if (currentMedicine > 0)
-                {
-                    medicine["days_remaining"] = "unknown";
-                    medicine["status"] = "unknown";
-                }
-                else
-                {
-                    medicine["days_remaining"] = "0";
-                    medicine["status"] = "critical";
-                }
-                result["medicine"] = medicine;
+                result["medicine"] = AnalyzeResource("medicine", currentMedicine, medicineBurnRate);
 
                 // Wood analysis
-                var wood = new JSONObject();
-                wood["current"] = currentWood;
-                wood["burn_rate_per_day"] = woodBurnRate;
-                if (woodBurnRate > 0 && currentWood > 0)
-                {
-                    float daysRemaining = currentWood / woodBurnRate;
-                    wood["days_remaining"] = daysRemaining.ToString("F1");
-                    wood["status"] = GetResourceStatus(daysRemaining);
-                }
-                else if (currentWood > 0)
-                {
-                    wood["days_remaining"] = "unknown";
-                    wood["status"] = "unknown";
-                }
-                else
-                {
-                    wood["days_remaining"] = "0";
-                    wood["status"] = "critical";
-                }
-                result["wood"] = wood;
+                result["wood"] = AnalyzeResource("wood", currentWood, woodBurnRate);
 
                 // Steel analysis
-                var steel = new JSONObject();
-                steel["current"] = currentSteel;
-                steel["burn_rate_per_day"] = steelBurnRate;
-                if (steelBurnRate > 0 && currentSteel > 0)
-                {
-                    float daysRemaining = currentSteel / steelBurnRate;
-                    steel["days_remaining"] = daysRemaining.ToString("F1");
-                    steel["status"] = GetResourceStatus(daysRemaining);
-                }
-                else if (currentSteel > 0)
-                {
-                    steel["days_remaining"] = "unknown";
-                    steel["status"] = "unknown";
-                }
-                else
-                {
-                    steel["days_remaining"] = "0";
-                    steel["status"] = "critical";
-                }
-                result["steel"] = steel;
+                result["steel"] = AnalyzeResource("steel", currentSteel, steelBurnRate);
 
                 // Summary with overall assessment
                 var summary = new JSONObject();
@@ -346,10 +270,10 @@ namespace RimMind.Tools
                 var lowResources = new JSONArray();
                 var warningResources = new JSONArray();
 
-                CheckResourceStatus(food, "food", criticalResources, lowResources, warningResources);
-                CheckResourceStatus(medicine, "medicine", criticalResources, lowResources, warningResources);
-                CheckResourceStatus(wood, "wood", criticalResources, lowResources, warningResources);
-                CheckResourceStatus(steel, "steel", criticalResources, lowResources, warningResources);
+                CheckResourceStatus((JSONObject)result["food"], "food", criticalResources, lowResources, warningResources);
+                CheckResourceStatus((JSONObject)result["medicine"], "medicine", criticalResources, lowResources, warningResources);
+                CheckResourceStatus((JSONObject)result["wood"], "wood", criticalResources, lowResources, warningResources);
+                CheckResourceStatus((JSONObject)result["steel"], "steel", criticalResources, lowResources, warningResources);
 
                 summary["critical"] = criticalResources;
                 summary["low"] = lowResources;
@@ -449,6 +373,35 @@ namespace RimMind.Tools
                 return "warning";
             else
                 return "stable";
+        }
+
+        /// <summary>
+        /// Analyzes a single resource: computes days remaining and status based on
+        /// current amount and burn rate. Replaces the ~15-line block that was
+        /// repeated identically for food, medicine, wood, and steel.
+        /// </summary>
+        private static JSONObject AnalyzeResource(string name, int current, float burnRate)
+        {
+            var obj = new JSONObject();
+            obj["current"] = current;
+            obj["burn_rate_per_day"] = burnRate;
+            if (burnRate > 0 && current > 0)
+            {
+                float daysRemaining = current / burnRate;
+                obj["days_remaining"] = daysRemaining.ToString("F1");
+                obj["status"] = GetResourceStatus(daysRemaining);
+            }
+            else if (current > 0)
+            {
+                obj["days_remaining"] = "unknown";
+                obj["status"] = "unknown";
+            }
+            else
+            {
+                obj["days_remaining"] = "0";
+                obj["status"] = "critical";
+            }
+            return obj;
         }
 
         private static void CheckResourceStatus(JSONObject resourceObj, string name, JSONArray critical, JSONArray low, JSONArray warning)
