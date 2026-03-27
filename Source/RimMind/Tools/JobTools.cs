@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using RimMind.API;
 using RimWorld;
@@ -8,6 +9,18 @@ namespace RimMind.Tools
 {
     public static class JobTools
     {
+        /// <summary>
+        /// Assigns a haul job, queueing it if the colonist already has haul work in progress.
+        /// Mirrors the TakeOrQueueJob pattern from EquipmentTools.
+        /// </summary>
+        private static bool TakeOrQueueHaulJob(Pawn colonist, Job job)
+        {
+            bool shouldQueue = colonist.jobs.jobQueue.Count > 0 ||
+                colonist.CurJobDef == JobDefOf.HaulToCell ||
+                colonist.CurJobDef == JobDefOf.HaulToContainer;
+            return colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc, requestQueueing: shouldQueue);
+        }
+
         public static string PrioritizeRescue(string colonistName, string targetName)
         {
             var map = Find.CurrentMap;
@@ -90,12 +103,13 @@ namespace RimMind.Tools
             if (haulable == null) return ToolExecutor.JsonError("No haulable item found at " + x + "," + z);
 
             var job = HaulAIUtility.HaulToStorageJob(colonist, haulable, false);
-            if (job != null && colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc))
+            if (job != null && TakeOrQueueHaulJob(colonist, job))
             {
                 var result = new JSONObject();
                 result["success"] = true;
                 result["colonist"] = colonist.Name?.ToStringShort ?? "Unknown";
                 result["item"] = haulable.LabelCap.ToString();
+                result["queued"] = colonist.jobs.jobQueue.Count > 0;
                 result["action"] = "haul";
                 return result.ToString();
             }
@@ -174,6 +188,83 @@ namespace RimMind.Tools
             }
 
             return ToolExecutor.JsonError("Failed to assign clean job.");
+        }
+
+        /// <summary>
+        /// Find all items of a given type on the map and queue haul jobs for all of them.
+        /// Use this when the player says "haul all [resource]" rather than pointing at a specific location.
+        /// </summary>
+        public static string HaulAllOfType(string colonistName, string itemType)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            if (string.IsNullOrEmpty(colonistName)) return ToolExecutor.JsonError("colonist parameter required.");
+            if (string.IsNullOrEmpty(itemType)) return ToolExecutor.JsonError("itemType parameter required.");
+
+            var colonist = ColonistTools.FindPawnByName(colonistName);
+            if (colonist == null) return ToolExecutor.JsonError("Colonist '" + colonistName + "' not found.");
+
+            string typeLower = itemType.ToLower();
+
+            // Find all haulable Things matching the item type (by label or defName)
+            var matches = map.listerThings.AllThings
+                .Where(t =>
+                    t.def.EverHaulable &&
+                    !t.IsForbidden(Faction.OfPlayer) &&
+                    t.Spawned &&
+                    (t.def.defName.ToLower().Contains(typeLower) ||
+                     t.def.label?.ToLower().Contains(typeLower) == true ||
+                     t.LabelShort?.ToLower().Contains(typeLower) == true))
+                .OrderBy(t => t.Position.DistanceTo(colonist.Position))
+                .Take(30) // cap to avoid absurd queues
+                .ToList();
+
+            if (matches.Count == 0)
+                return ToolExecutor.JsonError("No haulable items matching '" + itemType + "' found on the map.");
+
+            var queued = new JSONArray();
+            int successCount = 0;
+            int failCount = 0;
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                var thing = matches[i];
+                var job = HaulAIUtility.HaulToStorageJob(colonist, thing, false);
+                if (job == null) { failCount++; continue; }
+
+                // First job: smart queue (interrupts if idle, queues if already hauling)
+                // Subsequent jobs: always queue
+                bool ok = i == 0
+                    ? TakeOrQueueHaulJob(colonist, job)
+                    : colonist.jobs.TryTakeOrderedJob(job, JobTag.Misc, requestQueueing: true);
+
+                if (ok)
+                {
+                    var entry = new JSONObject();
+                    entry["item"] = thing.LabelCap.ToString();
+                    entry["count"] = thing.stackCount;
+                    entry["position"] = "(" + thing.Position.x + ", " + thing.Position.z + ")";
+                    queued.Add(entry);
+                    successCount++;
+                }
+                else
+                {
+                    failCount++;
+                }
+            }
+
+            if (successCount == 0)
+                return ToolExecutor.JsonError("Failed to queue any haul jobs for '" + itemType + "'.");
+
+            var result = new JSONObject();
+            result["success"] = true;
+            result["colonist"] = colonist.Name?.ToStringShort ?? "Unknown";
+            result["itemType"] = itemType;
+            result["jobsQueued"] = successCount;
+            result["failed"] = failCount;
+            result["hauls"] = queued;
+            return result.ToString();
         }
 
         private static Pawn FindPawnByNameInMap(string name, Map map)
