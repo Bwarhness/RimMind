@@ -338,6 +338,100 @@ namespace RimMind.Tools
             }
         }
 
+
+        // ========================================================================
+        // Shared shape placement result
+        // ========================================================================
+
+        private class ShapePlacementResult
+        {
+            public int placedCount;
+            public int failedCount;
+            public int sharedCount;
+            public JSONArray proposalIds = new JSONArray();
+            public JSONArray failuresList = new JSONArray();
+            public JSONArray existingInArea;
+            public int gridX1, gridZ1, gridX2, gridZ2;
+        }
+
+        // ========================================================================
+        // PlaceShapeCore — shared placement logic for wall_line and wall_rect
+        // ========================================================================
+
+        private static ShapePlacementResult PlaceShapeCore(
+            Map map, Faction faction, ThingDef def, ThingDef stuff,
+            List<IntVec3> cells, int bbX1, int bbZ1, int bbX2, int bbZ2,
+            int gridX1, int gridZ1, int gridX2, int gridZ2,
+            bool autoApprove, HashSet<IntVec3> excludeCells = null)
+        {
+            var result = new ShapePlacementResult
+            {
+                existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2),
+                gridX1 = gridX1, gridZ1 = gridZ1, gridX2 = gridX2, gridZ2 = gridZ2
+            };
+
+            foreach (var cell in cells)
+            {
+                if (excludeCells != null && excludeCells.Contains(cell))
+                    continue;
+
+                if (HasExistingWallOrBlueprint(cell, map))
+                {
+                    result.sharedCount++;
+                    continue;
+                }
+
+                var pr = PlaceOneBlueprint(map, faction, def, cell, stuff, Rot4.North, autoApprove);
+                if (pr.success)
+                {
+                    result.placedCount++;
+                    if (!autoApprove && pr.proposalId != null)
+                        result.proposalIds.Add(pr.proposalId);
+                }
+                else
+                {
+                    result.failedCount++;
+                    var entry = new JSONObject();
+                    entry["defName"] = def.defName;
+                    entry["x"] = cell.x;
+                    entry["z"] = cell.z;
+                    entry["error"] = pr.error;
+                    result.failuresList.Add(entry);
+                }
+            }
+
+            return result;
+        }
+
+        private static JSONObject BuildShapeResult(string shape, ShapePlacementResult sr,
+            int gridX1, int gridZ1, int gridX2, int gridZ2,
+            Map map, int minX, int minZ, int maxX, int maxZ)
+        {
+            var result = new JSONObject();
+            result["shape"] = shape;
+            result["bounds"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            result["placed"] = sr.placedCount;
+            result["failed"] = sr.failedCount;
+            if (sr.sharedCount > 0)
+                result["shared"] = sr.sharedCount;
+            if (sr.proposalIds.Count > 0)
+                result["proposal_ids"] = sr.proposalIds;
+            if (sr.failuresList.Count > 0)
+                result["failures"] = sr.failuresList;
+            if (sr.existingInArea != null)
+                result["existing_in_area"] = sr.existingInArea;
+            result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
+            result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
+            var adjacentHints = DetectAdjacentWalls(map, minX, minZ, maxX, maxZ);
+            if (adjacentHints != null)
+                result["adjacent_walls"] = adjacentHints;
+            return result;
+        }
+
+        // ========================================================================
+        // PlaceRoom — uses PlaceShapeCore for walls, places door separately
+        // ========================================================================
+
         private static string PlaceRoom(Map map, Faction faction, ThingDef wallDef, ThingDef doorDef,
             ThingDef wallStuff, int minX, int minZ, int maxX, int maxZ, JSONNode args, bool autoApprove)
         {
@@ -346,16 +440,15 @@ namespace RimMind.Tools
 
             if (width > 25 || height > 25)
                 return ToolExecutor.JsonError("Maximum room size is 25x25. Got " + width + "x" + height + ".");
-
             if (width < 3 || height < 3)
                 return ToolExecutor.JsonError("Minimum room size is 3x3 (1x1 interior + walls). Got " + width + "x" + height + ".");
 
-            // Resolve door stuff
+            // Door stuff resolution
             string doorStuffName = args?["door_stuff"]?.Value;
             if (string.IsNullOrEmpty(doorStuffName) || doorStuffName == "null")
                 doorStuffName = args?["stuff"]?.Value;
             if (doorStuffName == "null") doorStuffName = null;
-            ThingDef doorStuff = wallStuff; // default to wall stuff
+            ThingDef doorStuff = wallStuff;
             if (!string.IsNullOrEmpty(doorStuffName))
             {
                 doorStuff = ResolveStuffDef(doorStuffName, doorDef);
@@ -370,55 +463,37 @@ namespace RimMind.Tools
             }
             else if (doorDef.MadeFromStuff && doorStuff != null)
             {
-                // Validate that wall stuff works for door too
                 var checkDoorStuff = ResolveStuffDef(doorStuff.defName, doorDef);
                 if (checkDoorStuff == null)
                 {
-                    // Wall stuff doesn't work for door, try WoodLog as fallback
                     doorStuff = ResolveStuffDef("WoodLog", doorDef);
                     if (doorStuff == null)
                         return ToolExecutor.JsonError("Wall stuff '" + wallStuff.defName + "' is not valid for doors. Specify 'door_stuff'.");
                 }
             }
 
-            // Determine door position
-            string doorSide = args?["door_side"]?.Value ?? "south";
-            doorSide = doorSide.ToLower();
+            // Door position
+            string doorSide = (args?["door_side"]?.Value ?? "south").ToLower();
+            int innerLen = doorSide == "west" || doorSide == "east" ? height - 2 : width - 2;
+            int doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
 
-            // Calculate wall cells for the perimeter
-            var wallCells = GetRectOutline(minX, minZ, maxX, maxZ);
-
-            // Determine the door cell
             IntVec3 doorCell;
             Rot4 doorRot;
-
-            // Inner wall length (excluding corners)
-            int innerLen;
-            int doorOffset;
-
             switch (doorSide)
             {
                 case "south":
-                    innerLen = width - 2;
-                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
                     doorCell = new IntVec3(minX + 1 + doorOffset, 0, minZ);
                     doorRot = Rot4.North;
                     break;
                 case "north":
-                    innerLen = width - 2;
-                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
                     doorCell = new IntVec3(minX + 1 + doorOffset, 0, maxZ);
                     doorRot = Rot4.North;
                     break;
                 case "west":
-                    innerLen = height - 2;
-                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
                     doorCell = new IntVec3(minX, 0, minZ + 1 + doorOffset);
                     doorRot = Rot4.East;
                     break;
                 case "east":
-                    innerLen = height - 2;
-                    doorOffset = ParseDoorOffset(args?["door_offset"], innerLen);
                     doorCell = new IntVec3(maxX, 0, minZ + 1 + doorOffset);
                     doorRot = Rot4.East;
                     break;
@@ -426,257 +501,83 @@ namespace RimMind.Tools
                     return ToolExecutor.JsonError("Invalid door_side: " + doorSide + ". Valid: north, south, east, west.");
             }
 
-            // Remove door cell from wall cells
-            wallCells.RemoveAll(c => c.x == doorCell.x && c.z == doorCell.z);
+            var excludeCells = new HashSet<IntVec3> { doorCell };
+            var wallCells = GetRectOutline(minX, minZ, maxX, maxZ);
 
-            // Scan existing buildings before placement
-            int bbX1 = System.Math.Max(0, minX - 1);
-            int bbZ1 = System.Math.Max(0, minZ - 1);
-            int bbX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
-            int bbZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
-            JSONArray existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2);
+            int bbX1 = Math.Max(0, minX - 1), bbZ1 = Math.Max(0, minZ - 1);
+            int bbX2 = Math.Min(map.Size.x - 1, maxX + 1), bbZ2 = Math.Min(map.Size.z - 1, maxZ + 1);
+            int gridX1 = bbX1, gridZ1 = bbZ1, gridX2 = bbX2, gridZ2 = bbZ2;
 
-            // Place wall blueprints
-            var proposalIds = new JSONArray();
-            int placedCount = 0;
-            int failedCount = 0;
-            int sharedCount = 0;
-            var failuresList = new JSONArray();
+            var sr = PlaceShapeCore(map, faction, wallDef, wallStuff, wallCells,
+                bbX1, bbZ1, bbX2, bbZ2, gridX1, gridZ1, gridX2, gridZ2, autoApprove, excludeCells);
 
-            foreach (var cell in wallCells)
-            {
-                if (HasExistingWallOrBlueprint(cell, map))
-                {
-                    sharedCount++;
-                    continue;
-                }
-                var pr = PlaceOneBlueprint(map, faction, wallDef, cell, wallStuff, Rot4.North, autoApprove);
-                if (pr.success)
-                {
-                    placedCount++;
-                    if (!autoApprove && pr.proposalId != null)
-                        proposalIds.Add(pr.proposalId);
-                }
-                else
-                {
-                    failedCount++;
-                    var entry = new JSONObject();
-                    entry["defName"] = wallDef.defName;
-                    entry["x"] = cell.x;
-                    entry["z"] = cell.z;
-                    entry["error"] = pr.error;
-                    failuresList.Add(entry);
-                }
-            }
-
-            // Place door blueprint (no auto-rotate — door rotation must match wall orientation)
+            // Place door blueprint
             var doorResult = PlaceOneBlueprint(map, faction, doorDef, doorCell, doorStuff, doorRot, autoApprove, allowAutoRotate: false);
             if (doorResult.success)
             {
-                placedCount++;
+                sr.placedCount++;
                 if (!autoApprove && doorResult.proposalId != null)
-                    proposalIds.Add(doorResult.proposalId);
+                    sr.proposalIds.Add(doorResult.proposalId);
             }
             else
             {
-                failedCount++;
+                sr.failedCount++;
                 var entry = new JSONObject();
                 entry["defName"] = doorDef.defName;
                 entry["x"] = doorCell.x;
                 entry["z"] = doorCell.z;
                 entry["error"] = doorResult.error;
-                failuresList.Add(entry);
+                sr.failuresList.Add(entry);
             }
 
-            var result = new JSONObject();
-            result["shape"] = "room";
-            result["bounds"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
+            var result = BuildShapeResult("room", sr, gridX1, gridZ1, gridX2, gridZ2, map, minX, minZ, maxX, maxZ);
             result["interior"] = (width - 2) + "x" + (height - 2);
             result["door_side"] = doorSide;
             result["door_position"] = doorCell.x + "," + doorCell.z;
-            result["placed"] = placedCount;
-            result["failed"] = failedCount;
-            if (sharedCount > 0)
-                result["shared"] = sharedCount;
-            if (!autoApprove && proposalIds.Count > 0)
-                result["proposal_ids"] = proposalIds;
-            if (failuresList.Count > 0)
-                result["failures"] = failuresList;
-
-            // Render existing buildings and after area grid so the AI can see what changed
-            if (existingInArea != null)
-                result["existing_in_area"] = existingInArea;
-            int gridX1 = System.Math.Max(0, minX - 1);
-            int gridZ1 = System.Math.Max(0, minZ - 1);
-            int gridX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
-            int gridZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
-            result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
-            result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
-
-            var adjacentHints = DetectAdjacentWalls(map, minX, minZ, maxX, maxZ);
-            if (adjacentHints != null)
-                result["adjacent_walls"] = adjacentHints;
-
             return result.ToString();
         }
+
+        // ========================================================================
+        // PlaceWallLine — delegates entirely to PlaceShapeCore
+        // ========================================================================
 
         private static string PlaceWallLine(Map map, Faction faction, ThingDef wallDef,
             ThingDef wallStuff, int x1, int z1, int x2, int z2, bool autoApprove)
         {
             var cells = GetLine(x1, z1, x2, z2);
 
-            // Scan existing buildings before placement
-            JSONArray existingInArea;
-            {
-                int wlMinX = System.Math.Min(x1, x2);
-                int wlMinZ = System.Math.Min(z1, z2);
-                int wlMaxX = System.Math.Max(x1, x2);
-                int wlMaxZ = System.Math.Max(z1, z2);
-                int bbX1 = System.Math.Max(0, wlMinX - 1);
-                int bbZ1 = System.Math.Max(0, wlMinZ - 1);
-                int bbX2 = System.Math.Min(map.Size.x - 1, wlMaxX + 1);
-                int bbZ2 = System.Math.Min(map.Size.z - 1, wlMaxZ + 1);
-                existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2);
-            }
+            int minX = Math.Min(x1, x2), maxX = Math.Max(x1, x2);
+            int minZ = Math.Min(z1, z2), maxZ = Math.Max(z1, z2);
+            int bbX1 = Math.Max(0, minX - 1), bbZ1 = Math.Max(0, minZ - 1);
+            int bbX2 = Math.Min(map.Size.x - 1, maxX + 1), bbZ2 = Math.Min(map.Size.z - 1, maxZ + 1);
+            int gridX1 = bbX1, gridZ1 = bbZ1, gridX2 = bbX2, gridZ2 = bbZ2;
 
-            var proposalIds = new JSONArray();
-            int placedCount = 0;
-            int failedCount = 0;
-            int sharedCount = 0;
-            var failuresList = new JSONArray();
+            var sr = PlaceShapeCore(map, faction, wallDef, wallStuff, cells,
+                bbX1, bbZ1, bbX2, bbZ2, gridX1, gridZ1, gridX2, gridZ2, autoApprove);
 
-            foreach (var cell in cells)
-            {
-                if (HasExistingWallOrBlueprint(cell, map))
-                {
-                    sharedCount++;
-                    continue;
-                }
-                var pr = PlaceOneBlueprint(map, faction, wallDef, cell, wallStuff, Rot4.North, autoApprove);
-                if (pr.success)
-                {
-                    placedCount++;
-                    if (!autoApprove && pr.proposalId != null)
-                        proposalIds.Add(pr.proposalId);
-                }
-                else
-                {
-                    failedCount++;
-                    var entry = new JSONObject();
-                    entry["defName"] = wallDef.defName;
-                    entry["x"] = cell.x;
-                    entry["z"] = cell.z;
-                    entry["error"] = pr.error;
-                    failuresList.Add(entry);
-                }
-            }
-
-            var result = new JSONObject();
-            result["shape"] = "wall_line";
+            var result = BuildShapeResult("wall_line", sr, gridX1, gridZ1, gridX2, gridZ2, map, minX, minZ, maxX, maxZ);
             result["from"] = x1 + "," + z1;
             result["to"] = x2 + "," + z2;
-            result["placed"] = placedCount;
-            result["failed"] = failedCount;
-            if (sharedCount > 0)
-                result["shared"] = sharedCount;
-            if (!autoApprove && proposalIds.Count > 0)
-                result["proposal_ids"] = proposalIds;
-            if (failuresList.Count > 0)
-                result["failures"] = failuresList;
-
-            // Render existing buildings and after area grid so the AI can see what changed
-            if (existingInArea != null)
-                result["existing_in_area"] = existingInArea;
-            {
-                int wlMinX = System.Math.Min(x1, x2);
-                int wlMinZ = System.Math.Min(z1, z2);
-                int wlMaxX = System.Math.Max(x1, x2);
-                int wlMaxZ = System.Math.Max(z1, z2);
-                int gridX1 = System.Math.Max(0, wlMinX - 1);
-                int gridZ1 = System.Math.Max(0, wlMinZ - 1);
-                int gridX2 = System.Math.Min(map.Size.x - 1, wlMaxX + 1);
-                int gridZ2 = System.Math.Min(map.Size.z - 1, wlMaxZ + 1);
-                result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
-                result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
-
-                var adjacentHints = DetectAdjacentWalls(map, wlMinX, wlMinZ, wlMaxX, wlMaxZ);
-                if (adjacentHints != null)
-                    result["adjacent_walls"] = adjacentHints;
-            }
-
             return result.ToString();
         }
+
+        // ========================================================================
+        // PlaceWallRect — delegates entirely to PlaceShapeCore
+        // ========================================================================
 
         private static string PlaceWallRect(Map map, Faction faction, ThingDef wallDef,
             ThingDef wallStuff, int minX, int minZ, int maxX, int maxZ, bool autoApprove)
         {
             var cells = GetRectOutline(minX, minZ, maxX, maxZ);
 
-            // Scan existing buildings before placement
-            int bbX1 = System.Math.Max(0, minX - 1);
-            int bbZ1 = System.Math.Max(0, minZ - 1);
-            int bbX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
-            int bbZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
-            JSONArray existingInArea = ScanBuildingsInArea(map, bbX1, bbZ1, bbX2, bbZ2);
+            int bbX1 = Math.Max(0, minX - 1), bbZ1 = Math.Max(0, minZ - 1);
+            int bbX2 = Math.Min(map.Size.x - 1, maxX + 1), bbZ2 = Math.Min(map.Size.z - 1, maxZ + 1);
+            int gridX1 = bbX1, gridZ1 = bbZ1, gridX2 = bbX2, gridZ2 = bbZ2;
 
-            var proposalIds = new JSONArray();
-            int placedCount = 0;
-            int failedCount = 0;
-            int sharedCount = 0;
-            var failuresList = new JSONArray();
+            var sr = PlaceShapeCore(map, faction, wallDef, wallStuff, cells,
+                bbX1, bbZ1, bbX2, bbZ2, gridX1, gridZ1, gridX2, gridZ2, autoApprove);
 
-            foreach (var cell in cells)
-            {
-                if (HasExistingWallOrBlueprint(cell, map))
-                {
-                    sharedCount++;
-                    continue;
-                }
-                var pr = PlaceOneBlueprint(map, faction, wallDef, cell, wallStuff, Rot4.North, autoApprove);
-                if (pr.success)
-                {
-                    placedCount++;
-                    if (!autoApprove && pr.proposalId != null)
-                        proposalIds.Add(pr.proposalId);
-                }
-                else
-                {
-                    failedCount++;
-                    var entry = new JSONObject();
-                    entry["defName"] = wallDef.defName;
-                    entry["x"] = cell.x;
-                    entry["z"] = cell.z;
-                    entry["error"] = pr.error;
-                    failuresList.Add(entry);
-                }
-            }
-
-            var result = new JSONObject();
-            result["shape"] = "wall_rect";
-            result["bounds"] = minX + "," + minZ + " to " + maxX + "," + maxZ;
-            result["placed"] = placedCount;
-            result["failed"] = failedCount;
-            if (sharedCount > 0)
-                result["shared"] = sharedCount;
-            if (!autoApprove && proposalIds.Count > 0)
-                result["proposal_ids"] = proposalIds;
-            if (failuresList.Count > 0)
-                result["failures"] = failuresList;
-
-            // Render existing buildings and after area grid so the AI can see what changed
-            if (existingInArea != null)
-                result["existing_in_area"] = existingInArea;
-            int gridX1 = System.Math.Max(0, minX - 1);
-            int gridZ1 = System.Math.Max(0, minZ - 1);
-            int gridX2 = System.Math.Min(map.Size.x - 1, maxX + 1);
-            int gridZ2 = System.Math.Min(map.Size.z - 1, maxZ + 1);
-            result["area_after"] = MapTools.RenderArea(map, gridX1, gridZ1, gridX2, gridZ2);
-            result["buildings_in_area"] = ScanBuildingsInArea(map, gridX1, gridZ1, gridX2, gridZ2);
-
-            var adjacentHints = DetectAdjacentWalls(map, minX, minZ, maxX, maxZ);
-            if (adjacentHints != null)
-                result["adjacent_walls"] = adjacentHints;
-
+            var result = BuildShapeResult("wall_rect", sr, gridX1, gridZ1, gridX2, gridZ2, map, minX, minZ, maxX, maxZ);
             return result.ToString();
         }
 
@@ -1121,6 +1022,488 @@ namespace RimMind.Tools
                 if (e2 < dx) { err += dx; cz += sz; }
             }
             return cells;
+        }
+
+        // --- Placement Validation (Week 2 of #94) ---
+
+        public static string CheckPlacement(JSONNode args)
+        {
+            var map = Find.CurrentMap;
+            if (map == null) return ToolExecutor.JsonError("No active map.");
+
+            // Validate required parameters
+            if (string.IsNullOrEmpty(args?["building"]?.Value))
+                return ToolExecutor.JsonError("'building' parameter is required.");
+            if (args?["x"] == null || args?["z"] == null)
+                return ToolExecutor.JsonError("'x' and 'z' coordinates are required.");
+
+            string buildingDefName = args["building"].Value;
+            int x = args["x"].AsInt;
+            int z = args["z"].AsInt;
+            var pos = new IntVec3(x, 0, z);
+            
+            // Validate position is in bounds
+            if (!pos.InBounds(map))
+            {
+                return ToolExecutor.JsonError($"Position ({x}, {z}) is outside map bounds (map size: {map.Size.x}x{map.Size.z})");
+            }
+
+            // Resolve building def
+            var def = ResolveBuildingDef(buildingDefName);
+            if (def == null)
+            {
+                string suggestions = FindSimilarBuildings(buildingDefName);
+                string msg = "Building not found: " + buildingDefName;
+                if (suggestions != null)
+                    msg += ". Did you mean: " + suggestions + "?";
+                return ToolExecutor.JsonError(msg);
+            }
+
+            // Parse rotation (default: north)
+            string rotationStr = args?["rotation"]?.Value?.ToLower();
+            Rot4 rotation = Rot4.North;
+            if (!string.IsNullOrEmpty(rotationStr))
+            {
+                switch (rotationStr)
+                {
+                    case "north": rotation = Rot4.North; break;
+                    case "east": rotation = Rot4.East; break;
+                    case "south": rotation = Rot4.South; break;
+                    case "west": rotation = Rot4.West; break;
+                    default:
+                        return ToolExecutor.JsonError("Invalid rotation: " + rotationStr + ". Valid: north, south, east, west.");
+                }
+            }
+
+            // Calculate occupied cells
+            var occupiedCells = GenAdj.CellsOccupiedBy(pos, rotation, def.size).ToList();
+            
+            if (occupiedCells == null || occupiedCells.Count == 0)
+            {
+                return ToolExecutor.JsonError("Building size is invalid or position cannot be calculated");
+            }
+
+            // Result object
+            var result = new JSONObject();
+            result["building"] = def.defName;
+            result["position"] = new JSONArray { x, z };
+            result["rotation"] = rotation.ToStringHuman().ToLower();
+
+            // Size (accounting for rotation)
+            int sizeX = rotation.IsHorizontal ? def.size.z : def.size.x;
+            int sizeZ = rotation.IsHorizontal ? def.size.x : def.size.z;
+            result["size"] = new JSONArray { sizeX, sizeZ };
+
+            // Checks object
+            var checks = new JSONObject();
+            var warnings = new JSONArray();
+            bool valid = true;
+
+            // 1. Check terrain
+            var terrainCheck = CheckTerrain(map, def, occupiedCells);
+            checks["terrain"] = terrainCheck;
+            if (!terrainCheck["ok"].AsBool)
+                valid = false;
+
+            // 2. Check space/conflicts
+            var spaceCheck = CheckSpace(map, occupiedCells);
+            checks["space"] = spaceCheck;
+            if (!spaceCheck["ok"].AsBool)
+                valid = false;
+
+            // 3. Check power (if required)
+            var powerCheck = CheckPower(map, def, pos);
+            checks["power"] = powerCheck;
+            if (powerCheck["ok"] != null && !powerCheck["ok"].AsBool)
+                valid = false;
+
+            // 4. Check roof (for buildings that need it)
+            var roofCheck = CheckRoof(map, def, occupiedCells);
+            checks["roof"] = roofCheck;
+            if (roofCheck["ok"] != null && !roofCheck["ok"].AsBool)
+            {
+                // Roof is often a warning, not always a blocker
+                if (roofCheck["required"]?.AsBool == true)
+                    valid = false;
+                else
+                    warnings.Add(roofCheck["detail"].Value);
+            }
+
+            // 5. Check special placement rules
+            var specialCheck = CheckSpecialRules(map, def, pos, rotation, occupiedCells);
+            checks["special"] = specialCheck;
+            if (!specialCheck["ok"].AsBool)
+                valid = false;
+
+            // 6. Detect adjacent features
+            var adjacentCheck = CheckAdjacent(map, occupiedCells);
+            if (adjacentCheck.Count > 0)
+            {
+                for (int i = 0; i < adjacentCheck.Count; i++)
+                    warnings.Add(adjacentCheck[i]);
+            }
+
+            result["valid"] = valid;
+            result["checks"] = checks;
+
+            if (warnings.Count > 0)
+                result["warnings"] = warnings;
+
+            // Suggest alternative if invalid
+            if (!valid)
+            {
+                string suggestion = SuggestAlternative(map, def, pos, rotation);
+                if (suggestion != null)
+                    result["suggestion"] = suggestion;
+            }
+
+            return result.ToString();
+        }
+
+        private static JSONObject CheckTerrain(Map map, ThingDef def, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            if (map == null || def == null || cells == null || cells.Count == 0)
+            {
+                result["ok"] = false;
+                result["detail"] = "Invalid parameters for terrain check";
+                return result;
+            }
+            
+            foreach (var cell in cells)
+            {
+                if (!cell.InBounds(map))
+                {
+                    result["ok"] = false;
+                    result["detail"] = "Position out of map bounds";
+                    return result;
+                }
+
+                var terrain = map.terrainGrid.TerrainAt(cell);
+                
+                // Check terrain affordance
+                if (def.terrainAffordanceNeeded != null)
+                {
+                    if (!terrain.affordances.Contains(def.terrainAffordanceNeeded))
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) has {2} terrain, needs {3}",
+                            cell.x, cell.z, terrain.label, def.terrainAffordanceNeeded.label);
+                        return result;
+                    }
+                }
+
+                // Check for impassable terrain (water, lava, etc.)
+                if (terrain.passability != Traversability.Standable)
+                {
+                    result["ok"] = false;
+                    result["detail"] = string.Format("Cell ({0},{1}) is {2} (not buildable)",
+                        cell.x, cell.z, terrain.label);
+                    return result;
+                }
+            }
+
+            result["ok"] = true;
+            result["detail"] = "All cells have suitable terrain";
+            return result;
+        }
+
+        private static JSONObject CheckSpace(Map map, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            if (map == null || cells == null || cells.Count == 0)
+            {
+                result["ok"] = false;
+                result["detail"] = "Invalid parameters for space check";
+                return result;
+            }
+            
+            foreach (var cell in cells)
+            {
+                var things = cell.GetThingList(map);
+                foreach (var thing in things)
+                {
+                    // Check for existing buildings
+                    if (thing.def.category == ThingCategory.Building)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) occupied by {2}",
+                            cell.x, cell.z, thing.def.label);
+                        return result;
+                    }
+
+                    // Check for blueprints
+                    if (thing is Blueprint)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) has blueprint for {2}",
+                            cell.x, cell.z, thing.def.label);
+                        return result;
+                    }
+
+                    // Check for frames
+                    if (thing is Frame)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Cell ({0},{1}) has construction frame",
+                            cell.x, cell.z);
+                        return result;
+                    }
+                }
+            }
+
+            result["ok"] = true;
+            result["detail"] = "All cells are clear";
+            return result;
+        }
+
+        private static JSONObject CheckPower(Map map, ThingDef def, IntVec3 pos)
+        {
+            var result = new JSONObject();
+            
+            if (map == null || def == null)
+                return result;
+            
+            // Check if building needs power
+            var powerComp = def.comps?.Find(c => c is CompProperties_Power) as CompProperties_Power;
+            if (powerComp == null || powerComp.PowerConsumption <= 0)
+            {
+                // Doesn't need power
+                return result;
+            }
+
+            // Find nearest powered conduit
+            var powerNet = map.powerNetManager?.AllNetsListForReading;
+            if (powerNet == null || powerNet.Count == 0)
+            {
+                result["ok"] = false;
+                result["detail"] = "No power grid found on map";
+                return result;
+            }
+            
+            float nearestDistance = float.MaxValue;
+            IntVec3? nearestConduit = null;
+
+            foreach (var net in powerNet)
+            {
+                foreach (var transmitter in net.transmitters)
+                {
+                    float dist = pos.DistanceTo(transmitter.parent.Position);
+                    if (dist < nearestDistance)
+                    {
+                        nearestDistance = dist;
+                        nearestConduit = transmitter.parent.Position;
+                    }
+                }
+            }
+
+            // Power connection range is typically 6 cells
+            int maxRange = 6;
+            if (nearestConduit.HasValue && nearestDistance <= maxRange)
+            {
+                result["ok"] = true;
+                result["detail"] = string.Format("Power conduit {0} cells away at ({1},{2})",
+                    (int)nearestDistance, nearestConduit.Value.x, nearestConduit.Value.z);
+            }
+            else if (nearestConduit.HasValue)
+            {
+                result["ok"] = false;
+                result["detail"] = string.Format("Nearest power conduit is {0} cells away (max range: {1})",
+                    (int)nearestDistance, maxRange);
+            }
+            else
+            {
+                result["ok"] = false;
+                result["detail"] = "No powered conduits found on map";
+            }
+
+            return result;
+        }
+
+        private static JSONObject CheckRoof(Map map, ThingDef def, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            if (map == null || def == null || cells == null || cells.Count == 0)
+                return result; // No roof check if invalid params
+            
+            // Some buildings work better or require roof
+            bool needsRoof = false;
+            string reason = null;
+
+            // Electric stoves, coolers, heaters prefer indoor
+            if (def.defName.Contains("Stove") || def.defName.Contains("Cooler") || 
+                def.defName.Contains("Heater") || def.building?.isEdifice == true)
+            {
+                needsRoof = true;
+                reason = "works best indoors";
+            }
+
+            if (!needsRoof)
+            {
+                return result; // No roof check needed
+            }
+
+            int roofedCells = 0;
+            foreach (var cell in cells)
+            {
+                if (cell.Roofed(map))
+                    roofedCells++;
+            }
+
+            if (roofedCells == cells.Count)
+            {
+                result["ok"] = true;
+                result["detail"] = "Fully roofed (indoor)";
+            }
+            else if (roofedCells > 0)
+            {
+                result["ok"] = false;
+                result["detail"] = string.Format("Partially roofed ({0}/{1} cells) - {2}",
+                    roofedCells, cells.Count, reason);
+            }
+            else
+            {
+                result["ok"] = false;
+                result["detail"] = "Unroofed (outdoor) - " + reason;
+                result["required"] = false; // Warning, not blocker
+            }
+
+            return result;
+        }
+
+        private static JSONObject CheckSpecialRules(Map map, ThingDef def, IntVec3 pos, Rot4 rotation, List<IntVec3> cells)
+        {
+            var result = new JSONObject();
+            
+            if (map == null || def == null || cells == null)
+            {
+                result["ok"] = false;
+                result["detail"] = "Invalid parameters for special rules check";
+                return result;
+            }
+            
+            // Check interaction cell (for workbenches, beds, etc.)
+            if (def.hasInteractionCell)
+            {
+                var interactionCell = ThingUtility.InteractionCellWhenAt(def, pos, rotation, map);
+                
+                if (!interactionCell.IsValid || !interactionCell.InBounds(map))
+                {
+                    result["ok"] = false;
+                    result["detail"] = "Interaction cell out of bounds - rotate or move";
+                    return result;
+                }
+
+                if (!interactionCell.Standable(map))
+                {
+                    result["ok"] = false;
+                    result["detail"] = string.Format("Interaction cell ({0},{1}) blocked - pawns cannot access",
+                        interactionCell.x, interactionCell.z);
+                    return result;
+                }
+
+                var things = interactionCell.GetThingList(map);
+                foreach (var thing in things)
+                {
+                    if (thing.def.passability == Traversability.Impassable)
+                    {
+                        result["ok"] = false;
+                        result["detail"] = string.Format("Interaction cell ({0},{1}) blocked by {2}",
+                            interactionCell.x, interactionCell.z, thing.def.label);
+                        return result;
+                    }
+                }
+            }
+
+            // Check for vents (need adjacent wall)
+            if (def.defName.Contains("Vent"))
+            {
+                bool hasAdjacentWall = false;
+                foreach (var cell in cells)
+                {
+                    foreach (var adj in GenAdj.CardinalDirections)
+                    {
+                        var adjCell = cell + adj;
+                        if (!adjCell.InBounds(map)) continue;
+                        
+                        var edifice = adjCell.GetEdifice(map);
+                        if (edifice != null && edifice.def.holdsRoof)
+                        {
+                            hasAdjacentWall = true;
+                            break;
+                        }
+                    }
+                    if (hasAdjacentWall) break;
+                }
+
+                if (!hasAdjacentWall)
+                {
+                    result["ok"] = false;
+                    result["detail"] = "Vents must be placed adjacent to a wall";
+                    return result;
+                }
+            }
+
+            result["ok"] = true;
+            result["detail"] = "No special placement issues";
+            return result;
+        }
+
+        private static JSONArray CheckAdjacent(Map map, List<IntVec3> cells)
+        {
+            var warnings = new JSONArray();
+            
+            if (map == null || cells == null || cells.Count == 0)
+                return warnings;
+            
+            // Check for outdoor adjacency (temperature concerns)
+            bool hasOutdoorAdjacent = false;
+            foreach (var cell in cells)
+            {
+                foreach (var adj in GenAdj.CardinalDirections)
+                {
+                    var adjCell = cell + adj;
+                    if (!adjCell.InBounds(map)) continue;
+                    
+                    if (!adjCell.Roofed(map))
+                    {
+                        hasOutdoorAdjacent = true;
+                        break;
+                    }
+                }
+                if (hasOutdoorAdjacent) break;
+            }
+
+            if (hasOutdoorAdjacent)
+            {
+                warnings.Add("Adjacent to outdoor area - may affect temperature");
+            }
+
+            return warnings;
+        }
+
+        private static string SuggestAlternative(Map map, ThingDef def, IntVec3 pos, Rot4 rotation)
+        {
+            // Try nearby cells (simple search within 5 cells)
+            for (int radius = 1; radius <= 5; radius++)
+            {
+                foreach (var offset in GenRadial.RadialCellsAround(pos, radius, true))
+                {
+                    var testPos = pos + offset;
+                    if (!testPos.InBounds(map)) continue;
+
+                    var report = GenConstruct.CanPlaceBlueprintAt(def, testPos, rotation, map, false, null, null, null);
+                    if (report.Accepted)
+                    {
+                        return string.Format("Try position ({0},{1}) instead", testPos.x, testPos.z);
+                    }
+                }
+            }
+
+            return null;
         }
 
     }
