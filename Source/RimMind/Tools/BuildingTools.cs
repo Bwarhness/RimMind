@@ -8,6 +8,12 @@ using Verse;
 
 namespace RimMind.Tools
 {
+    /// <summary>
+    /// Thin forwarding class for building placement tools.
+    /// Query tools → BuildingQueryTools
+    /// Deconstruction tools → BuildingDeconstructTools
+    /// Placement tools → this file (PlaceBuilding, PlaceStructure, CheckPlacement)
+    /// </summary>
     public static class BuildingTools
     {
         private struct PlacementResult
@@ -27,363 +33,29 @@ namespace RimMind.Tools
             public JSONArray shortages;
         }
 
+        // --- Forwarding stubs for extracted query tools ---
+
         public static string ListBuildable(JSONNode args)
-        {
-            var map = Find.CurrentMap;
-            if (map == null) return ToolExecutor.JsonError("No active map.");
-
-            string categoryFilter = args?["category"]?.Value;
-
-            var buildings = new List<ThingDef>();
-            foreach (var def in DefDatabase<ThingDef>.AllDefs)
-            {
-                if (def.category != ThingCategory.Building) continue;
-                if (def.designationCategory == null) continue;
-                if (typeof(Blueprint).IsAssignableFrom(def.thingClass)) continue;
-                if (typeof(Frame).IsAssignableFrom(def.thingClass)) continue;
-                if (categoryFilter != null && !string.Equals(def.designationCategory.defName, categoryFilter, StringComparison.OrdinalIgnoreCase))
-                    continue;
-                buildings.Add(def);
-            }
-
-            buildings.Sort((a, b) =>
-            {
-                int catCmp = string.Compare(a.designationCategory.defName, b.designationCategory.defName, StringComparison.Ordinal);
-                if (catCmp != 0) return catCmp;
-                return string.Compare(a.label, b.label, StringComparison.Ordinal);
-            });
-
-            var result = new JSONObject();
-            result["total"] = buildings.Count;
-
-            if (categoryFilter == null)
-            {
-                var catCounts = new JSONObject();
-                foreach (var def in buildings)
-                {
-                    string cat = def.designationCategory.defName;
-                    catCounts[cat] = (catCounts[cat]?.AsInt ?? 0) + 1;
-                }
-                result["categories"] = catCounts;
-            }
-
-            var arr = new JSONArray();
-            foreach (var def in buildings)
-            {
-                var entry = new JSONObject();
-                entry["defName"] = def.defName;
-                entry["label"] = def.label;
-                if (categoryFilter == null)
-                    entry["category"] = def.designationCategory.defName;
-                string size = def.size.x + "x" + def.size.z;
-                if (size != "1x1") entry["size"] = size;
-                if (def.MadeFromStuff)
-                {
-                    entry["stuff"] = true;
-                    string hint = GetStuffHint(def);
-                    if (hint != null)
-                        entry["stuffHint"] = hint;
-                }
-                if (def.researchPrerequisites != null && def.researchPrerequisites.Count > 0)
-                {
-                    var missing = def.researchPrerequisites.Where(r => !r.IsFinished).ToList();
-                    if (missing.Count > 0)
-                    {
-                        var research = new JSONArray();
-                        foreach (var r in missing)
-                            research.Add(r.defName);
-                        entry["locked_research"] = research;
-                    }
-                }
-                arr.Add(entry);
-            }
-            result["buildings"] = arr;
-            return result.ToString();
-        }
+            => BuildingQueryTools.ListBuildable(args);
 
         public static string GetBuildingInfo(JSONNode args)
-        {
-            if (args == null || string.IsNullOrEmpty(args["defName"]?.Value))
-                return ToolExecutor.JsonError("'defName' is required.");
+            => BuildingQueryTools.GetBuildingInfo(args);
 
-            var def = ResolveBuildingDef(args["defName"].Value);
-            if (def == null)
-            {
-                string suggestions = FindSimilarBuildings(args["defName"].Value);
-                string msg = "Building not found: " + args["defName"].Value;
-                if (suggestions != null)
-                    msg += ". Did you mean: " + suggestions + "?";
-                return ToolExecutor.JsonError(msg);
-            }
-
-            var result = new JSONObject();
-            result["defName"] = def.defName;
-            result["label"] = def.label;
-            if (!string.IsNullOrEmpty(def.description))
-                result["description"] = def.description;
-            result["size"] = def.size.x + "x" + def.size.z;
-            if (def.designationCategory != null)
-                result["category"] = def.designationCategory.defName;
-            result["rotatable"] = def.rotatable;
-
-            if (def.MadeFromStuff)
-            {
-                result["madeFromStuff"] = true;
-                result["costStuffCount"] = def.costStuffCount;
-                if (def.stuffCategories != null)
-                {
-                    var cats = new JSONArray();
-                    foreach (var sc in def.stuffCategories)
-                        cats.Add(sc.defName);
-                    result["stuffCategories"] = cats;
-                }
-                var stuffList = new JSONArray();
-                foreach (var stuffDef in DefDatabase<ThingDef>.AllDefs)
-                {
-                    if (!stuffDef.IsStuff) continue;
-                    if (stuffDef.stuffProps?.categories == null) continue;
-                    if (def.stuffCategories != null)
-                    {
-                        foreach (var cat in stuffDef.stuffProps.categories)
-                        {
-                            if (def.stuffCategories.Contains(cat))
-                            {
-                                stuffList.Add(stuffDef.defName);
-                                break;
-                            }
-                        }
-                    }
-                }
-                result["availableStuffs"] = stuffList;
-            }
-
-            if (def.costList != null && def.costList.Count > 0)
-            {
-                var costs = new JSONObject();
-                foreach (var cost in def.costList)
-                    costs[cost.thingDef.defName] = cost.count;
-                result["costList"] = costs;
-            }
-
-            if (def.statBases != null && def.statBases.Count > 0)
-            {
-                var stats = new JSONObject();
-                foreach (var stat in def.statBases)
-                    stats[stat.stat.defName] = (float)Math.Round(stat.value, 2);
-                result["stats"] = stats;
-            }
-
-            if (def.researchPrerequisites != null && def.researchPrerequisites.Count > 0)
-            {
-                var research = new JSONArray();
-                foreach (var r in def.researchPrerequisites)
-                {
-                    var rObj = new JSONObject();
-                    rObj["defName"] = r.defName;
-                    rObj["label"] = r.label;
-                    rObj["completed"] = r.IsFinished;
-                    research.Add(rObj);
-                }
-                result["researchPrerequisites"] = research;
-            }
-
-            result["passability"] = def.passability.ToString();
-            if (def.terrainAffordanceNeeded != null)
-                result["terrainNeeded"] = def.terrainAffordanceNeeded.defName;
-            if (def.minifiedDef != null)
-                result["canUninstall"] = true;
-
-            if (def.hasInteractionCell)
-            {
-                result["has_interaction_cell"] = true;
-                result["interaction_cell_note"] = "Requires 1 clear cell in front (facing direction) for pawn access. Don't place facing a wall.";
-            }
-
-            return result.ToString();
-        }
-
-        /// <summary>
-        /// Get comprehensive placement requirements for a building.
-        /// Returns size, power, placement rules, terrain requirements, resources, research, and build work.
-        /// </summary>
         public static string GetRequirements(JSONNode args)
-        {
-            if (args == null || string.IsNullOrEmpty(args["building"]?.Value))
-                return ToolExecutor.JsonError("'building' parameter is required.");
+            => BuildingQueryTools.GetRequirements(args);
 
-            string buildingName = args["building"].Value;
-            var def = ResolveBuildingDef(buildingName);
-            if (def == null)
-            {
-                string suggestions = FindSimilarBuildings(buildingName);
-                string msg = "Building not found: " + buildingName;
-                if (suggestions != null)
-                    msg += ". Did you mean: " + suggestions + "?";
-                return ToolExecutor.JsonError(msg);
-            }
+        // --- Forwarding stubs for extracted deconstruction tools ---
 
-            var result = new JSONObject();
-            result["building"] = def.defName;
-            result["label"] = def.label;
+        public static string RemoveBuilding(JSONNode args)
+            => BuildingDeconstructTools.RemoveBuilding(args);
 
-            // Size
-            var sizeObj = new JSONObject();
-            sizeObj["width"] = def.size.x;
-            sizeObj["height"] = def.size.z;
-            result["size"] = sizeObj;
+        public static string DeconstructBuilding(JSONNode args)
+            => BuildingDeconstructTools.DeconstructBuilding(args);
 
-            // Power stats
-            var powerComp = def.GetCompProperties<CompProperties_Power>();
-            if (powerComp != null)
-            {
-                result["powerOutput"] = (int)Math.Round(powerComp.PowerConsumption > 0 ? 0 : Math.Abs(powerComp.PowerConsumption));
-                result["powerConsumption"] = (int)Math.Round(powerComp.PowerConsumption > 0 ? powerComp.PowerConsumption : 0);
-            }
-            else
-            {
-                result["powerOutput"] = 0;
-                result["powerConsumption"] = 0;
-            }
+        public static string ApproveBuildings(JSONNode args)
+            => BuildingDeconstructTools.ApproveBuildings(args);
 
-            // Placement rules
-            var placementRules = new JSONObject();
-            
-            // Check PlaceWorkers for special placement requirements
-            var placeWorkerNotes = new List<string>();
-            if (def.placeWorkers != null && def.placeWorkers.Count > 0)
-            {
-                foreach (var pwType in def.placeWorkers)
-                {
-                    string pwName = pwType.Name;
-                    
-                    // Detect common special placement requirements
-                    if (pwName.Contains("OnSteamGeyser"))
-                    {
-                        placementRules["mustBeOnSteamGeyser"] = true;
-                        placeWorkerNotes.Add("Must be placed directly on a steam geyser");
-                    }
-                    else if (pwName.Contains("WatchForGrowth"))
-                    {
-                        placementRules["mustWatchGrowingPlants"] = true;
-                        placeWorkerNotes.Add("Must face growing plants (sun lamps, etc.)");
-                    }
-                    else if (pwName.Contains("WaterDepth"))
-                    {
-                        placementRules["mustBeInWater"] = true;
-                        placeWorkerNotes.Add("Must be placed in water");
-                    }
-                    else if (pwName.Contains("NotUnderRoof"))
-                    {
-                        placementRules["mustBeOutdoors"] = true;
-                        placementRules["requiresRoof"] = false;
-                        placeWorkerNotes.Add("Must be outdoors (unroofed)");
-                    }
-                }
-            }
-            
-            // Standard placement flags
-            if (def.building != null)
-            {
-                // Indoors/outdoors requirements (if not already set by PlaceWorkers)
-                if (!placementRules.HasKey("mustBeOutdoors"))
-                {
-                    placementRules["mustBeIndoors"] = false;
-                    placementRules["mustBeOutdoors"] = false;
-                }
-                
-                if (!placementRules.HasKey("requiresRoof"))
-                {
-                    placementRules["requiresRoof"] = false;
-                }
-                
-                // Minifiable (can be uninstalled and moved)
-                placementRules["minifiable"] = def.minifiedDef != null;
-            }
-
-            result["placementRules"] = placementRules;
-
-            // Terrain requirements
-            var terrainReqs = new JSONArray();
-            if (def.terrainAffordanceNeeded != null && !string.IsNullOrEmpty(def.terrainAffordanceNeeded.defName))
-            {
-                string affordance = def.terrainAffordanceNeeded.defName;
-                
-                // Translate affordance to human-readable requirements
-                if (affordance.Contains("Heavy"))
-                    terrainReqs.Add("Supports heavy structures");
-                else if (affordance.Contains("Medium"))
-                    terrainReqs.Add("Supports medium structures");
-                else if (affordance.Contains("Light"))
-                    terrainReqs.Add("Supports light structures");
-                    
-                // All terrain affordances implicitly require "not water" unless specifically a water building
-                if (def.placeWorkers == null || !def.placeWorkers.Any(pw => pw.Name.Contains("Water")))
-                    terrainReqs.Add("Not water");
-            }
-            else
-            {
-                // Default: most buildings need solid ground
-                terrainReqs.Add("Not water");
-            }
-            
-            result["terrainRequirements"] = terrainReqs;
-
-            // Work to build
-            if (def.statBases != null)
-            {
-                var workStat = def.statBases.FirstOrDefault(s => s.stat.defName == "WorkToBuild");
-                if (workStat != null)
-                    result["workToBuild"] = (int)Math.Round(workStat.value);
-            }
-
-            // Resources required
-            var resources = new JSONArray();
-            if (def.MadeFromStuff)
-            {
-                // Stuff-based building (e.g., walls)
-                var resObj = new JSONObject();
-                resObj["thing"] = "Stuff (any material)";
-                resObj["count"] = def.costStuffCount;
-                resources.Add(resObj);
-            }
-            
-            if (def.costList != null && def.costList.Count > 0)
-            {
-                foreach (var cost in def.costList)
-                {
-                    var resObj = new JSONObject();
-                    resObj["thing"] = cost.thingDef.defName;
-                    resObj["count"] = cost.count;
-                    resources.Add(resObj);
-                }
-            }
-            
-            result["resources"] = resources;
-
-            // Research required
-            if (def.researchPrerequisites != null && def.researchPrerequisites.Count > 0)
-            {
-                // Just return the first research requirement for simplicity
-                // (most buildings only have one)
-                result["researchRequired"] = def.researchPrerequisites[0].defName;
-            }
-            else
-            {
-                result["researchRequired"] = "None";
-            }
-
-            // Notes (from PlaceWorker analysis)
-            if (placeWorkerNotes.Count > 0)
-            {
-                result["notes"] = string.Join("; ", placeWorkerNotes);
-            }
-            else
-            {
-                result["notes"] = "";
-            }
-
-            return result.ToString();
-        }
+        // --- Placement tools (remain here) ---
 
         public static string PlaceBuilding(JSONNode args)
         {
@@ -1029,257 +701,6 @@ namespace RimMind.Tools
             return result.ToString();
         }
 
-        public static string RemoveBuilding(JSONNode args)
-        {
-            var map = Find.CurrentMap;
-            if (map == null) return ToolExecutor.JsonError("No active map.");
-
-            bool removeAll = args?["all"]?.AsBool == true;
-            var idsNode = args?["proposal_ids"];
-            idsNode = UnwrapStringArray(idsNode);
-            bool hasArea = !string.IsNullOrEmpty(args?["x"]?.Value);
-
-            if (!removeAll && (idsNode == null || !idsNode.IsArray) && !hasArea)
-                return ToolExecutor.JsonError("Provide 'proposal_ids' array, area (x/z/x2/z2), or 'all: true'.");
-
-            ProposalTracker.CleanupDestroyed(map);
-
-            var toRemove = new List<KeyValuePair<string, Thing>>();
-
-            if (removeAll)
-            {
-                toRemove = ProposalTracker.GetAll(map);
-            }
-            else if (idsNode != null && idsNode.IsArray)
-            {
-                foreach (JSONNode idNode in idsNode.AsArray)
-                {
-                    string id = idNode.Value;
-                    Thing t = ProposalTracker.FindThing(id, map);
-                    if (t != null && !t.Destroyed)
-                        toRemove.Add(new KeyValuePair<string, Thing>(id, t));
-                }
-            }
-            else if (hasArea)
-            {
-                int x = args["x"].AsInt;
-                int z = args["z"].AsInt;
-                int x2 = args["x2"]?.AsInt ?? x;
-                int z2 = args["z2"]?.AsInt ?? z;
-                int minX = Math.Min(x, x2), maxX = Math.Max(x, x2);
-                int minZ = Math.Min(z, z2), maxZ = Math.Max(z, z2);
-                var rect = new CellRect(minX, minZ, maxX - minX + 1, maxZ - minZ + 1);
-                toRemove = ProposalTracker.GetInRect(rect, map);
-            }
-
-            int removed = 0;
-            foreach (var kvp in toRemove)
-            {
-                if (!kvp.Value.Destroyed)
-                    kvp.Value.Destroy(DestroyMode.Cancel);
-                ProposalTracker.Untrack(kvp.Key);
-                removed++;
-            }
-
-            var result = new JSONObject();
-            result["removed"] = removed;
-            return result.ToString();
-        }
-
-        /// <summary>
-        /// Mark already-built structures for deconstruction using RimWorld's native designation system.
-        /// Parameters: x/z (cell), x2/z2 (area), def_name (all of type). At least one required.
-        /// </summary>
-        public static string DeconstructBuilding(JSONNode args)
-        {
-            var map = Find.CurrentMap;
-            if (map == null) return ToolExecutor.JsonError("No active map.");
-
-            bool hasCell = args?["x"] != null && args?["z"] != null;
-            bool hasArea = hasCell && args?["x2"] != null && args?["z2"] != null;
-            string defName = args?["def_name"]?.Value;
-
-            if (!hasCell && string.IsNullOrEmpty(defName))
-                return ToolExecutor.JsonError("At least one parameter required: x/z (cell), x2/z2 (area), or def_name.");
-
-            var targets = new List<Thing>();
-
-            // Collect target buildings
-            if (!string.IsNullOrEmpty(defName))
-            {
-                // Target all buildings of this defName on the map
-                foreach (var building in map.listerBuildings.allBuildingsColonist)
-                {
-                    if (string.Equals(building.def.defName, defName, StringComparison.OrdinalIgnoreCase))
-                        targets.Add(building);
-                }
-                // Also check non-colonist buildings (ancient ruins, ship chunks, etc.)
-                foreach (var thing in map.listerThings.AllThings)
-                {
-                    if (thing is Building && !(thing is Blueprint) && !(thing is Frame))
-                    {
-                        if (string.Equals(thing.def.defName, defName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (!targets.Contains(thing))
-                                targets.Add(thing);
-                        }
-                    }
-                }
-            }
-            else if (hasArea)
-            {
-                // Area selection
-                int x1 = args["x"].AsInt;
-                int z1 = args["z"].AsInt;
-                int x2 = args["x2"].AsInt;
-                int z2 = args["z2"].AsInt;
-                int minX = Math.Min(x1, x2), maxX = Math.Max(x1, x2);
-                int minZ = Math.Min(z1, z2), maxZ = Math.Max(z1, z2);
-
-                for (int z = minZ; z <= maxZ; z++)
-                {
-                    for (int x = minX; x <= maxX; x++)
-                    {
-                        var cell = new IntVec3(x, 0, z);
-                        if (!cell.InBounds(map)) continue;
-
-                        foreach (var thing in cell.GetThingList(map))
-                        {
-                            if (thing is Building && !(thing is Blueprint) && !(thing is Frame))
-                            {
-                                if (!targets.Contains(thing))
-                                    targets.Add(thing);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Single cell
-                int x = args["x"].AsInt;
-                int z = args["z"].AsInt;
-                var cell = new IntVec3(x, 0, z);
-
-                if (!cell.InBounds(map))
-                    return ToolExecutor.JsonError($"Position ({x}, {z}) is outside map bounds.");
-
-                foreach (var thing in cell.GetThingList(map))
-                {
-                    if (thing is Building && !(thing is Blueprint) && !(thing is Frame))
-                        targets.Add(thing);
-                }
-            }
-
-            int designated = 0;
-            int alreadyDesignated = 0;
-            int skipped = 0;
-            var structuresList = new JSONArray();
-
-            foreach (var thing in targets)
-            {
-                // Check if already designated for deconstruction
-                if (map.designationManager.DesignationOn(thing, DesignationDefOf.Deconstruct) != null)
-                {
-                    alreadyDesignated++;
-                    continue;
-                }
-
-                // Check if it can be deconstructed
-                bool canDeconstruct = thing.def.building?.IsDeconstructible ?? false;
-
-                // Also allow ship chunks and mineable things
-                if (!canDeconstruct && thing.def.mineable)
-                    canDeconstruct = true;
-
-                // Check if it's a real built thing
-                bool isBuilt = thing is Building && !(thing is Blueprint) && !(thing is Frame);
-
-                if (!canDeconstruct || !isBuilt)
-                {
-                    skipped++;
-                    continue;
-                }
-
-                // Apply the deconstruction designation
-                map.designationManager.AddDesignation(new Designation(thing, DesignationDefOf.Deconstruct));
-                designated++;
-
-                string label = thing.def.label ?? thing.def.defName;
-                structuresList.Add($"{label} at {thing.Position.x},{thing.Position.z}");
-            }
-
-            var result = new JSONObject();
-            result["designated"] = designated;
-            result["already_designated"] = alreadyDesignated;
-            result["skipped"] = skipped;
-            if (structuresList.Count > 0 && structuresList.Count <= 50)
-                result["structures"] = structuresList;
-            else if (structuresList.Count > 50)
-                result["structures_note"] = $"{structuresList.Count} structures designated (list truncated)";
-
-            return result.ToString();
-        }
-
-        public static string ApproveBuildings(JSONNode args)
-        {
-            var map = Find.CurrentMap;
-            if (map == null) return ToolExecutor.JsonError("No active map.");
-
-            bool approveAll = args?["all"]?.AsBool == true;
-            var idsNode = args?["proposal_ids"];
-            idsNode = UnwrapStringArray(idsNode);
-            bool hasArea = !string.IsNullOrEmpty(args?["x"]?.Value);
-
-            if (!approveAll && (idsNode == null || !idsNode.IsArray) && !hasArea)
-                return ToolExecutor.JsonError("Provide 'proposal_ids' array, area (x/z/x2/z2), or 'all: true'.");
-
-            ProposalTracker.CleanupDestroyed(map);
-
-            var toApprove = new List<KeyValuePair<string, Thing>>();
-
-            if (approveAll)
-            {
-                toApprove = ProposalTracker.GetAll(map);
-            }
-            else if (idsNode != null && idsNode.IsArray)
-            {
-                foreach (JSONNode idNode in idsNode.AsArray)
-                {
-                    string id = idNode.Value;
-                    Thing t = ProposalTracker.FindThing(id, map);
-                    if (t != null && !t.Destroyed)
-                        toApprove.Add(new KeyValuePair<string, Thing>(id, t));
-                }
-            }
-            else if (hasArea)
-            {
-                int x = args["x"].AsInt;
-                int z = args["z"].AsInt;
-                int x2 = args["x2"]?.AsInt ?? x;
-                int z2 = args["z2"]?.AsInt ?? z;
-                int minX = Math.Min(x, x2), maxX = Math.Max(x, x2);
-                int minZ = Math.Min(z, z2), maxZ = Math.Max(z, z2);
-                var rect = new CellRect(minX, minZ, maxX - minX + 1, maxZ - minZ + 1);
-                toApprove = ProposalTracker.GetInRect(rect, map);
-            }
-
-            int approved = 0;
-            foreach (var kvp in toApprove)
-            {
-                if (!kvp.Value.Destroyed)
-                {
-                    kvp.Value.SetForbidden(false, false);
-                    approved++;
-                }
-                ProposalTracker.Untrack(kvp.Key);
-            }
-
-            var result = new JSONObject();
-            result["approved"] = approved;
-            return result.ToString();
-        }
-
         // --- Core placement helper ---
 
         private static PlacementResult PlaceOneBlueprint(Map map, Faction faction, ThingDef def, IntVec3 pos, ThingDef stuff, Rot4 rot, bool autoApprove, bool allowAutoRotate = true)
@@ -1414,9 +835,8 @@ namespace RimMind.Tools
             return result;
         }
 
-        // --- Utility helpers ---
+        // --- Private helpers ---
 
-        // LLMs sometimes send JSON arrays as double-encoded strings -- unwrap them
         private static JSONNode UnwrapStringArray(JSONNode node)
         {
             if (node != null && node.IsString)
@@ -1433,25 +853,12 @@ namespace RimMind.Tools
 
         private static ThingDef ResolveBuildingDef(string defName)
         {
-            var def = DefDatabase<ThingDef>.GetNamedSilentFail(defName);
-            if (def != null && def.category == ThingCategory.Building
-                && !typeof(Blueprint).IsAssignableFrom(def.thingClass)
-                && !typeof(Frame).IsAssignableFrom(def.thingClass))
-            {
-                return def;
-            }
+            return BuildingHelpers.ResolveBuildingDef(defName);
+        }
 
-            // Fuzzy: case-insensitive match across all building defs
-            foreach (var candidate in DefDatabase<ThingDef>.AllDefs)
-            {
-                if (candidate.category != ThingCategory.Building) continue;
-                if (typeof(Blueprint).IsAssignableFrom(candidate.thingClass)) continue;
-                if (typeof(Frame).IsAssignableFrom(candidate.thingClass)) continue;
-                if (string.Equals(candidate.defName, defName, StringComparison.OrdinalIgnoreCase))
-                    return candidate;
-            }
-
-            return null;
+        private static string FindSimilarBuildings(string defName)
+        {
+            return BuildingHelpers.FindSimilarBuildings(defName);
         }
 
         private static ThingDef ResolveStuffDef(string stuffName, ThingDef buildingDef)
@@ -1484,31 +891,6 @@ namespace RimMind.Tools
             return false;
         }
 
-        private static string FindSimilarBuildings(string defName)
-        {
-            if (string.IsNullOrEmpty(defName)) return null;
-
-            var matches = new List<string>();
-            string lower = defName.ToLower();
-
-            foreach (var candidate in DefDatabase<ThingDef>.AllDefs)
-            {
-                if (candidate.category != ThingCategory.Building) continue;
-                if (candidate.designationCategory == null) continue;
-                if (typeof(Blueprint).IsAssignableFrom(candidate.thingClass)) continue;
-                if (typeof(Frame).IsAssignableFrom(candidate.thingClass)) continue;
-
-                if (candidate.defName.ToLower().Contains(lower)
-                    || (candidate.label != null && candidate.label.ToLower().Contains(lower)))
-                {
-                    matches.Add(candidate.defName);
-                    if (matches.Count >= 3) break;
-                }
-            }
-
-            return matches.Count > 0 ? string.Join(", ", matches) : null;
-        }
-
         private static string FindSimilarStuffs(string stuffName, ThingDef buildingDef)
         {
             if (string.IsNullOrEmpty(stuffName) || buildingDef == null) return null;
@@ -1534,158 +916,118 @@ namespace RimMind.Tools
 
         private static string GetStuffHint(ThingDef def)
         {
-            if (def.stuffCategories == null || def.stuffCategories.Count == 0)
-                return null;
-
-            var hints = new List<string>();
-            foreach (var cat in def.stuffCategories)
-            {
-                string catName = cat.defName;
-                if (catName.Contains("Stony"))
-                    hints.AddRange(new[] { "BlocksGranite", "BlocksSandstone", "BlocksMarble" });
-                else if (catName.Contains("Metallic"))
-                    hints.AddRange(new[] { "Steel", "Plasteel", "Silver" });
-                else if (catName.Contains("Woody"))
-                    hints.Add("WoodLog");
-            }
-
-            if (hints.Count == 0) return null;
-            // Deduplicate and take up to 3
-            var unique = new List<string>();
-            foreach (var h in hints)
-            {
-                if (!unique.Contains(h))
-                    unique.Add(h);
-                if (unique.Count >= 3) break;
-            }
-            return string.Join(", ", unique);
+            return BuildingHelpers.GetStuffHint(def);
         }
 
-        private static string GetPlacementHint(string reason, ThingDef def, Map map = null, IntVec3 pos = default)
+        private static string GetPlacementHint(string reason, ThingDef def, Map map, IntVec3 pos)
         {
-            if (string.IsNullOrEmpty(reason)) return "";
+            string hint = "";
 
-            if (reason.IndexOf("Occupied", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (reason != null && def != null && map != null && pos.IsValid)
             {
-                string occupantInfo = null;
-                if (map != null && pos.InBounds(map))
+                if (reason.ToLower().Contains("blocked"))
                 {
                     var things = pos.GetThingList(map);
-                    foreach (var t in things)
+                    if (things.Count > 0)
                     {
-                        if (t.def.category == ThingCategory.Building || t is Blueprint)
-                        {
-                            string size = t.def.size.x + "x" + t.def.size.z;
-                            occupantInfo = t.def.label + (size != "1x1" ? " (" + size + ")" : "");
-                            break;
-                        }
+                        var blocking = things.FirstOrDefault(t => t.def.category == ThingCategory.Building || t is Blueprint);
+                        if (blocking != null)
+                            hint = ". Blocked by: " + blocking.def.label;
                     }
                 }
-                if (occupantInfo != null)
-                    return " Occupied by " + occupantInfo + ". Try adjacent cells.";
-                return " Try adjacent cells or remove existing building first.";
+
+                if (def.placeWorkers != null)
+                {
+                    foreach (var pwType in def.placeWorkers)
+                    {
+                        string n = pwType.Name;
+                        if (n.Contains("OnSteamGeyser"))
+                            hint += ". Must be on a steam geyser.";
+                        else if (n.Contains("NotUnderRoof"))
+                            hint += ". Must be placed outdoors.";
+                    }
+                }
             }
 
-            if (reason.IndexOf("Terrain", StringComparison.OrdinalIgnoreCase) >= 0
-                || reason.IndexOf("afford", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                string needed = def.terrainAffordanceNeeded != null ? def.terrainAffordanceNeeded.defName : "suitable terrain";
-                return " This needs " + needed + ". Try a different location.";
-            }
-
-            if (reason.IndexOf("Would block", StringComparison.OrdinalIgnoreCase) >= 0)
-                return " Would block an adjacent door or passage.";
-
-            return "";
+            return hint;
         }
 
-        private static Rot4 ParseRotation(JSONNode rotNode)
+        private static Rot4 ParseRotation(object rotationNode)
         {
-            if (rotNode == null || string.IsNullOrEmpty(rotNode.Value)) return Rot4.North;
-            int val = rotNode.AsInt;
-            switch (val)
+            if (rotationNode == null) return Rot4.North;
+            int rot = 0;
+            if (rotationNode is int ri) rot = ri;
+            else if (rotationNode is string rs && int.TryParse(rs, out int parsed)) rot = parsed;
+            else if (rotationNode is JSONNode jn) rot = jn.AsInt;
+
+            rot = ((rot % 4) + 4) % 4;
+            return rot switch
             {
-                case 1: return Rot4.East;
-                case 2: return Rot4.South;
-                case 3: return Rot4.West;
-                default: return Rot4.North;
-            }
+                1 => Rot4.East,
+                2 => Rot4.South,
+                3 => Rot4.West,
+                _ => Rot4.North
+            };
         }
 
-        private static int ParseDoorOffset(JSONNode offsetNode, int innerLen)
+        private static int ParseDoorOffset(object offsetNode, int wallLen)
         {
-            if (innerLen <= 0) return 0;
-            if (offsetNode == null || string.IsNullOrEmpty(offsetNode.Value))
-                return innerLen / 2; // default: center
-            int offset = offsetNode.AsInt;
-            if (offset < 0) offset = 0;
-            if (offset >= innerLen) offset = innerLen - 1;
-            return offset;
+            if (offsetNode == null) return wallLen / 2;
+            int offset = 0;
+            if (offsetNode is int oi) offset = oi;
+            else if (offsetNode is string os && int.TryParse(os, out int parsed)) offset = parsed;
+            else if (offsetNode is JSONNode jn) offset = jn.AsInt;
+            return ((offset % wallLen) + wallLen) % wallLen;
         }
 
-        private static bool HasExistingWallOrBlueprint(IntVec3 pos, Map map)
+        private static bool HasExistingWallOrBlueprint(IntVec3 cell, Map map)
         {
-            var thingList = pos.GetThingList(map);
-            for (int i = 0; i < thingList.Count; i++)
+            if (!cell.InBounds(map)) return true;
+
+            var edifice = cell.GetEdifice(map);
+            if (edifice != null)
             {
-                var thing = thingList[i];
-                if (thing.def.category == ThingCategory.Building && thing.def.holdsRoof)
-                    return true;
-                if (thing is Blueprint_Build bp && bp.def.entityDefToBuild is ThingDef td && td.holdsRoof)
-                    return true;
+                if (edifice.def.passability == Traversability.Impassable) return true;
+                if (typeof(Blueprint).IsAssignableFrom(edifice.def.thingClass)) return true;
             }
+
+            // Also check blueprints that haven't been placed yet
+            var things = cell.GetThingList(map);
+            foreach (var t in things)
+            {
+                if (t is Blueprint bp && bp.def.entityDefToBuild is ThingDef td)
+                {
+                    if (td.passability == Traversability.Impassable) return true;
+                }
+            }
+
             return false;
         }
-
-        // --- Adjacent wall detection ---
 
         private static JSONArray DetectAdjacentWalls(Map map, int minX, int minZ, int maxX, int maxZ)
         {
             var hints = new JSONArray();
 
-            // Check 1 cell west of west wall (x = minX - 1)
-            if (minX > 0 && HasWallLine(map, minX - 1, minZ, minX - 1, maxZ))
-                hints.Add("Existing wall 1 cell west at x=" + (minX - 1) + ". Use x1=" + (minX - 1) + " to share walls.");
-
-            // Check 1 cell east of east wall (x = maxX + 1)
-            if (maxX < map.Size.x - 1 && HasWallLine(map, maxX + 1, minZ, maxX + 1, maxZ))
-                hints.Add("Existing wall 1 cell east at x=" + (maxX + 1) + ". Use x2=" + (maxX + 1) + " to share walls.");
-
-            // Check 1 cell south of south wall (z = minZ - 1)
-            if (minZ > 0 && HasWallLine(map, minX, minZ - 1, maxX, minZ - 1))
-                hints.Add("Existing wall 1 cell south at z=" + (minZ - 1) + ". Use z1=" + (minZ - 1) + " to share walls.");
-
-            // Check 1 cell north of north wall (z = maxZ + 1)
-            if (maxZ < map.Size.z - 1 && HasWallLine(map, minX, maxZ + 1, maxX, maxZ + 1))
-                hints.Add("Existing wall 1 cell north at z=" + (maxZ + 1) + ". Use z2=" + (maxZ + 1) + " to share walls.");
-
-            return hints.Count > 0 ? hints : null;
-        }
-
-        private static bool HasWallLine(Map map, int x1, int z1, int x2, int z2)
-        {
-            // Check if at least 3 cells along this line have walls or wall blueprints
-            // (avoids false positives from single random walls)
-            int wallCount = 0;
-            int totalCells = 0;
-
-            int lineMinX = Math.Min(x1, x2), lineMaxX = Math.Max(x1, x2);
-            int lineMinZ = Math.Min(z1, z2), lineMaxZ = Math.Max(z1, z2);
-
-            for (int z = lineMinZ; z <= lineMaxZ; z++)
+            for (int x = minX; x <= maxX; x++)
             {
-                for (int x = lineMinX; x <= lineMaxX; x++)
-                {
-                    var cell = new IntVec3(x, 0, z);
-                    if (!cell.InBounds(map)) continue;
-                    totalCells++;
-                    if (HasExistingWallOrBlueprint(cell, map))
-                        wallCount++;
-                }
+                if (HasWallLine(map, x, minZ - 1)) hints.Add("wall adjacent to north at x=" + x);
+                if (HasWallLine(map, x, maxZ + 1)) hints.Add("wall adjacent to south at x=" + x);
+            }
+            for (int z = minZ; z <= maxZ; z++)
+            {
+                if (HasWallLine(map, minX - 1, z)) hints.Add("wall adjacent to west at z=" + z);
+                if (HasWallLine(map, maxX + 1, z)) hints.Add("wall adjacent to east at z=" + z);
             }
 
-            // Require at least 3 walls or 50% of the line to count as a wall line
-            return wallCount >= 3 || (totalCells > 0 && wallCount >= totalCells * 0.5);
+            return hints;
+        }
+
+        private static bool HasWallLine(Map map, int x, int z)
+        {
+            var cell = new IntVec3(x, 0, z);
+            if (!cell.InBounds(map)) return false;
+            var edifice = cell.GetEdifice(map);
+            return edifice != null && edifice.def.passability == Traversability.Impassable;
         }
 
         // --- Area scanning helper ---
@@ -2093,7 +1435,6 @@ namespace RimMind.Tools
             }
             else
             {
-                // This case is now handled earlier, but keep as fallback
                 result["ok"] = false;
                 result["detail"] = "No powered conduits found on map";
             }
