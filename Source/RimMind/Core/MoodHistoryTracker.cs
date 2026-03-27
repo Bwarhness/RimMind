@@ -45,15 +45,15 @@ namespace RimMind.Core
             // Take snapshots every ~1 hour
             if (currentTick - lastSnapshotTick >= SNAPSHOT_INTERVAL)
             {
-                TakeSnapshot(currentTick);
+                Map map = Find.CurrentMap;
+                TakeSnapshot(currentTick, map);
                 lastSnapshotTick = currentTick;
                 CleanOldSnapshots(currentTick);
             }
         }
 
-        private void TakeSnapshot(int currentTick)
+        private void TakeSnapshot(int currentTick, Map map)
         {
-            var map = Find.CurrentMap;
             if (map == null) return;
 
             foreach (var pawn in map.mapPawns.FreeColonists)
@@ -103,49 +103,10 @@ namespace RimMind.Core
         {
             base.ExposeData();
             Scribe_Values.Look(ref lastSnapshotTick, "lastSnapshotTick", 0);
-            
-            if (Scribe.mode == LoadSaveMode.Saving)
+            Scribe_Collections.Look(ref snapshots, "snapshots", LookMode.Deep);
+            if (Scribe.mode == LoadSaveMode.LoadingVars && snapshots == null)
             {
-                // Convert to lists for saving
-                var ticks = snapshots.Select(s => s.tick).ToList();
-                var pawnIds = snapshots.Select(s => s.pawnId).ToList();
-                var moodLevels = snapshots.Select(s => s.moodLevel).ToList();
-                var breakThresholds = snapshots.Select(s => s.breakThreshold).ToList();
-
-                Scribe_Collections.Look<int>(ref ticks, "snapshotTicks", LookMode.Value);
-                Scribe_Collections.Look<string>(ref pawnIds, "snapshotPawnIds", LookMode.Value);
-                Scribe_Collections.Look<float>(ref moodLevels, "snapshotMoodLevels", LookMode.Value);
-                Scribe_Collections.Look<float>(ref breakThresholds, "snapshotBreakThresholds", LookMode.Value);
-            }
-            else if (Scribe.mode == LoadSaveMode.LoadingVars)
-            {
-                List<int> ticks = null;
-                List<string> pawnIds = null;
-                List<float> moodLevels = null;
-                List<float> breakThresholds = null;
-
-                Scribe_Collections.Look<int>(ref ticks, "snapshotTicks", LookMode.Value);
-                Scribe_Collections.Look<string>(ref pawnIds, "snapshotPawnIds", LookMode.Value);
-                Scribe_Collections.Look<float>(ref moodLevels, "snapshotMoodLevels", LookMode.Value);
-                Scribe_Collections.Look<float>(ref breakThresholds, "snapshotBreakThresholds", LookMode.Value);
-
                 snapshots = new List<MoodSnapshot>();
-
-                if (ticks != null && pawnIds != null && moodLevels != null && breakThresholds != null)
-                {
-                    int count = Math.Min(Math.Min(ticks.Count, pawnIds.Count), 
-                                       Math.Min(moodLevels.Count, breakThresholds.Count));
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        snapshots.Add(new MoodSnapshot(
-                            ticks[i],
-                            pawnIds[i],
-                            moodLevels[i],
-                            breakThresholds[i]
-                        ));
-                    }
-                }
             }
         }
     }

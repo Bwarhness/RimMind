@@ -11,6 +11,16 @@ namespace RimMind.Tools
 {
     public static class MoodTools
     {
+        // Traits that make mental breaks more likely or more severe — used by both
+        // GetMoodRisks() and SuggestMoodInterventions() to avoid duplication.
+        private static readonly string[] MentalBreakRiskTraits =
+        {
+            "Neurotic",
+            "Volatile",
+            "Depressive",
+            "PsychicallySensitive",
+            "Pessimist"
+        };
         public static string GetMoodRisks()
         {
             var map = Find.CurrentMap;
@@ -89,12 +99,7 @@ namespace RimMind.Tools
                     {
                         foreach (var trait in pawn.story.traits.allTraits)
                         {
-                            // Traits that make mental breaks more likely or more severe
-                            if (trait.def.defName == "Neurotic" || 
-                                trait.def.defName == "Volatile" ||
-                                trait.def.defName == "Depressive" ||
-                                trait.def.defName == "PsychicallySensitive" ||
-                                trait.def.defName == "Pessimist")
+                            if (MentalBreakRiskTraits.Contains(trait.def.defName))
                             {
                                 riskTraits.Add(trait.LabelCap.ToString());
                             }
