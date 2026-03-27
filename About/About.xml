@@ -3,7 +3,7 @@
     <name>RimMind</name>
     <author>RimMind Team</author>
     <packageId>rimmind.ai</packageId>
-<modVersion>1.0.19</modVersion>
+<modVersion>1.0.20</modVersion>
     <picture>thumbnail.png</picture>
     <supportedVersions>
         <li>1.5</li>
