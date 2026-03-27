@@ -142,6 +142,8 @@ namespace RimMind.Tools
             { "get_mood_risks", args => MoodTools.GetMoodRisks() },
             { "suggest_mood_interventions", args => MoodTools.SuggestMoodInterventions(args?["name"]?.Value) },
             { "get_mood_trends", args => MoodTools.GetMoodTrends() },
+            { "get_mental_break_risks", args => MentalBreakTools.GetMentalBreakRisks() },
+            { "handle_mental_break", args => MentalBreakTools.HandleMentalBreak(args?["colonist"]?.Value, args?["action"]?.Value) },
             { "get_environment_quality", args => EnvironmentTools.GetEnvironmentQuality() },
 
             // Social
@@ -208,7 +210,9 @@ namespace RimMind.Tools
             { "wear_apparel", args => args?["x"] == null || args?["z"] == null ? JsonError("'x' and 'z' coordinates are required.") : EquipmentTools.WearApparel(args["colonist"]?.Value, args["x"].AsInt, args["z"].AsInt) },
             { "drop_equipment", args => EquipmentTools.DropEquipment(args?["colonist"]?.Value) },
             { "assign_outfit", args => EquipmentTools.AssignOutfit(args?["colonist"]?.Value, args?["outfitName"]?.Value) },
+            { "list_outfits", args => OutfitTools.ListOutfits() },
             { "assign_drug_policy", args => EquipmentTools.AssignDrugPolicy(args?["colonist"]?.Value, args?["policyName"]?.Value) },
+            { "list_drug_policies", args => DrugTools.ListDrugPolicies() },
             { "assign_food_restriction", args => EquipmentTools.AssignFoodRestriction(args?["colonist"]?.Value, args?["restrictionName"]?.Value) },
 
             // Building
