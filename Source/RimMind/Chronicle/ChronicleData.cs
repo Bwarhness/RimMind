@@ -5,6 +5,51 @@ using Verse;
 namespace RimMind.Chronicle
 {
     /// <summary>
+    /// Represents a colonist death event for obituaries.
+    /// </summary>
+    public class ColonistDeath
+    {
+        public string name;
+        public string cause;      // "raider", "wild animal", "infection", "blight", "unknown"
+        public string killer;      // Name of killer or killer type
+        public int day;
+        public string lastWords;
+
+        public ColonistDeath()
+        {
+        }
+
+        public ColonistDeath(string name, string cause, string killer, int day, string lastWords = null)
+        {
+            this.name = name;
+            this.cause = cause;
+            this.killer = killer;
+            this.day = day;
+            this.lastWords = lastWords;
+        }
+    }
+
+    /// <summary>
+    /// Represents a raid/battle event for battle reports.
+    /// </summary>
+    public class RaidEvent
+    {
+        public int day;
+        public string enemyFaction;
+        public int enemyCount;
+        public bool survived;
+        public int colonistsInvolved;
+        public int damageDealt;
+        public int colonistsKilled;
+        public int enemiesKilled;
+        public string letterLabel;
+
+        public RaidEvent()
+        {
+        }
+    }
+
+    /// <summary>
     /// Represents a single issue of the Colony Chronicle - a newspaper-style weekly report.
     /// </summary>
     public class WeeklyChronicle
@@ -22,6 +67,25 @@ namespace RimMind.Chronicle
         public string weatherPoem;
         public string prediction;
         public bool isGenerated;
+
+        // Phase 2: Extended tracking
+        public int colonistCountStart;
+        public int colonistCountEnd;
+        public int raidsThisWeek;
+        public bool raidMarathon;      // 3+ raids in one week
+        public bool deathlessWeek;
+        public bool firstDeath;        // First death ever in colony
+        public bool survivedFirstRaid;
+        public int colonistDeaths;
+        public List<ColonistDeath> deaths = new List<ColonistDeath>();
+        public List<string> milestoneFlags = new List<string>();
+        public List<RaidEvent> raids = new List<RaidEvent>();
+
+        // Mood extremes for the week
+        public string bestMoodColonist;
+        public float bestMoodValue;
+        public string worstMoodColonist;
+        public float worstMoodValue;
 
         public WeeklyChronicle()
         {
@@ -105,6 +169,27 @@ namespace RimMind.Chronicle
     }
 
     /// <summary>
+    /// Represents a colonist joining the colony.
+    /// </summary>
+    public class ColonistJoin
+    {
+        public string name;
+        public string reason;      // "recruit", "guest", "rescue", "migration"
+        public int day;
+
+        public ColonistJoin()
+        {
+        }
+
+        public ColonistJoin(string name, string reason, int day)
+        {
+            this.name = name;
+            this.reason = reason;
+            this.day = day;
+        }
+    }
+
+    /// <summary>
     /// Tracks event data accumulated throughout the current week.
     /// Used internally by ChronicleTracker to build the weekly report.
     /// </summary>
@@ -141,6 +226,37 @@ namespace RimMind.Chronicle
         public int lowestColonistCount;
         public string mostExtremeMoodColonist;
         public float mostExtremeMoodValue;
+
+        // Phase 2: Extended tracking
+        public int colonistCountStart;
+        public int colonistCountEnd;
+        public int raidsThisWeek;
+        public int colonistDeaths;
+        public List<ColonistDeath> deathsList = new List<ColonistDeath>();
+        public List<RaidEvent> raidsList = new List<RaidEvent>();
+        public List<ColonistJoin> joins = new List<ColonistJoin>();
+        public List<string> milestoneFlags = new List<string>();
+
+        // Mood extremes
+        public string bestMoodColonist;
+        public float bestMoodValue = 1.0f;  // Start at max
+        public string worstMoodColonist;
+        public float worstMoodValue = 0.0f; // Start at min
+
+        // Achievement flags
+        public bool raidMarathon;        // 3+ raids in one week
+        public bool deathlessWeek;
+        public bool firstDeath;         // First death ever in colony
+        public bool survivedFirstRaid;
+        public bool firstMechanoidKill;
+        public bool firstBanishment;
+
+        // Cumulative stats for milestone detection
+        public int totalColonistDeaths;
+        public int totalRaidsSurvived;
+        public bool hasReached5Colonists;
+        public bool hasReached10Colonists;
+        public bool hasReached20Colonists;
 
         public WeeklyEventLog()
         {
@@ -185,6 +301,24 @@ namespace RimMind.Chronicle
             lowestColonistCount = int.MaxValue;
             mostExtremeMoodColonist = null;
             mostExtremeMoodValue = 0.5f;
+
+            // Phase 2 reset
+            deathsList.Clear();
+            raidsList.Clear();
+            joins.Clear();
+            milestoneFlags.Clear();
+            bestMoodColonist = null;
+            bestMoodValue = 1.0f;
+            worstMoodColonist = null;
+            worstMoodValue = 0.0f;
+            raidMarathon = false;
+            deathlessWeek = true;  // Assume deathless until a death occurs
+            firstDeath = false;
+            survivedFirstRaid = false;
+            firstMechanoidKill = false;
+            firstBanishment = false;
+            colonistCountStart = 0;
+            colonistCountEnd = 0;
         }
 
         public string BuildContextSummary()
@@ -211,6 +345,41 @@ namespace RimMind.Chronicle
             }
 
             sb.AppendLine();
+            sb.AppendLine("-- OBITUARIES (DEATHS) --");
+            if (deathsList.Count == 0)
+            {
+                sb.AppendLine("No deaths this week. A blessing from the gods.");
+            }
+            else
+            {
+                foreach (var d in deathsList)
+                {
+                    sb.AppendLine($"Day {d.day}: {d.name} died from {d.cause}");
+                    if (!string.IsNullOrEmpty(d.killer) && d.killer != "unknown")
+                        sb.AppendLine($"  Killed by: {d.killer}");
+                    if (!string.IsNullOrEmpty(d.lastWords))
+                        sb.AppendLine($"  Last words: \"{d.lastWords}\"");
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("-- BATTLE REPORTS (RAIDS) --");
+            if (raidsList.Count == 0)
+            {
+                sb.AppendLine("No raids this week. The colony rests easy.");
+            }
+            else
+            {
+                foreach (var r in raidsList)
+                {
+                    string outcome = r.survived ? "SURVIVED" : "DEFEAT";
+                    sb.AppendLine($"Day {r.day}: Raid by {r.enemyFaction} - {outcome}");
+                    sb.AppendLine($"  Enemies: {r.enemyCount}, Our colonists involved: {r.colonistsInvolved}");
+                    sb.AppendLine($"  Enemies killed: {r.enemiesKilled}, Colonists lost: {r.colonistsKilled}");
+                }
+            }
+
+            sb.AppendLine();
             sb.AppendLine("-- COLONIST QUOTES --");
             if (quotes.Count == 0)
             {
@@ -226,13 +395,17 @@ namespace RimMind.Chronicle
 
             sb.AppendLine();
             sb.AppendLine("-- MILESTONES --");
-            if (milestones.Count == 0)
+            if (milestones.Count == 0 && milestoneFlags.Count == 0)
             {
                 sb.AppendLine("No major milestones reached.");
             }
             else
             {
                 foreach (var m in milestones)
+                {
+                    sb.AppendLine($"* {m}");
+                }
+                foreach (var m in milestoneFlags)
                 {
                     sb.AppendLine($"* {m}");
                 }
@@ -249,6 +422,35 @@ namespace RimMind.Chronicle
             sb.AppendLine($"Research Completed: {researchCompleted}");
             sb.AppendLine($"Animals Tamed: {animalsTamed}");
             sb.AppendLine($"Items Crafted: {itemsCrafted}");
+
+            sb.AppendLine();
+            sb.AppendLine("-- COLONIST CHANGES --");
+            sb.AppendLine($"Colonist count: {colonistCountStart} at start, {colonistCountEnd} at end");
+            if (joins.Count > 0)
+            {
+                sb.AppendLine("Colonists joined:");
+                foreach (var j in joins)
+                    sb.AppendLine($"  - {j.name} ({j.reason})");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("-- ACHIEVEMENT FLAGS --");
+            if (deathlessWeek) sb.AppendLine("* DEATHLESS WEEK - No colonists died!");
+            if (raidMarathon) sb.AppendLine("* RAID MARATHON - Survived 3+ raids in one week!");
+            if (firstDeath) sb.AppendLine("* FIRST DEATH - Colony experienced its first death");
+            if (survivedFirstRaid) sb.AppendLine("* SURVIVED FIRST RAID - The colony's first raid survived!");
+            if (firstMechanoidKill) sb.AppendLine("* FIRST MECHANOID KILL - First mechanoid destroyed!");
+            if (firstBanishment) sb.AppendLine("* FIRST BANISHMENT - First colonist banished!");
+            if (hasReached5Colonists) sb.AppendLine("* COLONY OF 5 - Reached 5 colonists!");
+            if (hasReached10Colonists) sb.AppendLine("* COLONY OF 10 - Reached 10 colonists!");
+            if (hasReached20Colonists) sb.AppendLine("* COLONY OF 20 - Reached 20 colonists!");
+
+            sb.AppendLine();
+            sb.AppendLine("-- MOOD EXTREMES --");
+            if (!string.IsNullOrEmpty(bestMoodColonist))
+                sb.AppendLine($"Happiest colonist: {bestMoodColonist} at {bestMoodValue:P0} mood");
+            if (!string.IsNullOrEmpty(worstMoodColonist))
+                sb.AppendLine($"Most troubled colonist: {worstMoodColonist} at {worstMoodValue:P0} mood");
 
             sb.AppendLine();
             sb.AppendLine("-- WEATHER --");
@@ -268,10 +470,6 @@ namespace RimMind.Chronicle
             sb.AppendLine("-- COLONY STANDINGS --");
             sb.AppendLine($"Wealth: {highestWealth:N0} (peak), {lowestWealth:N0} (low)");
             sb.AppendLine($"Colonists: {highestColonistCount} (peak), {lowestColonistCount} (low)");
-            if (!string.IsNullOrEmpty(mostExtremeMoodColonist))
-            {
-                sb.AppendLine($"Most Emotional: {mostExtremeMoodColonist} at {mostExtremeMoodValue:P0} mood");
-            }
 
             return sb.ToString();
         }

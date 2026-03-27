@@ -24,6 +24,9 @@ namespace RimMind.Core
                 // attribute-based patching causes AmbiguousMatchException)
                 Automation.LetterAutomationPatch.Apply(harmony);
 
+                // Chronicle event patches for death/raid tracking
+                Chronicle.ChronicleEventPatches.Apply(harmony);
+
                 var patched = harmony.GetPatchedMethods();
                 int count = 0;
                 foreach (var m in patched) count++;
