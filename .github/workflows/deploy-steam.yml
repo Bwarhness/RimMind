@@ -34,6 +34,7 @@ jobs:
           cp Assemblies/RimMind.dll staging/Assemblies/
           cp -r Defs/* staging/Defs/
           cp -r Languages staging/Languages
+          cp thumbnail.png staging/
 
       - name: Patch About.xml for dev
         if: github.ref_name == 'dev'
@@ -49,4 +50,5 @@ jobs:
           appId: 294100
           publishedFileId: ${{ github.ref_name == 'main' && '3666997391' || '3668326181' }}
           path: staging
+          previewPath: staging/About/Preview.png
           changeNote: "${{ github.ref_name == 'dev' && '[DEV] ' || '' }}${{ github.event.head_commit.message }}"

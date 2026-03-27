@@ -73,6 +73,11 @@
     <RimMind_ChatErrorPrefix>[Error]</RimMind_ChatErrorPrefix>
     <RimMind_CopyChatMessage>Copy</RimMind_CopyChatMessage>
     <RimMind_CopyChatMessageTip>Copy message to clipboard</RimMind_CopyChatMessageTip>
+    <RimMind_ExportHtml>Export HTML</RimMind_ExportHtml>
+    <RimMind_ExportTxt>Export TXT</RimMind_ExportTxt>
+    <RimMind_ExportSuccess>Conversation exported to: {0}</RimMind_ExportSuccess>
+    <RimMind_ExportHtmlTip>Export the full conversation as a styled HTML file</RimMind_ExportHtmlTip>
+    <RimMind_ExportTxtTip>Export the full conversation as a plain text file</RimMind_ExportTxtTip>
     
     <!-- Directives Window -->
     <RimMind_DirectivesTitle>Colony Directives</RimMind_DirectivesTitle>
@@ -145,4 +150,29 @@
     <RimMind_LocationQueryTitle>RimMind — ({0}, {1})</RimMind_LocationQueryTitle>
     <RimMind_LocationQueryHint>Describe what you want at this location...</RimMind_LocationQueryHint>
     <RimMind_LocationQuerySend>Send</RimMind_LocationQuerySend>
+
+    <!-- Colony Chronicle -->
+    <RimMind_Chronicle_Title>Colony Chronicle</RimMind_Chronicle_Title>
+    <RimMind_Chronicle_Loading>Generating Chronicle...</RimMind_Chronicle_Loading>
+    <RimMind_Chronicle_NoChronicle>No Chronicle available yet. Check back at the end of the week!</RimMind_Chronicle_NoChronicle>
+    <RimMind_Chronicle_Volume>Vol. {0}</RimMind_Chronicle_Volume>
+    <RimMind_Chronicle_Week>Week {0}</RimMind_Chronicle_Week>
+    <RimMind_Chronicle_Generating>Week {0} has ended. The Colony Chronicle is being prepared...</RimMind_Chronicle_Generating>
+    <RimMind_Chronicle_OneYearAgo>ON THIS DAY, ONE YEAR AGO</RimMind_Chronicle_OneYearAgo>
+    <RimMind_Chronicle_FromTheEditorsDesk>FROM THE EDITOR'S DESK</RimMind_Chronicle_FromTheEditorsDesk>
+    <RimMind_Chronicle_ColonistInterview>COLONIST INTERVIEW</RimMind_Chronicle_ColonistInterview>
+    <RimMind_Chronicle_Predictions>WEEK AHEAD: PREDICTIONS</RimMind_Chronicle_Predictions>
+    <RimMind_Chronicle_NotableQuotes>NOTABLE QUOTES</RimMind_Chronicle_NotableQuotes>
+    <RimMind_Chronicle_EndOfChronicle>End of Chronicle</RimMind_Chronicle_EndOfChronicle>
+    <RimMind_Chronicle_StaffEditor>RimMind AI, Colony Chronicle Staff Editor</RimMind_Chronicle_StaffEditor>
+    <RimMind_Chronicle_Survived47>We have survived 47 colonies. This one might make it.</RimMind_Chronicle_Survived47>
+    <RimMind_Chronicle_BattleReport>BATTLE REPORT</RimMind_Chronicle_BattleReport>
+    <RimMind_Chronicle_Obituaries>OBITUARIES</RimMind_Chronicle_Obituaries>
+    <RimMind_Chronicle_Economy>ECONOMY</RimMind_Chronicle_Economy>
+    <RimMind_Chronicle_Milestones>MILESTONES</RimMind_Chronicle_Milestones>
+    <RimMind_Chronicle_Weather>WEATHER</RimMind_Chronicle_Weather>
+    <RimMind_Chronicle_RunningJoke>RUNNING JOKE</RimMind_Chronicle_RunningJoke>
+    <RimMind_Chronicle_ConfidenceHigh>High confidence</RimMind_Chronicle_ConfidenceHigh>
+    <RimMind_Chronicle_ConfidenceMedium>Medium confidence</RimMind_Chronicle_ConfidenceMedium>
+    <RimMind_Chronicle_ConfidenceLow>Low confidence</RimMind_Chronicle_ConfidenceLow>
 </LanguageData>
