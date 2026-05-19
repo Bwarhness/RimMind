@@ -70,6 +70,9 @@ namespace RimMind.Storyteller
                 }
             }
 
+            // Clear stale pending letter framing from previous sessions
+            PendingLetterFraming.Clear();
+
             Log.Message("[RimMind] NarrativeEngine initialized.");
         }
 
@@ -109,6 +112,7 @@ namespace RimMind.Storyteller
             if (ticksSinceLastOutcomeCheck >= OUTCOME_CHECK_INTERVAL)
             {
                 ticksSinceLastOutcomeCheck = 0;
+                PendingLetterFraming.CleanupOldEntries();
                 CheckEventOutcomes();
             }
         }

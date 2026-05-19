@@ -15,13 +15,19 @@ namespace RimMind.Storyteller
         private static readonly Dictionary<string, FramingEntry> pending = new Dictionary<string, FramingEntry>();
         private static readonly object lockObj = new object();
 
+        /// <summary>
+        /// Register framing for a pending incident. Uses a composite key (incidentDefName_eventId)
+        /// so that multiple incidents of the same type don't overwrite each other.
+        /// </summary>
         public static void RegisterPendingFraming(string incidentDefName, PlannedEvent planned, IThemeProvider theme, PlotBeat beat)
         {
-            if (string.IsNullOrEmpty(incidentDefName)) return;
+            if (string.IsNullOrEmpty(incidentDefName) || planned == null) return;
+            string key = $"{incidentDefName}_{planned.Id}";
             lock (lockObj)
             {
-                pending[incidentDefName] = new FramingEntry
+                pending[key] = new FramingEntry
                 {
+                    IncidentDefName = incidentDefName,
                     Planned = planned,
                     Theme = theme,
                     Beat = beat,
@@ -30,17 +36,36 @@ namespace RimMind.Storyteller
             }
         }
 
+        /// <summary>
+        /// Consume the first pending framing entry matching the given incidentDefName (FIFO).
+        /// Used by letter patches which only know the defName, not the event ID.
+        /// </summary>
         public static FramingEntry Consume(string incidentDefName)
         {
             if (string.IsNullOrEmpty(incidentDefName)) return null;
             lock (lockObj)
             {
-                if (pending.TryGetValue(incidentDefName, out var entry))
+                foreach (var kv in pending)
                 {
-                    pending.Remove(incidentDefName);
-                    return entry;
+                    if (kv.Value.IncidentDefName == incidentDefName)
+                    {
+                        pending.Remove(kv.Key);
+                        return kv.Value;
+                    }
                 }
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Remove all pending entries. Called on game start/load to prevent stale data
+        /// from leaking across save/load cycles.
+        /// </summary>
+        public static void Clear()
+        {
+            lock (lockObj)
+            {
+                pending.Clear();
             }
         }
 
@@ -63,6 +88,7 @@ namespace RimMind.Storyteller
 
     public class FramingEntry
     {
+        public string IncidentDefName;
         public PlannedEvent Planned;
         public IThemeProvider Theme;
         public PlotBeat Beat;

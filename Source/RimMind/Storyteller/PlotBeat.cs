@@ -40,6 +40,12 @@ namespace RimMind.Storyteller
             Scribe_Collections.Look(ref OpensThreads, "opensThreads", LookMode.Value);
             Scribe_Collections.Look(ref ClosesThreads, "closesThreads", LookMode.Value);
             Scribe_Collections.Look(ref PlantsSeeds, "plantsSeeds", LookMode.Value);
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            {
+                if (OpensThreads == null) OpensThreads = new List<string>();
+                if (ClosesThreads == null) ClosesThreads = new List<string>();
+                if (PlantsSeeds == null) PlantsSeeds = new List<string>();
+            }
             Scribe_Values.Look(ref DayExecuted, "dayExecuted", 0);
             Scribe_Values.Look(ref WasExecuted, "wasExecuted", false);
             Scribe_Values.Look(ref IncidentDefName, "incidentDefName");

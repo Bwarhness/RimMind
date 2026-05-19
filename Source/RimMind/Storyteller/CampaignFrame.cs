@@ -28,6 +28,12 @@ namespace RimMind.Storyteller
             Scribe_Values.Look(ref Setting, "setting");
             Scribe_Values.Look(ref IncitingIncident, "incitingIncident");
             Scribe_Collections.Look(ref ActiveForces, "activeForces", LookMode.Value);
+            Scribe_Collections.Look(ref PlantedSeeds, "plantedSeeds", LookMode.Deep);
+            if (Scribe.mode == LoadSaveMode.LoadingVars)
+            {
+                if (ActiveForces == null) ActiveForces = new List<string>();
+                if (PlantedSeeds == null) PlantedSeeds = new List<NarrativeSeed>();
+            }
             Scribe_Values.Look(ref CurrentAct, "currentAct", "Act I");
             Scribe_Values.Look(ref PendingThreat, "pendingThreat");
             Scribe_Values.Look(ref Opportunity, "opportunity");

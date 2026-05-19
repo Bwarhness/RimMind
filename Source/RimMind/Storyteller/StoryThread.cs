@@ -38,6 +38,8 @@ namespace RimMind.Storyteller
             Scribe_Values.Look(ref DayOpened, "dayOpened");
             Scribe_Values.Look(ref DayClosed, "dayClosed", 0);
             Scribe_Collections.Look(ref RelatedBeatIds, "relatedBeatIds", LookMode.Value);
+            if (Scribe.mode == LoadSaveMode.LoadingVars && RelatedBeatIds == null)
+                RelatedBeatIds = new List<string>();
             Scribe_Values.Look(ref DramaticWeight, "dramaticWeight", 1f);
         }
     }

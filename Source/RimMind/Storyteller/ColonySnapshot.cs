@@ -35,6 +35,26 @@ namespace RimMind.Storyteller
         public int DaysSinceLastTrade;
         public string FactionName;
 
+        // Cached reflection metadata — resolved once, reused on every Capture() call
+        private static readonly FieldInfo QuestsField;
+        private static readonly PropertyInfo QuestStateProperty;
+        private static readonly PropertyInfo QuestNameProperty;
+
+        static ColonySnapshot()
+        {
+            try
+            {
+                var questManagerType = typeof(Find).Assembly.GetType("RimWorld.QuestManager");
+                QuestsField = questManagerType?.GetField("quests", BindingFlags.NonPublic | BindingFlags.Instance)
+                            ?? questManagerType?.GetField("quests", BindingFlags.Public | BindingFlags.Instance);
+
+                var questType = typeof(Find).Assembly.GetType("RimWorld.Quest");
+                QuestStateProperty = questType?.GetProperty("State", BindingFlags.Public | BindingFlags.Instance);
+                QuestNameProperty = questType?.GetProperty("name", BindingFlags.Public | BindingFlags.Instance);
+            }
+            catch { }
+        }
+
         public static ColonySnapshot Capture(Map map)
         {
             if (map == null) return null;
@@ -93,33 +113,24 @@ namespace RimMind.Storyteller
                 }
             }
 
-            // Active quests
+            // Active quests — uses cached reflection metadata
             try
             {
                 var questManager = Find.QuestManager;
-                if (questManager != null)
+                if (questManager != null && QuestsField != null)
                 {
-                    var questsField = questManager.GetType().GetField("quests", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-                    if (questsField != null)
+                    var quests = QuestsField.GetValue(questManager) as IEnumerable;
+                    if (quests != null && QuestStateProperty != null && QuestNameProperty != null)
                     {
-                        var quests = questsField.GetValue(questManager) as System.Collections.IEnumerable;
-                        if (quests != null)
+                        foreach (var quest in quests)
                         {
-                            foreach (var quest in quests)
+                            if (quest == null) continue;
+                            var state = QuestStateProperty.GetValue(quest);
+                            if (state != null && state.ToString() == "Ongoing")
                             {
-                                if (quest == null) continue;
-                                var stateProp = quest.GetType().GetProperty("State");
-                                var nameProp = quest.GetType().GetProperty("name");
-                                if (stateProp != null && nameProp != null)
-                                {
-                                    var state = stateProp.GetValue(quest);
-                                    if (state != null && state.ToString() == "Ongoing")
-                                    {
-                                        var name = nameProp.GetValue(quest)?.ToString();
-                                        if (!string.IsNullOrEmpty(name))
-                                            snapshot.ActiveQuests.Add(name);
-                                    }
-                                }
+                                var name = QuestNameProperty.GetValue(quest)?.ToString();
+                                if (!string.IsNullOrEmpty(name))
+                                    snapshot.ActiveQuests.Add(name);
                             }
                         }
                     }
