@@ -5,6 +5,19 @@ using RimMind.Languages;
 
 namespace RimMind.Core
 {
+    /// <summary>
+    /// Ensures NarrativeEngine is registered as a GameComponent on game init.
+    /// </summary>
+    [HarmonyPatch(typeof(Game), "FinalizeInit")]
+    static class NarrativeEngineInjector
+    {
+        static void Postfix(Game __instance)
+        {
+            if (__instance.GetComponent<Storyteller.NarrativeEngine>() == null)
+                __instance.components.Add(new Storyteller.NarrativeEngine(__instance));
+        }
+    }
+
     public class RimMindMod : Mod
     {
         public static RimMindSettings Settings { get; private set; }
@@ -20,12 +33,19 @@ namespace RimMind.Core
                 var harmony = new Harmony("com.rimmind.mod");
                 harmony.PatchAll();
 
-                // Manual patch for LetterStack.ReceiveLetter (3 overloads in RimWorld 1.6,
-                // attribute-based patching causes AmbiguousMatchException)
-                Automation.LetterAutomationPatch.Apply(harmony);
-
                 // Chronicle event patches for death/raid tracking
                 Chronicle.ChronicleEventPatches.Apply(harmony);
+
+                // Unified LetterStack patch: handles both narrative framing AND event automation
+                // Framing runs before automation so AI sees the framed/narrative version
+                try
+                {
+                    Storyteller.LetterStackPatch.Apply(harmony);
+                }
+                catch (System.Exception ex)
+                {
+                    Log.Warning("[RimMind] LetterStack patch failed: " + ex.Message);
+                }
 
                 var patched = harmony.GetPatchedMethods();
                 int count = 0;
@@ -168,6 +188,34 @@ namespace RimMind.Core
             if (listing.ButtonText(RimMindTranslations.Get("RimMind_ConfigureAutomationRules")))
             {
                 Find.WindowStack.Add(new RimMind.Automation.AutomationSettingsWindow());
+            }
+
+            listing.GapLine();
+
+            // AI Storyteller
+            listing.Label("<b>" + "AI Storyteller" + "</b>");
+            listing.CheckboxLabeled(RimMindTranslations.Get("RimMind_EnableAIStoryteller"), ref Settings.storytellerEnabled, RimMindTranslations.Get("RimMind_EnableAIStorytellerDesc"));
+            
+            if (Settings.storytellerEnabled)
+            {
+                listing.Label("Theme:");
+                var themes = Storyteller.ThemeRegistry.AllThemes;
+                foreach (var theme in themes)
+                {
+                    bool isSelected = Settings.selectedTheme == theme.ThemeId;
+                    if (listing.RadioButton(theme.ThemeName, isSelected))
+                    {
+                        Settings.selectedTheme = theme.ThemeId;
+                    }
+                }
+
+                listing.Gap(4f);
+                listing.Label("Storyteller Model (optional — uses default if blank):");
+                Settings.storytellerModel = listing.TextEntry(Settings.storytellerModel);
+                if (string.IsNullOrEmpty(Settings.storytellerModel))
+                {
+                    listing.Label("<color=#888888>Using default model from provider settings.</color>");
+                }
             }
 
             listing.End();

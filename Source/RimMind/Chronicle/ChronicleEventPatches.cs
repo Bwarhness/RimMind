@@ -59,9 +59,10 @@ namespace RimMind.Chronicle
                     }
                 }
 
-                // Patch LetterStack.ReceiveLetter for raid detection
-                // We use the existing LetterAutomationPatch, so we just add Chronicle-specific handling there
-                // by checking ChronicleTracker directly in LetterAutomationPatch
+                // Note: LetterStack.ReceiveLetter is patched by Storyteller.LetterStackPatch (unified handler)
+                // Chronicle raid detection via letters is not currently integrated.
+                // To add it, call ChronicleEventPatches.OnRaidLetterReceived() from LetterStackPatch.ApplyAutomation()
+                // when a threat letter def is detected.
 
                 // Patch ThingOwner.Notify_ItemRemoved for banishment detection
                 var thingOwnerType = AccessTools.TypeByName("ThingOwner");
@@ -188,8 +189,8 @@ namespace RimMind.Chronicle
         }
 
         /// <summary>
-        /// Called from LetterAutomationPatch when a threat letter is received.
-        /// This is invoked by ChronicleTracker when it detects a raid letter.
+        /// Called when a threat letter is received (not currently wired up).
+        /// To enable: call this from Storyteller.LetterStackPatch.ApplyAutomation() when detecting threat letters.
         /// </summary>
         public static void OnRaidLetterReceived(Letter letter)
         {
