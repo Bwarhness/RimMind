@@ -8,6 +8,8 @@
         <defName>RimMind_AIStoryteller</defName>
         <label>RimMind AI</label>
         <description>An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built.</description>
+        <portraitLarge>UI/HeroArt/Storytellers/CassandraClassic</portraitLarge>
+        <portraitTiny>UI/HeroArt/Storytellers/CassandraClassicTiny</portraitTiny>
         <listOrder>35</listOrder>
         <comps>
             <li Class="RimMind.Storyteller.StorytellerCompProperties_AIStoryteller">
