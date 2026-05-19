@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LanguageData>
+    <!-- EN: RimMind AI -->
+    <RimMind_AIStoryteller.label>RimMind AI</RimMind_AIStoryteller.label>
+    <!-- EN: An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built. -->
+    <RimMind_AIStoryteller.description>An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built.</RimMind_AIStoryteller.description>
+</LanguageData>
