@@ -30,7 +30,7 @@ namespace RimMind.Storyteller
             return engine;
         }
 
-        public override IEnumerable<FiringIncident> MakeIncidentsForInterval(IIncidentTarget target)
+        public override IEnumerable<FiringIncident> MakeIntervalIncidents(IIncidentTarget target)
         {
             var engine = GetEngine();
             var queue = engine?.EventQueue;
@@ -38,7 +38,7 @@ namespace RimMind.Storyteller
             // If storyteller disabled or no engine/queue, fall back to vanilla
             if (!RimMindMod.Settings.storytellerEnabled || queue == null)
             {
-                foreach (var incident in base.MakeIncidentsForInterval(target))
+                foreach (var incident in base.MakeIntervalIncidents(target))
                     yield return incident;
                 yield break;
             }
@@ -71,7 +71,7 @@ namespace RimMind.Storyteller
             }
 
             // Fall back to vanilla behavior if queue empty or planned event invalid
-            foreach (var incident in base.MakeIncidentsForInterval(target))
+            foreach (var incident in base.MakeIntervalIncidents(target))
                 yield return incident;
         }
 
