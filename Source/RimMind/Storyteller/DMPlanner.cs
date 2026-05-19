@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using RimMind.API;
 using RimMind.Core;
 using Verse;
@@ -69,26 +68,23 @@ namespace RimMind.Storyteller
                 HandlePlanResponse(response, state, theme);
             };
 
-            // Dispatch to the appropriate API client
-            ThreadPool.QueueUserWorkItem(_ =>
+            // Dispatch to the appropriate API client (each client handles its own async dispatch)
+            try
             {
-                try
-                {
-                    if (RimMindMod.Settings.IsClaudeCode)
-                        ClaudeCodeClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                    else if (RimMindMod.Settings.IsAnthropic)
-                        AnthropicClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                    else if (RimMindMod.Settings.IsCustom)
-                        CustomProviderClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                    else
-                        OpenRouterClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[RimMind] DMPlanner API dispatch failed: " + ex.Message);
-                    MainThreadDispatcher.Enqueue(() => isPlanning = false);
-                }
-            });
+                if (RimMindMod.Settings.IsClaudeCode)
+                    ClaudeCodeClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
+                else if (RimMindMod.Settings.IsAnthropic)
+                    AnthropicClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
+                else if (RimMindMod.Settings.IsCustom)
+                    CustomProviderClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
+                else
+                    OpenRouterClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[RimMind] DMPlanner API dispatch failed: " + ex.Message);
+                MainThreadDispatcher.Enqueue(() => isPlanning = false);
+            }
         }
 
         private List<ChatMessage> BuildPlanningMessages(NarrativeState state, ColonySnapshot snapshot, IThemeProvider theme)

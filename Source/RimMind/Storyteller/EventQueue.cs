@@ -13,8 +13,23 @@ namespace RimMind.Storyteller
         private List<PlannedEvent> events = new List<PlannedEvent>();
         private readonly object lockObj = new object();
 
-        public bool HasEvents => events.Any(e => !e.WasFired);
-        public int Count => events.Count(e => !e.WasFired);
+        public bool HasEvents
+        {
+            get
+            {
+                lock (lockObj)
+                    return events.Any(e => !e.WasFired);
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                lock (lockObj)
+                    return events.Count(e => !e.WasFired);
+            }
+        }
 
         public void Enqueue(PlannedEvent evt)
         {
