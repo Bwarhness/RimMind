@@ -36,6 +36,11 @@ namespace RimMind.Core
         public bool enableEventAutomation = false;
         public Dictionary<string, AutomationRule> automationRules = new Dictionary<string, AutomationRule>();
 
+        // AI Storyteller settings
+        public bool storytellerEnabled = true;
+        public string selectedTheme = "chronicle";
+        public string storytellerModel = "";
+
         public bool IsAnthropic => apiProvider == "anthropic";
         public bool IsClaudeCode => apiProvider == "claudecode";
         public bool IsCustom => apiProvider == "custom";
@@ -44,6 +49,7 @@ namespace RimMind.Core
         {
             get
             {
+                if (!string.IsNullOrEmpty(storytellerModel)) return storytellerModel;
                 if (IsClaudeCode) return claudeCodeModelId;
                 if (IsAnthropic) return anthropicModelId;
                 if (IsCustom) return customModelId;
@@ -69,6 +75,11 @@ namespace RimMind.Core
             Scribe_Values.Look(ref autoDetectDirectives, "autoDetectDirectives", true);
             Scribe_Values.Look(ref enableEventAutomation, "enableEventAutomation", false);
             Scribe_Collections.Look(ref automationRules, "automationRules", LookMode.Value, LookMode.Deep);
+
+            // Storyteller settings
+            Scribe_Values.Look(ref storytellerEnabled, "storytellerEnabled", true);
+            Scribe_Values.Look(ref selectedTheme, "selectedTheme", "chronicle");
+            Scribe_Values.Look(ref storytellerModel, "storytellerModel", "");
 
             if (Scribe.mode == LoadSaveMode.LoadingVars && automationRules == null)
             {

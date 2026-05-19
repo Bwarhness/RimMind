@@ -27,6 +27,16 @@ namespace RimMind.Core
                 // Chronicle event patches for death/raid tracking
                 Chronicle.ChronicleEventPatches.Apply(harmony);
 
+                // AI Storyteller letter framing patches
+                try
+                {
+                    Storyteller.LetterFramingPatch.Apply(harmony);
+                }
+                catch (System.Exception ex)
+                {
+                    Log.Warning("[RimMind] Letter framing patch failed: " + ex.Message);
+                }
+
                 var patched = harmony.GetPatchedMethods();
                 int count = 0;
                 foreach (var m in patched) count++;
@@ -168,6 +178,34 @@ namespace RimMind.Core
             if (listing.ButtonText(RimMindTranslations.Get("RimMind_ConfigureAutomationRules")))
             {
                 Find.WindowStack.Add(new RimMind.Automation.AutomationSettingsWindow());
+            }
+
+            listing.GapLine();
+
+            // AI Storyteller
+            listing.Label("<b>" + "AI Storyteller" + "</b>");
+            listing.CheckboxLabeled(RimMindTranslations.Get("RimMind_EnableAIStoryteller"), ref Settings.storytellerEnabled, RimMindTranslations.Get("RimMind_EnableAIStorytellerDesc"));
+            
+            if (Settings.storytellerEnabled)
+            {
+                listing.Label("Theme:");
+                var themes = Storyteller.ThemeRegistry.AllThemes;
+                foreach (var theme in themes)
+                {
+                    bool isSelected = Settings.selectedTheme == theme.ThemeId;
+                    if (listing.RadioButton(theme.ThemeName, isSelected))
+                    {
+                        Settings.selectedTheme = theme.ThemeId;
+                    }
+                }
+
+                listing.Gap(4f);
+                listing.Label("Storyteller Model (optional — uses default if blank):");
+                Settings.storytellerModel = listing.TextEntry(Settings.storytellerModel);
+                if (string.IsNullOrEmpty(Settings.storytellerModel))
+                {
+                    listing.Label("<color=#888888>Using default model from provider settings.</color>");
+                }
             }
 
             listing.End();

@@ -2,6 +2,6 @@
 <LanguageData>
     <!-- EN: RimMind AI -->
     <RimMind_AIStoryteller.label>RimMind AI</RimMind_AIStoryteller.label>
-    <!-- EN: An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built. -->
-    <RimMind_AIStoryteller.description>An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built.</RimMind_AIStoryteller.description>
+    <!-- EN: An AI-powered storyteller that plans narrative arcs, manages campaign coherence, and frames events with narrative weight. Generates 3-beat story plans via AI, tracks plot threads and tension, and adapts to colony outcomes over 50+ days. Requires internet. -->
+    <RimMind_AIStoryteller.description>An AI-powered storyteller that plans narrative arcs, manages campaign coherence, and frames events with narrative weight. Generates 3-beat story plans via AI, tracks plot threads and tension, and adapts to colony outcomes over 50+ days. Requires internet.</RimMind_AIStoryteller.description>
 </LanguageData>
