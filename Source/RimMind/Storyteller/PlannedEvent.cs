@@ -52,7 +52,7 @@ namespace RimMind.Storyteller
 
             // Determine target based on incident's targetTags
             Map targetMap = null;
-            if (def.targetTags.Any(tag => tag == "World"))
+            if (def.targetTags.Any(tag => tag.defName == "World"))
             {
                 // World-targeted incident
                 targetMap = null;
