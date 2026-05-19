@@ -56,19 +56,20 @@ namespace RimMind.Storyteller
         /// <summary>
         /// Unified postfix that handles both framing and automation.
         /// Framing is applied first, then automation triggers (so AI sees framed text).
-        /// Uses Harmony parameter injection to get the actual Letter instance directly.
+        /// Harmony parameter injection matches by source-method parameter name; the
+        /// target's first parameter is named "let", so this postfix must use that name.
         /// </summary>
-        public static void Postfix(Letter letter)
+        public static void Postfix(Letter let)
         {
-            if (letter == null) return;
+            if (let == null) return;
 
             try
             {
                 // STEP 1: Apply narrative framing FIRST (so automation sees framed version)
-                ApplyFraming(letter);
+                ApplyFraming(let);
 
                 // STEP 2: Trigger event automation SECOND (sees the framed letter)
-                ApplyAutomation(letter);
+                ApplyAutomation(let);
             }
             catch (Exception ex)
             {

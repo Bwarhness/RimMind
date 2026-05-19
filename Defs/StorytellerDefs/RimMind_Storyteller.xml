@@ -9,18 +9,8 @@
         <label>RimMind AI</label>
         <description>An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built.</description>
         <listOrder>35</listOrder>
-        <populationIntentFactorX4Curves>
-            <points>
-                <li>(0, 1)</li>
-                <li>(1, 1)</li>
-                <li>(5, 1)</li>
-                <li>(10, 1)</li>
-                <li>(15, 1)</li>
-                <li>(20, 1)</li>
-            </points>
-        </populationIntentFactorX4Curves>
         <comps>
-            <li Class="RimMind.Storyteller.AIStorytellerComp">
+            <li Class="RimMind.Storyteller.StorytellerCompProperties_AIStoryteller">
                 <minDaysPassed>3</minDaysPassed>
                 <curveIncidents>
                     <points>
@@ -29,8 +19,6 @@
                     </points>
                 </curveIncidents>
             </li>
-            <li Class="StorytellerComp_DifficultyBreather" />
-            <li Class="StorytellerComp_ShipChunk" />
         </comps>
     </StorytellerDef>
 </Defs>

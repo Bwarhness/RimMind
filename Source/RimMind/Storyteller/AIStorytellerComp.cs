@@ -99,7 +99,7 @@ namespace RimMind.Storyteller
         private bool ShouldGenerateEventNow(IIncidentTarget target)
         {
             // Use props from XML configuration
-            var props = this.props as StorytellerCompProperties;
+            var props = this.props as StorytellerCompProperties_AIStoryteller;
             if (props == null) return false;
 
             // Check minimum days passed
