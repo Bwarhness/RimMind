@@ -1,4 +1,5 @@
 using RimWorld;
+using System.Linq;
 using Verse;
 
 namespace RimMind.Storyteller
@@ -49,10 +50,22 @@ namespace RimMind.Storyteller
                     return null;
             }
 
-            var parms = StorytellerUtility.DefaultParmsNow(def.category, Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome));
+            // Determine target based on incident's targetTags
+            Map targetMap = null;
+            if (def.targetTags.Any(tag => tag == TargetTagDefOf.World))
+            {
+                // World-targeted incident
+                targetMap = null;
+            }
+            else
+            {
+                // Map-targeted incident - use current map or first player home map
+                targetMap = Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome);
+            }
+
+            var parms = StorytellerUtility.DefaultParmsNow(def.category, targetMap);
             parms.points = Points > 0 ? Points : parms.points;
-            parms.target = Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome);
-            parms.forced = true;
+            parms.target = targetMap;
 
             // Set faction if relevant
             if (def.category == IncidentCategoryDefOf.ThreatBig || def.category == IncidentCategoryDefOf.ThreatSmall)

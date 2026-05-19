@@ -14,7 +14,7 @@ namespace RimMind.Storyteller
     public class DMPlanner
     {
         private readonly NarrativeState state;
-        private bool isPlanning = false;
+        private volatile bool isPlanning = false;
         private int lastPlanTick = 0;
 
         public DMPlanner(NarrativeState state)

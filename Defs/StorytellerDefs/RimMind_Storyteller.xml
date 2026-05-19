@@ -30,54 +30,6 @@
                 </curveIncidents>
             </li>
             <li Class="StorytellerComp_DifficultyBreather" />
-            <li Class="StorytellerComp_Category">
-                <category>ThreatBig</category>
-                <minDaysPassed>11</minDaysPassed>
-                <allowedTargetTags>
-                    <li>Map_PlayerHome</li>
-                </allowedTargetTags>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>ThreatSmall</category>
-                <maxIncidentsCount>1</maxIncidentsCount>
-                <allowedTargetTags>
-                    <li>Map_PlayerHome</li>
-                </allowedTargetTags>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>FactionArrival</category>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>OrbitalVisitor</category>
-                <maxIncidentsCount>1</maxIncidentsCount>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>AllyAssistance</category>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>Misc</category>
-                <maxIncidentsCount>1</maxIncidentsCount>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>Quest</category>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>Quest</category>
-                <maxIncidentsCount>1</maxIncidentsCount>
-                <minDaysPassed>20</minDaysPassed>
-                <allowedTargetTags>
-                    <li>World</li>
-                </allowedTargetTags>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>ShipChunkDrop</category>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>DiseaseHuman</category>
-            </li>
-            <li Class="StorytellerComp_Category">
-                <category>DiseaseAnimal</category>
-            </li>
             <li Class="StorytellerComp_ShipChunk" />
         </comps>
     </StorytellerDef>

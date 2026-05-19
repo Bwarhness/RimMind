@@ -5,6 +5,19 @@ using RimMind.Languages;
 
 namespace RimMind.Core
 {
+    /// <summary>
+    /// Ensures NarrativeEngine is registered as a GameComponent on game init.
+    /// </summary>
+    [HarmonyPatch(typeof(Game), "FinalizeInit")]
+    static class NarrativeEngineInjector
+    {
+        static void Postfix(Game __instance)
+        {
+            if (__instance.GetComponent<Storyteller.NarrativeEngine>() == null)
+                __instance.components.Add(new Storyteller.NarrativeEngine(__instance));
+        }
+    }
+
     public class RimMindMod : Mod
     {
         public static RimMindSettings Settings { get; private set; }

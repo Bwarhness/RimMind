@@ -35,7 +35,7 @@ namespace RimMind.Storyteller
         public EventQueue EventQueue => eventQueue;
         public DMPlanner Planner => planner;
 
-        public NarrativeEngine(Game game) : base() { }
+        public NarrativeEngine(Game game) : base(game) { }
 
         public override void FinalizeInit()
         {
