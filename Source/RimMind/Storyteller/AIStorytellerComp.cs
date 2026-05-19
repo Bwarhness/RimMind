@@ -61,6 +61,11 @@ namespace RimMind.Storyteller
 
                     Log.Message($"[RimMind] AI Storyteller firing planned event: {planned.IncidentDefName} ({planned.NarrativeLabel})");
                     yield return firing;
+                    
+                    // Mark event as fired AFTER successful creation and yield
+                    // This prevents permanent loss if ToFiringIncident() had failed
+                    queue.MarkFired(planned);
+                    
                     yield break; // One planned event per interval
                 }
             }
@@ -97,10 +102,26 @@ namespace RimMind.Storyteller
             var map = target as Map;
             if (map == null) return false;
 
-            // Check minimum days passed
+            // Check minimum days passed - read from XML config via base class props
             float daysPassed = GenDate.DaysPassedFloat;
-            if (daysPassed < 3f) // Hardcoded from XML <minDaysPassed>3</minDaysPassed>
-                return false;
+            var classicProps = this.props as StorytellerCompProperties_Classic;
+            if (classicProps != null)
+            {
+                if (daysPassed < classicProps.minDaysPassed)
+                    return false;
+
+                // Respect curveIncidents - check if we should generate based on the curve
+                // The curve maps days (x) to incident count (y)
+                if (classicProps.curveIncidents != null && classicProps.curveIncidents.Length > 0)
+                {
+                    // Evaluate curve at current day to get allowed incident count
+                    float allowedIncidents = classicProps.curveIncidents.Evaluate(daysPassed);
+                    // Could add logic here to limit incidents based on curve value
+                    // For now, just ensure we're past the curve start point
+                    if (allowedIncidents <= 0)
+                        return false;
+                }
+            }
 
             return true;
         }

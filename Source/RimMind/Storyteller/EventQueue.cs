@@ -37,12 +37,21 @@ namespace RimMind.Storyteller
             lock (lockObj)
             {
                 var evt = events.FirstOrDefault(e => !e.WasFired);
+                // Note: WasFired is NOT set here - it's set by the caller after successful execution
+                // This prevents permanent loss of events if ToFiringIncident() fails or returns null
+                return evt;
+            }
+        }
+
+        public void MarkFired(PlannedEvent evt)
+        {
+            lock (lockObj)
+            {
                 if (evt != null)
                 {
                     evt.WasFired = true;
                     evt.FireDay = GenLocalDate.DayOfYear(Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome));
                 }
-                return evt;
             }
         }
 
