@@ -10,10 +10,10 @@ namespace RimMind.Storyteller
     /// Phase 1-5: Active AI Storyteller.
     /// 
     /// Overrides MakeIncidentsForInterval to inject AI-planned narrative events from the
-    /// DM Planner / Plot Graph pipeline. Falls back to vanilla StorytellerComp_Classic
+    /// DM Planner / Plot Graph pipeline. Falls back to vanilla StorytellerComp
     /// behavior when the event queue is empty or the storyteller is disabled.
     /// </summary>
-    public class AIStorytellerComp : StorytellerComp_Classic
+    public class AIStorytellerComp : StorytellerComp
     {
         // Cached engine reference for performance
         private NarrativeEngine engine;
@@ -30,7 +30,7 @@ namespace RimMind.Storyteller
             return engine;
         }
 
-        public override IEnumerable<FiringIncident> MakeIncidentsForInterval(ITarget target)
+        public override IEnumerable<FiringIncident> MakeIncidentsForInterval(IIncidentTarget target)
         {
             var engine = GetEngine();
             var queue = engine?.EventQueue;
@@ -70,7 +70,7 @@ namespace RimMind.Storyteller
                 }
             }
 
-            // Fall back to vanilla classic behavior if queue empty or planned event invalid
+            // Fall back to vanilla behavior if queue empty or planned event invalid
             foreach (var incident in base.MakeIncidentsForInterval(target))
                 yield return incident;
         }
@@ -96,32 +96,16 @@ namespace RimMind.Storyteller
         /// Checks if this storyteller comp should generate an incident now.
         /// Respects minDaysPassed and curveIncidents from XML config.
         /// </summary>
-        private bool ShouldGenerateEventNow(ITarget target)
+        private bool ShouldGenerateEventNow(IIncidentTarget target)
         {
-            // Mirror base class checks from StorytellerComp_Classic
-            var map = target as Map;
-            if (map == null) return false;
+            // Use props from XML configuration
+            var props = this.props as StorytellerCompProperties;
+            if (props == null) return false;
 
-            // Check minimum days passed - read from XML config via base class props
+            // Check minimum days passed
             float daysPassed = GenDate.DaysPassedFloat;
-            var classicProps = this.props as StorytellerCompProperties_Classic;
-            if (classicProps != null)
-            {
-                if (daysPassed < classicProps.minDaysPassed)
-                    return false;
-
-                // Respect curveIncidents - check if we should generate based on the curve
-                // The curve maps days (x) to incident count (y)
-                if (classicProps.curveIncidents != null && classicProps.curveIncidents.Length > 0)
-                {
-                    // Evaluate curve at current day to get allowed incident count
-                    float allowedIncidents = classicProps.curveIncidents.Evaluate(daysPassed);
-                    // Could add logic here to limit incidents based on curve value
-                    // For now, just ensure we're past the curve start point
-                    if (allowedIncidents <= 0)
-                        return false;
-                }
-            }
+            if (daysPassed < props.minDaysPassed)
+                return false;
 
             return true;
         }
