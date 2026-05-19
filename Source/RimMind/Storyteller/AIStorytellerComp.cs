@@ -84,7 +84,7 @@ namespace RimMind.Storyteller
 
             // Try to apply custom letter text if this incident generates a letter
             // We do this via a lightweight post-execution tracking; the actual letter
-            // modification is handled by our LetterFramingPatch if the letter matches
+            // modification is handled by our LetterStackPatch (unified framing+automation) if the letter matches
             // our incident. For now, store the planned event data for later framing.
             if (!string.IsNullOrEmpty(planned.NarrativeLabel))
             {

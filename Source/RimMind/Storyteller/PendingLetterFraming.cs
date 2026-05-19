@@ -8,7 +8,7 @@ namespace RimMind.Storyteller
     /// <summary>
     /// Lightweight registry for pending narrative letter framing.
     /// When a planned event fires, we register framing data here.
-    /// LetterAutomationPatch checks this registry when letters arrive.
+    /// LetterStackPatch (unified patch for framing + automation) checks this registry when letters arrive.
     /// </summary>
     public static class PendingLetterFraming
     {

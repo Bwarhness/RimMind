@@ -33,21 +33,18 @@ namespace RimMind.Core
                 var harmony = new Harmony("com.rimmind.mod");
                 harmony.PatchAll();
 
-                // Manual patch for LetterStack.ReceiveLetter (3 overloads in RimWorld 1.6,
-                // attribute-based patching causes AmbiguousMatchException)
-                Automation.LetterAutomationPatch.Apply(harmony);
-
                 // Chronicle event patches for death/raid tracking
                 Chronicle.ChronicleEventPatches.Apply(harmony);
 
-                // AI Storyteller letter framing patches
+                // Unified LetterStack patch: handles both narrative framing AND event automation
+                // Framing runs before automation so AI sees the framed/narrative version
                 try
                 {
-                    Storyteller.LetterFramingPatch.Apply(harmony);
+                    Storyteller.LetterStackPatch.Apply(harmony);
                 }
                 catch (System.Exception ex)
                 {
-                    Log.Warning("[RimMind] Letter framing patch failed: " + ex.Message);
+                    Log.Warning("[RimMind] LetterStack patch failed: " + ex.Message);
                 }
 
                 var patched = harmony.GetPatchedMethods();
