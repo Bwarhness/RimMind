@@ -293,6 +293,10 @@ namespace RimMind.Scenarios
                 pawn.Name = new NameTriple(first, nick, last);
             }
 
+            // Xenotype is now applied PRE-generation via StartingPawnUtility.GetGenerationRequest
+            // postfix (ForcedXenotype for vanilla, ForcedCustomXenotype for saved custom). No
+            // post-generation mutation needed — the pawn is already rolled correctly.
+
             // Traits
             if (spec.Traits != null && spec.Traits.Count > 0 && pawn.story?.traits != null)
             {
@@ -300,17 +304,12 @@ namespace RimMind.Scenarios
                 foreach (var traitName in spec.Traits)
                 {
                     if (string.IsNullOrWhiteSpace(traitName)) continue;
-                    var def = DefDatabase<TraitDef>.GetNamedSilentFail(traitName);
-                    if (def == null)
-                    {
-                        // Fuzzy: try matching by label case-insensitive
-                        def = DefDatabase<TraitDef>.AllDefsListForReading
-                            .FirstOrDefault(d => string.Equals(d.defName, traitName, StringComparison.OrdinalIgnoreCase)
-                                              || string.Equals(d.label, traitName, StringComparison.OrdinalIgnoreCase));
-                    }
+                    int requestedDegree = 0;
+                    var def = ResolveTrait(traitName, out requestedDegree);
                     if (def == null) continue;
                     if (pawn.story.traits.HasTrait(def)) continue;
-                    pawn.story.traits.GainTrait(new Trait(def, 0, false));
+                    int degree = PickValidDegree(def, requestedDegree);
+                    pawn.story.traits.GainTrait(new Trait(def, degree, false));
                 }
             }
 
@@ -337,6 +336,46 @@ namespace RimMind.Scenarios
                     rec.passion = ParsePassion(kv.Value);
                 }
             }
+        }
+
+        // Resolve a trait name from the AI. Handles cases where the AI specifies a
+        // label like "Very Neurotic" (degree 2 of TraitDef Neurotic) or "Sanguine"
+        // (degree 2 of NaturalMood) instead of just the bare defName.
+        private static TraitDef ResolveTrait(string name, out int requestedDegree)
+        {
+            requestedDegree = 0;
+            if (string.IsNullOrWhiteSpace(name)) return null;
+
+            var def = DefDatabase<TraitDef>.GetNamedSilentFail(name);
+            if (def != null) return def;
+
+            foreach (var d in DefDatabase<TraitDef>.AllDefsListForReading)
+            {
+                if (string.Equals(d.defName, name, StringComparison.OrdinalIgnoreCase)) return d;
+                if (d.degreeDatas != null)
+                {
+                    foreach (var deg in d.degreeDatas)
+                    {
+                        if (string.Equals(deg.label, name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            requestedDegree = deg.degree;
+                            return d;
+                        }
+                    }
+                }
+                if (string.Equals(d.label, name, StringComparison.OrdinalIgnoreCase)) return d;
+            }
+            return null;
+        }
+
+        // Pick a degree that the TraitDef actually defines. Falls back to the first
+        // declared degree (e.g. Neurotic is degree 1, no degree 0).
+        private static int PickValidDegree(TraitDef def, int requested)
+        {
+            if (def?.degreeDatas == null || def.degreeDatas.Count == 0) return requested;
+            foreach (var d in def.degreeDatas)
+                if (d.degree == requested) return requested;
+            return def.degreeDatas[0].degree;
         }
 
         private static SkillDef ResolveSkill(string name)
@@ -381,6 +420,159 @@ namespace RimMind.Scenarios
                     thing.stackCount = Mathf.Clamp(spec.Count, 1, thing.def.stackLimit);
                 if (thing != null)
                     yield return thing;
+            }
+        }
+
+        // Maps spec.Xenotype (custom name) -> the saved CustomXenotype instance. Built in
+        // PreConfigure so that StartingPawnUtility.GetGenerationRequest postfix can attach
+        // ForcedCustomXenotype to each pawn's request.
+        private Dictionary<string, CustomXenotype> savedCustomXenotypes;
+        public CustomXenotype GetSavedCustomXenotype(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            if (savedCustomXenotypes == null) return null;
+            return savedCustomXenotypes.TryGetValue(name, out var x) ? x : null;
+        }
+
+        public override void PreConfigure()
+        {
+            base.PreConfigure();
+            SaveCustomXenotypes();
+        }
+
+        public override void PostGameStart()
+        {
+            base.PostGameStart();
+            ApplyIdeologyOverride();
+        }
+
+        /// <summary>
+        /// For each pawn spec with a custom gene list, build a CustomXenotype and
+        /// persist it to the user's xenotype library so it shows up in the dropdown
+        /// on Page_ConfigureStartingPawns. Files are overwritten if the same name
+        /// re-appears across regenerations.
+        /// </summary>
+        private void SaveCustomXenotypes()
+        {
+            try
+            {
+                if (!ModsConfig.BiotechActive) return;
+                if (plan?.Pawns == null || plan.Pawns.Count == 0) return;
+
+                savedCustomXenotypes = new Dictionary<string, CustomXenotype>();
+                var iconDef = DefDatabase<XenotypeIconDef>.AllDefsListForReading
+                    .FirstOrDefault(d => d.defName == "Basic")
+                    ?? DefDatabase<XenotypeIconDef>.AllDefsListForReading.FirstOrDefault();
+
+                foreach (var spec in plan.Pawns)
+                {
+                    if (spec.XenotypeGenes == null || spec.XenotypeGenes.Count == 0) continue;
+
+                    // If the AI returned no name or the generic "Custom", invent a
+                    // per-pawn name (e.g. "Frodo's kind") so the genes still apply.
+                    if (string.IsNullOrWhiteSpace(spec.Xenotype) || string.Equals(spec.Xenotype, "Custom", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string seed = !string.IsNullOrWhiteSpace(spec.FirstName) ? spec.FirstName.Trim() : "Colonist";
+                        spec.Xenotype = $"{seed}sKind";
+                        Log.Message($"[RimMind] Auto-named custom xenotype: {spec.Xenotype}");
+                    }
+
+                    if (savedCustomXenotypes.ContainsKey(spec.Xenotype)) continue;
+
+                    // Collision check: if the AI used a vanilla xenotype's name, drop the
+                    // custom gene list and let the vanilla XenotypeDef path take over.
+                    if (DefDatabase<XenotypeDef>.GetNamedSilentFail(spec.Xenotype) != null)
+                    {
+                        Log.Warning($"[RimMind] Custom xenotype name \"{spec.Xenotype}\" collides with vanilla XenotypeDef; using vanilla and ignoring custom genes.");
+                        spec.XenotypeGenes.Clear();
+                        continue;
+                    }
+
+                    var resolved = ResolveGenes(spec.XenotypeGenes);
+                    if (resolved.Count == 0) continue;
+
+                    var xeno = new CustomXenotype
+                    {
+                        name = spec.Xenotype.Trim(),
+                        genes = resolved,
+                        iconDef = iconDef,
+                        inheritable = false
+                    };
+
+                    string path = GenFilePaths.AbsFilePathForXenotype(xeno.name);
+                    try
+                    {
+                        GameDataSaveLoader.SaveXenotype(xeno, path);
+                        savedCustomXenotypes[xeno.name] = xeno;
+                        Log.Message($"[RimMind] Saved custom xenotype \"{xeno.name}\" ({resolved.Count} genes) to {path}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning($"[RimMind] SaveXenotype failed for {xeno.name}: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[RimMind] SaveCustomXenotypes failed: " + ex.Message);
+            }
+        }
+
+        private static List<GeneDef> ResolveGenes(List<string> names)
+        {
+            var list = new List<GeneDef>();
+            if (names == null) return list;
+            foreach (var raw in names)
+            {
+                if (string.IsNullOrWhiteSpace(raw)) continue;
+                var def = DefDatabase<GeneDef>.GetNamedSilentFail(raw)
+                       ?? DefDatabase<GeneDef>.AllDefsListForReading
+                            .FirstOrDefault(d => string.Equals(d.defName, raw, StringComparison.OrdinalIgnoreCase)
+                                              || string.Equals(d.label, raw, StringComparison.OrdinalIgnoreCase));
+                if (def == null)
+                {
+                    Log.Warning($"[RimMind] Unknown GeneDef in custom xenotype: {raw}");
+                    continue;
+                }
+                if (!list.Contains(def)) list.Add(def);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// If the AI generated an ideology name/description and the Ideology DLC is
+        /// active, rename the player faction's primary ideology to match the plan.
+        /// Done via reflection because Ideo.name and .description are set via internal
+        /// init paths in vanilla; direct field write is the safest mutate-in-place.
+        /// </summary>
+        private void ApplyIdeologyOverride()
+        {
+            try
+            {
+                if (plan?.Campaign == null) return;
+                if (!ModsConfig.IdeologyActive) return;
+
+                string name = plan.Campaign.IdeologyName;
+                string desc = plan.Campaign.IdeologyDescription;
+                if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(desc)) return;
+
+                var playerIdeo = Faction.OfPlayer?.ideos?.PrimaryIdeo;
+                if (playerIdeo == null)
+                {
+                    Log.Warning("[RimMind] No primary ideo on player faction; skipping ideology override.");
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(name))
+                    HarmonyLib.Traverse.Create(playerIdeo).Field("name").SetValue(name.Trim());
+                if (!string.IsNullOrWhiteSpace(desc))
+                    HarmonyLib.Traverse.Create(playerIdeo).Field("description").SetValue(desc.Trim());
+
+                Log.Message($"[RimMind] Applied AI ideology override: {name}");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning("[RimMind] Ideology override failed: " + ex.Message);
             }
         }
 

@@ -49,12 +49,17 @@ namespace RimMind.Scenarios
         public string NickName;
         public string LastName;
         public string Gender;             // "Male" / "Female" / null = random
-        public string ChildhoodBackstory; // BackstoryDef defName, or descriptive label
-        public string AdulthoodBackstory; // ditto
+        public int? Age;                  // optional biological age in years
+        public string Appearance;         // physical description (1-2 sentences)
+        public string Xenotype;                 // vanilla XenotypeDef defName OR a custom name when XenotypeGenes is populated
+        public List<string> XenotypeGenes = new List<string>();  // GeneDef defNames; non-empty -> treat Xenotype as custom
+        public string ChildhoodBackstory; // multi-paragraph prose
+        public string AdulthoodBackstory; // multi-paragraph prose
+        public string DefiningMoment;     // one pivotal event that shaped them
         public List<string> Traits = new List<string>();           // TraitDef defNames
         public Dictionary<string, int> Skills = new Dictionary<string, int>(); // SkillDef defName -> level
         public Dictionary<string, string> Passions = new Dictionary<string, string>(); // SkillDef defName -> "Minor"/"Major"
-        public string Narrative;          // Short story flavor about this pawn
+        public string Narrative;          // short tagline summary
 
         public void ExposeData()
         {
@@ -62,8 +67,13 @@ namespace RimMind.Scenarios
             Scribe_Values.Look(ref NickName, "nickName");
             Scribe_Values.Look(ref LastName, "lastName");
             Scribe_Values.Look(ref Gender, "gender");
+            Scribe_Values.Look(ref Age, "age");
+            Scribe_Values.Look(ref Appearance, "appearance");
+            Scribe_Values.Look(ref Xenotype, "xenotype");
+            Scribe_Collections.Look(ref XenotypeGenes, "xenotypeGenes", LookMode.Value);
             Scribe_Values.Look(ref ChildhoodBackstory, "childhoodBackstory");
             Scribe_Values.Look(ref AdulthoodBackstory, "adulthoodBackstory");
+            Scribe_Values.Look(ref DefiningMoment, "definingMoment");
             Scribe_Collections.Look(ref Traits, "traits", LookMode.Value);
             Scribe_Collections.Look(ref Skills, "skills", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref Passions, "passions", LookMode.Value, LookMode.Value);
@@ -74,6 +84,7 @@ namespace RimMind.Scenarios
                 if (Traits == null) Traits = new List<string>();
                 if (Skills == null) Skills = new Dictionary<string, int>();
                 if (Passions == null) Passions = new Dictionary<string, string>();
+                if (XenotypeGenes == null) XenotypeGenes = new List<string>();
             }
         }
     }

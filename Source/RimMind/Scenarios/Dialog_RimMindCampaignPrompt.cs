@@ -164,55 +164,100 @@ namespace RimMind.Scenarios
             var scroll = new Rect(body.x, body.y + 38f, body.width, body.height - 38f);
             var plan = scenpart.plan;
             float lineH = 22f;
-            float viewH = 100f
-                + plan.Pawns.Count * 60f
-                + plan.Items.Count * lineH
-                + 80f;
-            if (plan.Campaign != null) viewH += 80f;
+
+            // We compute viewH conservatively — the actual height depends on dynamic prose
+            // lengths. Always over-estimate so nothing is clipped.
+            float viewH = 200f;
+            if (plan.Campaign != null) viewH += 1200f;
+            viewH += plan.Pawns.Count * 900f;
+            viewH += plan.Items.Count * lineH + 80f;
+
             var view = new Rect(0f, 0f, scroll.width - 20f, viewH);
             Widgets.BeginScrollView(scroll, ref reviewScroll, view);
 
             float y = 0f;
-            Widgets.Label(new Rect(0, y, view.width, lineH), "<b>" + "RimMind_Scenario_PitchHeading".Translate() + "</b>");
-            y += lineH;
-            GUI.color = new Color(0.85f, 0.85f, 0.85f);
-            Widgets.Label(new Rect(0, y, view.width, lineH * 2f), Trunc(plan.UserPrompt, 240));
-            GUI.color = Color.white;
-            y += lineH * 2f + 8f;
+            DrawReadonly(view.width, ref y, lineH, "RimMind_Scenario_PitchHeading".Translate(), plan.UserPrompt);
 
             if (plan.Campaign != null)
             {
-                Widgets.Label(new Rect(0, y, view.width, lineH), "<b>" + "RimMind_Scenario_FrameHeading".Translate() + "</b>");
-                y += lineH;
-                if (!string.IsNullOrEmpty(plan.Campaign.Setting))
+                var c = plan.Campaign;
+
+                GUI.color = new Color(0.75f, 0.85f, 1f);
+                Widgets.Label(new Rect(0, y, view.width, lineH), "<i>All fields below are editable. Tweak anything before committing.</i>");
+                GUI.color = Color.white;
+                y += lineH + 4f;
+
+                DrawEditable(view.width, ref y, lineH, "Setting", ref c.Setting);
+                DrawEditable(view.width, ref y, lineH, "Tech level", ref c.TechLevel);
+                DrawEditable(view.width, ref y, lineH, "World lore", ref c.WorldLore, minHeight: 120f);
+
+                DrawEditable(view.width, ref y, lineH, "Ideology name", ref c.IdeologyName);
+                DrawEditable(view.width, ref y, lineH, "Ideology description (becomes in-game Ideo)", ref c.IdeologyDescription, minHeight: 100f);
+
+                DrawEditable(view.width, ref y, lineH, "Recent events", ref c.RecentEvents, minHeight: 80f);
+                DrawEditable(view.width, ref y, lineH, "Inciting incident", ref c.IncitingIncident, minHeight: 60f);
+                DrawEditable(view.width, ref y, lineH, "How the party met", ref c.HowTheyMet, minHeight: 80f);
+                DrawEditable(view.width, ref y, lineH, "Shared goal", ref c.SharedGoal);
+                DrawEditable(view.width, ref y, lineH, "Internal tension", ref c.InternalTension);
+                DrawEditable(view.width, ref y, lineH, "Pending threat", ref c.PendingThreat);
+                DrawEditable(view.width, ref y, lineH, "Opportunity", ref c.Opportunity);
+
+                if (c.Themes != null && c.Themes.Count > 0)
                 {
-                    Widgets.Label(new Rect(0, y, view.width, lineH * 2f), "  " + plan.Campaign.Setting);
-                    y += lineH * 2f;
+                    DrawInline(view.width, ref y, lineH, "Themes", string.Join(" | ", c.Themes));
                 }
-                y += 8f;
+
+                if (c.ActiveForces != null && c.ActiveForces.Count > 0)
+                {
+                    Widgets.Label(new Rect(0, y, view.width, lineH), "<b>Active forces:</b>");
+                    y += lineH;
+                    for (int i = 0; i < c.ActiveForces.Count; i++)
+                    {
+                        var rect = new Rect(16f, y, view.width - 16f, lineH * 2f);
+                        c.ActiveForces[i] = Widgets.TextArea(rect, c.ActiveForces[i] ?? "");
+                        y += lineH * 2f + 4f;
+                    }
+                }
             }
 
             if (plan.Pawns.Count > 0)
             {
                 Widgets.Label(new Rect(0, y, view.width, lineH), "<b>" + "RimMind_Scenario_PawnsHeading".Translate(plan.Pawns.Count) + "</b>");
-                y += lineH;
+                y += lineH + 4f;
                 foreach (var p in plan.Pawns)
                 {
                     string name = string.IsNullOrWhiteSpace(p.NickName)
                         ? $"{p.FirstName} {p.LastName}".Trim()
                         : $"{p.FirstName} \"{p.NickName}\" {p.LastName}".Trim();
+                    string ageStr = p.Age.HasValue ? $" ({p.Age.Value})" : "";
                     string traits = (p.Traits != null && p.Traits.Count > 0) ? string.Join(", ", p.Traits) : "(rolled)";
-                    Widgets.Label(new Rect(0, y, view.width, lineH), $"  {name} — {traits}");
+                    Widgets.Label(new Rect(0, y, view.width, lineH), $"<b>{name}{ageStr}</b> — {traits}");
                     y += lineH;
-                    if (!string.IsNullOrEmpty(p.Narrative))
+                    DrawEditable(view.width, ref y, lineH, "  Tagline", ref p.Narrative, indent: 16);
+                    DrawEditable(view.width, ref y, lineH, "  Appearance", ref p.Appearance, indent: 16);
+                    DrawEditable(view.width, ref y, lineH, "  Xenotype (vanilla name or custom)", ref p.Xenotype, indent: 16);
+
+                    // Custom gene list: edit as comma-separated; round-trip to the List<string> on the spec.
+                    string genesCsv = (p.XenotypeGenes != null && p.XenotypeGenes.Count > 0)
+                        ? string.Join(", ", p.XenotypeGenes) : "";
+                    string genesBefore = genesCsv;
+                    DrawEditable(view.width, ref y, lineH, "  Custom genes (leave blank for vanilla)", ref genesCsv, indent: 16);
+                    if (!ReferenceEquals(genesCsv, genesBefore) && genesCsv != genesBefore)
                     {
-                        GUI.color = new Color(0.75f, 0.75f, 0.75f);
-                        Widgets.Label(new Rect(16, y, view.width - 16, lineH * 2f), Trunc(p.Narrative, 200));
-                        GUI.color = Color.white;
-                        y += lineH * 2f;
+                        if (p.XenotypeGenes == null) p.XenotypeGenes = new System.Collections.Generic.List<string>();
+                        p.XenotypeGenes.Clear();
+                        foreach (var raw in (genesCsv ?? "").Split(','))
+                        {
+                            var t = raw.Trim();
+                            if (!string.IsNullOrEmpty(t)) p.XenotypeGenes.Add(t);
+                        }
                     }
+
+                    DrawEditable(view.width, ref y, lineH, "  Childhood", ref p.ChildhoodBackstory, indent: 16, minHeight: 80f);
+                    DrawEditable(view.width, ref y, lineH, "  Adulthood", ref p.AdulthoodBackstory, indent: 16, minHeight: 80f);
+                    DrawEditable(view.width, ref y, lineH, "  Defining moment", ref p.DefiningMoment, indent: 16);
+                    y += 12f;
                 }
-                y += 8f;
             }
 
             if (plan.Items.Count > 0)
@@ -300,6 +345,43 @@ namespace RimMind.Scenarios
         {
             if (string.IsNullOrEmpty(s)) return "";
             return s.Length <= n ? s : s.Substring(0, n) + "...";
+        }
+
+        // Editable prose: title bold, multi-line text area that mutates the bound string.
+        private static void DrawEditable(float width, ref float y, float lineH, string title, ref string body, float indent = 0f, float minHeight = 60f)
+        {
+            float x = indent;
+            float innerWidth = width - indent;
+            Widgets.Label(new Rect(x, y, innerWidth, lineH), "<b>" + title + ":</b>");
+            y += lineH;
+            string val = body ?? "";
+            float h = Math.Max(minHeight, Text.CalcHeight(val, innerWidth - 8f) + 6f);
+            body = Widgets.TextArea(new Rect(x + 8f, y, innerWidth - 8f, h), val);
+            y += h + 6f;
+        }
+
+        // Read-only display for fields that don't make sense to edit (pitch, lists).
+        private static void DrawReadonly(float width, ref float y, float lineH, string title, string body, float indent = 0f)
+        {
+            if (string.IsNullOrWhiteSpace(body)) return;
+            float x = indent;
+            float innerWidth = width - indent;
+            Widgets.Label(new Rect(x, y, innerWidth, lineH), "<b>" + title + ":</b>");
+            y += lineH;
+            float h = Text.CalcHeight(body, innerWidth - 8f);
+            Widgets.Label(new Rect(x + 8f, y, innerWidth - 8f, h), body);
+            y += h + 6f;
+        }
+
+        private static void DrawInline(float width, ref float y, float lineH, string title, string value, float indent = 0f)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return;
+            float x = indent;
+            float innerWidth = width - indent;
+            string text = "<b>" + title + ":</b> " + value;
+            float h = Text.CalcHeight(text, innerWidth);
+            Widgets.Label(new Rect(x, y, innerWidth, h), text);
+            y += h + 2f;
         }
     }
 }
