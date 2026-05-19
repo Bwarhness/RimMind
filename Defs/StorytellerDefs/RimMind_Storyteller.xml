@@ -4,7 +4,7 @@
          Uses vanilla incident selection (StorytellerComp_Classic behavior via inheritance).
          Future phases will override MakeIncidentsForInterval to inject AI-planned narrative events.
     -->
-    <StorytellerDef>
+    <StorytellerDef ParentName="BaseStoryteller">
         <defName>RimMind_AIStoryteller</defName>
         <label>RimMind AI</label>
         <description>An AI-powered storyteller that plans narrative arcs like a tabletop DM. For now it behaves like a classic storyteller while the narrative engine is being built.</description>
