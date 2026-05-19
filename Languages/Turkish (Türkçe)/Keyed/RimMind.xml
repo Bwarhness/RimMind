@@ -83,7 +83,7 @@
     <!-- Context Window -->
     <RimMind_ContextTitle>Bağlam İnpektörü</RimMind_ContextTitle>
     <RimMind_ContextRefresh>Yenile</RimMind_ContextRefresh>
-    <RimMind_ContextToplam>Toplam: {0} (~{1} token tahmini)</RimMind_ContextTotal>
+    <RimMind_ContextTotal>Toplam: {0} (~{1} token tahmini)</RimMind_ContextTotal>
     <RimMind_ContextLastAPI>Son API: {0} gir + {1} çık = {2} gerçek</RimMind_ContextLastAPI>
     <RimMind_ContextTabSystem>Sistem ({0})</RimMind_ContextTabSystem>
     <RimMind_ContextTabTools>Araçlar ({0}, {1})</RimMind_ContextTabTools>

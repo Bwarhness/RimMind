@@ -102,7 +102,7 @@
     <RimMind_EnableAIStorytellerDesc>When enabled, RimMind will act as an AI storyteller that plans narrative arcs, manages campaign coherence, and frames events with narrative weight. Requires internet.</RimMind_EnableAIStorytellerDesc>
     <RimMind_AIStorytellerGenerate>Generate Campaign Frame</RimMind_AIStorytellerGenerate>
     <RimMind_AIStorytellerRegenerate>Regenerate Frame</RimMind_AIStorytellerRegenerate>
-    <RimMind_AIStorytellerLock>Lock Frame & Begin Story</RimMind_AIStorytellerLock>
+    <RimMind_AIStorytellerLock>Lock Frame &amp; Begin Story</RimMind_AIStorytellerLock>
     <RimMind_AIStorytellerSkip>Skip AI Storyteller (Classic Mode)</RimMind_AIStorytellerSkip>
     <RimMind_AIStorytellerGenerating>Generating campaign frame...</RimMind_AIStorytellerGenerating>
     <RimMind_AIStorytellerFailed>Failed to generate campaign frame. Check your API settings and try again.</RimMind_AIStorytellerFailed>
