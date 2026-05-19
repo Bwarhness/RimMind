@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using RimMind.API;
 using RimMind.Core;
+using RimWorld;
 using Verse;
 
 namespace RimMind.Storyteller

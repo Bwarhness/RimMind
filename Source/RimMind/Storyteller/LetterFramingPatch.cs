@@ -85,13 +85,13 @@ namespace RimMind.Storyteller
                 // Override label
                 if (!string.IsNullOrEmpty(planned?.NarrativeLabel))
                 {
-                    let.label = theme.FrameLetterLabel(defName, planned.NarrativeLabel);
+                    let.def.label = theme.FrameLetterLabel(defName, planned.NarrativeLabel);
                 }
 
                 // Override text if it's a ChoiceLetter
                 if (let is ChoiceLetter choiceLetter && !string.IsNullOrEmpty(planned?.NarrativeText))
                 {
-                    string baseText = choiceLetter.Text ?? "";
+                    string baseText = choiceLetter.Text.ToString() ?? "";
                     string framedText = theme.FrameLetterText(defName, baseText, beat);
                     // Use Harmony Traverse to set the private 'text' field
                     try

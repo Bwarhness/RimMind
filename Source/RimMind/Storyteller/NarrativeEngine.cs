@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using RimMind.API;
+using RimMind.Core;
 using RimWorld;
 using Verse;
 
@@ -41,7 +42,7 @@ namespace RimMind.Storyteller
         public EventQueue EventQueue => eventQueue;
         public DMPlanner Planner => planner;
 
-        public NarrativeEngine(Game game) : base(game) { }
+        public NarrativeEngine(Game game) : base() { }
 
         public override void FinalizeInit()
         {
@@ -386,8 +387,8 @@ namespace RimMind.Storyteller
             try
             {
                 var storyteller = Find.Storyteller;
-                if (storyteller == null || storyteller.storytellerDef == null) return false;
-                return storyteller.storytellerDef.defName == "RimMind_AIStoryteller";
+                if (storyteller == null || storyteller.def == null) return false;
+                return storyteller.def.defName == "RimMind_AIStoryteller";
             }
             catch
             {

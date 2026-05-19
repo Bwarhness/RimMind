@@ -1,5 +1,6 @@
 using System;
 using RimMind.Core;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -61,7 +62,7 @@ namespace RimMind.Storyteller
                 else
                 {
                     bool canGenerate = !string.IsNullOrWhiteSpace(userPrompt) && userPrompt.Length >= 10;
-                    if (listing.ButtonText("Generate Campaign Frame", canGenerate))
+                    if (canGenerate && listing.ButtonText("Generate Campaign Frame"))
                     {
                         GenerateFrame();
                     }
@@ -156,7 +157,7 @@ namespace RimMind.Storyteller
                     }
                 }
 
-                if (listing.ButtonText("Lock Frame & Begin Story", true, null))
+                if (listing.ButtonText("Lock Frame & Begin Story"))
                 {
                     LockAndBegin();
                 }

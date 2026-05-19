@@ -63,12 +63,12 @@ namespace RimMind.Storyteller
             {
                 Day = GenLocalDate.DayOfYear(map),
                 Year = GenLocalDate.Year(map),
-                Season = GenLocalDate.Season(map).LabelCap.ToString(),
+                Season = SeasonUtility.LabelCap(GenLocalDate.Season(map)).ToString(),
                 ColonistCount = map.mapPawns.FreeColonists.Count,
                 PrisonerCount = map.mapPawns.PrisonersOfColony.Count,
                 AnimalCount = map.mapPawns.ColonyAnimals.Count,
                 TotalWealth = map.wealthWatcher.WealthTotal,
-                CurrentWeather = map.weatherManager.curWeather?.LabelCap?.ToString() ?? "Unknown",
+                CurrentWeather = map.weatherManager.curWeather?.label.ToString() ?? "Unknown",
                 MapSize = map.Size.x,
                 TechLevel = Faction.OfPlayer.def.techLevel,
                 FactionName = Faction.OfPlayer.Name
@@ -143,7 +143,7 @@ namespace RimMind.Storyteller
             {
                 if (Find.ResearchManager != null)
                 {
-                    var currentProj = Find.ResearchManager.currentProj;
+                    var currentProj = Find.ResearchManager.GetProject();
                     if (currentProj != null)
                         snapshot.RecentResearch.Add($"In progress: {currentProj.label}");
                 }
