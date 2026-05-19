@@ -65,7 +65,11 @@ namespace RimMind.Storyteller
                 if (evt != null)
                 {
                     evt.WasFired = true;
-                    evt.FireDay = GenLocalDate.DayOfYear(Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome));
+                    var map = Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome);
+                    if (map != null)
+                        evt.FireDay = GenLocalDate.DayOfYear(map);
+                    else
+                        evt.FireDay = GenDate.DaysPassedInt;
                 }
             }
         }

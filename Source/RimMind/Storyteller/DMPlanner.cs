@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using RimMind.API;
 using RimMind.Core;
 using Verse;
@@ -15,6 +16,9 @@ namespace RimMind.Storyteller
         private readonly NarrativeState state;
         private volatile bool isPlanning = false;
         private int lastPlanTick = 0;
+
+        // Regex for extracting JSON from markdown code blocks
+        private static readonly Regex MarkdownCodeBlock = new Regex(@"```(?:json)?\s*\n(.*?)\n```", RegexOptions.Singleline);
 
         public DMPlanner(NarrativeState state)
         {
@@ -217,13 +221,7 @@ namespace RimMind.Storyteller
             try
             {
                 // Strip markdown code blocks if present
-                if (content.Contains("```"))
-                {
-                    int start = content.IndexOf("[");
-                    int end = content.LastIndexOf("]");
-                    if (start >= 0 && end > start)
-                        content = content.Substring(start, end - start + 1);
-                }
+                content = ExtractJsonFromMarkdown(content);
 
                 var root = JSONNode.Parse(content);
                 if (root == null || !root.IsArray)
@@ -314,6 +312,18 @@ namespace RimMind.Storyteller
             if (string.IsNullOrEmpty(s)) return "";
             if (s.Length <= maxLen) return s;
             return s.Substring(0, maxLen) + "...";
+        }
+
+        /// <summary>
+        /// Extract JSON content from markdown code blocks (```json ... ```).
+        /// Falls back to trimming the raw content if no code block is found.
+        /// </summary>
+        private static string ExtractJsonFromMarkdown(string content)
+        {
+            var match = MarkdownCodeBlock.Match(content);
+            if (match.Success)
+                return match.Groups[1].Value.Trim();
+            return content.Trim();
         }
     }
 }

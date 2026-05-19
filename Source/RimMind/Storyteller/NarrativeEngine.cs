@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using RimWorld;
 using Verse;
 
@@ -25,6 +26,10 @@ namespace RimMind.Storyteller
 
         // Tracking which events we've already processed outcomes for
         private HashSet<string> processedEventIds = new HashSet<string>();
+        private const int MAX_PROCESSED_EVENTS = 500;
+
+        // Regex for extracting JSON from markdown code blocks
+        private static readonly Regex MarkdownCodeBlock = new Regex(@"```(?:json)?\s*\n(.*?)\n```", RegexOptions.Singleline);
 
         // Campaign setup prompt tracking
         private bool hasPromptedForCampaign = false;
@@ -283,20 +288,23 @@ namespace RimMind.Storyteller
         {
             // Check recently fired events to see if we can determine outcomes
             // This is a lightweight periodic check — heavy outcome analysis happens via Chronicle
+
+            // Trim processedEventIds to prevent unbounded growth
+            if (processedEventIds.Count > MAX_PROCESSED_EVENTS)
+            {
+                processedEventIds.Clear();
+                var recent = state.EventHistory.Skip(Math.Max(0, state.EventHistory.Count - MAX_PROCESSED_EVENTS));
+                foreach (var evt in recent)
+                    processedEventIds.Add(evt.Id);
+            }
         }
 
         private CampaignFrame ParseCampaignFrame(string json, string userPrompt)
         {
             try
             {
-                // Strip markdown if present
-                if (json.Contains("```"))
-                {
-                    int start = json.IndexOf("{");
-                    int end = json.LastIndexOf("}");
-                    if (start >= 0 && end > start)
-                        json = json.Substring(start, end - start + 1);
-                }
+                // Strip markdown code blocks if present
+                json = ExtractJsonFromMarkdown(json);
 
                 var root = JSONNode.Parse(json);
                 if (root == null) return null;
@@ -384,6 +392,18 @@ namespace RimMind.Storyteller
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Extract JSON content from markdown code blocks (```json ... ```).
+        /// Falls back to trimming the raw content if no code block is found.
+        /// </summary>
+        private static string ExtractJsonFromMarkdown(string content)
+        {
+            var match = MarkdownCodeBlock.Match(content);
+            if (match.Success)
+                return match.Groups[1].Value.Trim();
+            return content.Trim();
         }
     }
 }
