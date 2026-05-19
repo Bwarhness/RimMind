@@ -71,7 +71,7 @@ namespace RimMind.Storyteller
                     if (map != null)
                         evt.FireDay = GenLocalDate.DayOfYear(map);
                     else
-                        evt.FireDay = GenDate.DaysPassedInt;
+                        evt.FireDay = GenDate.DaysPassed;
                 }
             }
         }
