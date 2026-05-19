@@ -16,21 +16,23 @@ namespace RimMind.Core
                 actionQueue.Enqueue(action);
         }
 
-        public override void GameComponentUpdate()
+        /// <summary>
+        /// Process queued callbacks on the calling thread. Used by both the in-game
+        /// GameComponentUpdate path and any pre-game UI that needs to receive
+        /// HTTP callbacks (Current.Game is null pre-game, so GameComponentUpdate
+        /// never fires there — pre-game consumers must drain the queue themselves).
+        /// </summary>
+        public static void Drain(int maxPerCall = 10)
         {
             int processed = 0;
-            while (actionQueue.TryDequeue(out Action action) && processed < 10)
+            while (actionQueue.TryDequeue(out Action action) && processed < maxPerCall)
             {
-                try
-                {
-                    action.Invoke();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("[RimMind] MainThreadDispatcher error: " + ex);
-                }
+                try { action.Invoke(); }
+                catch (Exception ex) { Log.Error("[RimMind] MainThreadDispatcher error: " + ex); }
                 processed++;
             }
         }
+
+        public override void GameComponentUpdate() => Drain();
     }
 }

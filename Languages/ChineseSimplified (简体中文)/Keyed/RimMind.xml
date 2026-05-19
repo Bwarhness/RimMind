@@ -269,4 +269,29 @@
   <RimMind_CopyChatMessage>复制</RimMind_CopyChatMessage>
     <!-- EN: Copy message to clipboard -->
   <RimMind_CopyChatMessageTip>复制消息到剪贴板</RimMind_CopyChatMessageTip>
-</LanguageData>
+
+    <RimMind_AIStorytellerLockedToast>Campaign frame locked. Click Next to begin.</RimMind_AIStorytellerLockedToast>
+    <!-- AI Scenario (RimMind_AIScenario ScenPart UI) -->
+    <RimMind_Scenario_SummaryEmpty>(no pitch yet — click Edit to pitch a story to the AI)</RimMind_Scenario_SummaryEmpty>
+    <RimMind_Scenario_Summary>AI-authored: {0}</RimMind_Scenario_Summary>
+    <RimMind_Scenario_PartTitle>AI Campaign Pitch</RimMind_Scenario_PartTitle>
+    <RimMind_Scenario_PromptLabel>Describe your world, your story, and how things are right now:</RimMind_Scenario_PromptLabel>
+    <RimMind_Scenario_PromptHint>Examples: "A desperate group of cyberpunks crashland in a frozen tundra after fleeing corporate enforcers." or "Three nuns from a moon convent, washed up on a tropical coast after their pilgrimage ship sank."</RimMind_Scenario_PromptHint>
+    <RimMind_Scenario_Generate>Generate Starting State</RimMind_Scenario_Generate>
+    <RimMind_Scenario_Regenerate>Regenerate</RimMind_Scenario_Regenerate>
+    <RimMind_Scenario_ClearPlan>Discard and re-pitch</RimMind_Scenario_ClearPlan>
+    <RimMind_Scenario_Generating>Asking the AI...</RimMind_Scenario_Generating>
+    <RimMind_Scenario_GenerateFailed>Generation failed. Check your AI provider settings in mod options.</RimMind_Scenario_GenerateFailed>
+    <RimMind_Scenario_PitchHeading>Your pitch</RimMind_Scenario_PitchHeading>
+    <RimMind_Scenario_FrameHeading>Narrative frame</RimMind_Scenario_FrameHeading>
+    <RimMind_Scenario_PawnsHeading>Starting colonists ({0})</RimMind_Scenario_PawnsHeading>
+    <RimMind_Scenario_ItemsHeading>Starting items ({0})</RimMind_Scenario_ItemsHeading>
+    <RimMind_Scenario_HintsHeading>AI hints</RimMind_Scenario_HintsHeading>
+    <RimMind_Scenario_BiomeHint>Recommended biome: {0}</RimMind_Scenario_BiomeHint>
+    <RimMind_Scenario_SeasonHint>Recommended season: {0}</RimMind_Scenario_SeasonHint>
+    <RimMind_GameStartDialog>The AI has authored your starting state. Now play it out.</RimMind_GameStartDialog>
+    <!-- AI Scenario - Dialog -->
+    <RimMind_Scenario_DialogTitle>RimMind: pitch your story</RimMind_Scenario_DialogTitle>
+    <RimMind_Scenario_DialogSubtitle>The AI will use your pitch to author your starting colonists, items, and a biome recommendation.</RimMind_Scenario_DialogSubtitle>
+    <RimMind_Scenario_DialogCommit>Commit and continue</RimMind_Scenario_DialogCommit>
+    <RimMind_Scenario_ReadyToast>Pitch committed. Click Next to continue.</RimMind_Scenario_ReadyToast></LanguageData>

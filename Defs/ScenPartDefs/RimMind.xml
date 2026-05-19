@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ScenPartDef>
+    <defName>RimMind_CampaignSetup</defName>
+    <label>RimMind AI campaign setup</label>
+    <category>Fixed</category>
+    <scenPartClass>RimMind.Scenarios.ScenPart_RimMindCampaign</scenPartClass>
+    <summaryPriority>900</summaryPriority>
+    <maxUses>1</maxUses>
+    <canBeRandomlyAdded>false</canBeRandomlyAdded>
+    <canBePlayerAddedRemoved>false</canBePlayerAddedRemoved>
+  </ScenPartDef>
+
+</Defs>

@@ -9,6 +9,10 @@ namespace RimMind.API
         public float temperature = 0.7f;
         public int max_tokens = 1024;
         public List<JSONNode> tools;
+        // For reasoning models (Qwen3.5, DeepSeek-R1, etc.) — when set, adds
+        // `chat_template_kwargs.enable_thinking=<value>` to the request body.
+        // Unknown providers ignore it.
+        public bool? enable_thinking;
 
         public JSONNode ToJSON()
         {
@@ -17,6 +21,13 @@ namespace RimMind.API
             obj["temperature"] = temperature;
             obj["max_tokens"] = max_tokens;
             obj["stream"] = false;
+
+            if (enable_thinking.HasValue)
+            {
+                var kwargs = new JSONObject();
+                kwargs["enable_thinking"] = enable_thinking.Value;
+                obj["chat_template_kwargs"] = kwargs;
+            }
 
             var msgArray = new JSONArray();
             foreach (var msg in messages)

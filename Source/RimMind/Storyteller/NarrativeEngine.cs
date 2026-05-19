@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using RimMind.API;
 using RimMind.Core;
 using RimWorld;
 using Verse;
@@ -29,12 +27,6 @@ namespace RimMind.Storyteller
         // Tracking which events we've already processed outcomes for
         private HashSet<string> processedEventIds = new HashSet<string>();
         private const int MAX_PROCESSED_EVENTS = 500;
-
-        // Regex for extracting JSON from markdown code blocks
-        private static readonly Regex MarkdownCodeBlock = new Regex(@"```(?:json)?\s*\n(.*?)\n```", RegexOptions.Singleline);
-
-        // Campaign setup prompt tracking
-        private bool hasPromptedForCampaign = false;
 
         // Public singleton access
         public static NarrativeEngine Instance => Current.Game?.GetComponent<NarrativeEngine>();
@@ -63,17 +55,35 @@ namespace RimMind.Storyteller
                 planner = new DMPlanner(state);
             }
 
-            // Lock campaign frame if game is already underway and not yet locked
-            if (state.Campaign != null && !state.Campaign.IsLocked)
+            // Pull the campaign frame from the active scenario's RimMind ScenPart, if any.
+            // Runs once on new game; loaded saves keep the persisted state.Campaign.
+            if (!state.IsInitialized)
             {
+                var scen = Find.Scenario;
+                if (scen != null)
+                {
+                    foreach (var part in scen.AllParts)
+                    {
+                        var rmPart = part as Scenarios.ScenPart_RimMindCampaign;
+                        if (rmPart?.plan?.Campaign == null) continue;
+                        state.Campaign = rmPart.plan.Campaign;
+                        state.Campaign.IsLocked = true;
+                        state.Campaign.DayLocked = 0;
+                        state.IsInitialized = true;
+                        Log.Message("[RimMind] Campaign frame consumed from RimMind scenario part.");
+                        break;
+                    }
+                }
+            }
+            else if (state.Campaign != null && !state.Campaign.IsLocked)
+            {
+                // Save loaded mid-setup: opportunistically lock if the game is already underway.
                 var map = Find.CurrentMap ?? Find.Maps.FirstOrDefault(m => m.IsPlayerHome);
                 if (map != null)
                 {
                     int day = GenLocalDate.DayOfYear(map);
                     if (day > 0)
-                    {
                         LockCampaignFrame(day);
-                    }
                 }
             }
 
@@ -90,16 +100,6 @@ namespace RimMind.Storyteller
             if (!RimMindMod.Settings.storytellerEnabled) return;
             if (state == null || planner == null || eventQueue == null) return;
             if (Find.TickManager.TicksGame < INITIAL_DELAY_TICKS) return;
-
-            // Check if we should prompt for campaign setup
-            if (!hasPromptedForCampaign && !state.Campaign.IsLocked)
-            {
-                if (IsRimMindStorytellerActive())
-                {
-                    hasPromptedForCampaign = true;
-                    Find.WindowStack.Add(new CampaignSetupWindow());
-                }
-            }
 
             // Only advance planning counter when game is not paused
             if (!Find.TickManager.Paused)
@@ -122,75 +122,6 @@ namespace RimMind.Storyteller
                 PendingLetterFraming.CleanupOldEntries();
                 CheckEventOutcomes();
             }
-        }
-
-        /// <summary>
-        /// Generate or regenerate the campaign frame from a user prompt. Async.
-        /// </summary>
-        public void GenerateCampaignFrame(string userPrompt, Action<CampaignFrame> callback)
-        {
-            if (!RimMindMod.Settings.storytellerEnabled)
-            {
-                MainThreadDispatcher.Enqueue(() => callback?.Invoke(null));
-                return;
-            }
-
-            var theme = ThemeRegistry.Get(state?.CurrentThemeId ?? "chronicle") ?? new ChronicleThemeProvider();
-
-            var messages = new List<ChatMessage>
-            {
-                ChatMessage.System(theme.CampaignPrompt),
-                ChatMessage.User($"Design a campaign frame for this prompt: \"{userPrompt}\"\n\nRespond in JSON with fields: setting, incitingIncident, activeForces (array), currentAct, pendingThreat, opportunity, plantedSeeds (array of objects with id, description, suggestedIncidentDefName).")
-            };
-
-            var request = new ChatRequest
-            {
-                model = RimMindMod.Settings.ActiveModelId,
-                messages = messages,
-                temperature = 0.9f,
-                max_tokens = 2048
-            };
-
-            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
-            {
-                try
-                {
-                    Action<ChatResponse> onResponse = response =>
-                    {
-                        if (!response.success)
-                        {
-                            Log.Warning("[RimMind] Campaign frame generation failed: " + response.error);
-                            callback?.Invoke(null);
-                            return;
-                        }
-
-                        var frame = ParseCampaignFrame(response.message?.content ?? "", userPrompt);
-                        callback?.Invoke(frame);
-                    };
-
-                    if (RimMindMod.Settings.IsClaudeCode)
-                        ClaudeCodeClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                    else if (RimMindMod.Settings.IsAnthropic)
-                        AnthropicClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                    else if (RimMindMod.Settings.IsCustom)
-                        CustomProviderClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                    else
-                        OpenRouterClient.SendAsync(request, r => MainThreadDispatcher.Enqueue(() => onResponse(r)));
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning("[RimMind] Campaign generation dispatch failed: " + ex.Message);
-                    MainThreadDispatcher.Enqueue(() => callback?.Invoke(null));
-                }
-            });
-        }
-
-        public void SetCampaignFrame(CampaignFrame frame)
-        {
-            if (state == null) return;
-            state.Campaign = frame ?? new CampaignFrame();
-            state.IsInitialized = frame != null;
-            Log.Message("[RimMind] Campaign frame set.");
         }
 
         public void LockCampaignFrame(int day)
@@ -301,68 +232,6 @@ namespace RimMind.Storyteller
             }
         }
 
-        private CampaignFrame ParseCampaignFrame(string json, string userPrompt)
-        {
-            try
-            {
-                // Strip markdown code blocks if present
-                json = ExtractJsonFromMarkdown(json);
-
-                var root = JSONNode.Parse(json);
-                if (root == null) return null;
-
-                var frame = new CampaignFrame
-                {
-                    UserPrompt = userPrompt,
-                    Setting = root["setting"]?.Value ?? "An untamed rim world",
-                    IncitingIncident = root["incitingIncident"]?.Value ?? root["inciting_incident"]?.Value ?? "Crash landing",
-                    CurrentAct = root["currentAct"]?.Value ?? root["current_act"]?.Value ?? "Act I",
-                    PendingThreat = root["pendingThreat"]?.Value ?? root["pending_threat"]?.Value ?? "Unknown dangers",
-                    Opportunity = root["opportunity"]?.Value ?? "Survival and hope",
-                    ActiveForces = ParseStringArray(root["activeForces"] ?? root["active_forces"]),
-                    PlantedSeeds = ParseSeedsArray(root["plantedSeeds"] ?? root["planted_seeds"])
-                };
-
-                return frame;
-            }
-            catch (Exception ex)
-            {
-                Log.Warning("[RimMind] Failed to parse campaign frame: " + ex.Message);
-                return null;
-            }
-        }
-
-        private List<string> ParseStringArray(JSONNode node)
-        {
-            var list = new List<string>();
-            if (node == null || !node.IsArray) return list;
-            foreach (JSONNode n in node.AsArray)
-            {
-                if (n != null && !n.IsNull)
-                    list.Add(n.Value);
-            }
-            return list;
-        }
-
-        private List<NarrativeSeed> ParseSeedsArray(JSONNode node)
-        {
-            var list = new List<NarrativeSeed>();
-            if (node == null || !node.IsArray) return list;
-            int idx = 0;
-            foreach (JSONNode n in node.AsArray)
-            {
-                if (n == null || n.IsNull) continue;
-                list.Add(new NarrativeSeed(
-                    n["id"]?.Value ?? $"seed_{idx}",
-                    n["description"]?.Value ?? "A mystery yet to unfold",
-                    n["suggestedIncidentDefName"]?.Value ?? n["suggested_incident_def_name"]?.Value ?? "",
-                    0
-                ));
-                idx++;
-            }
-            return list;
-        }
-
         public override void ExposeData()
         {
             base.ExposeData();
@@ -371,7 +240,6 @@ namespace RimMind.Storyteller
             Scribe_Collections.Look(ref processedEventIds, "processedEventIds", LookMode.Value);
             Scribe_Values.Look(ref ticksSinceLastPlan, "ticksSinceLastPlan", 0);
             Scribe_Values.Look(ref ticksSinceLastOutcomeCheck, "ticksSinceLastOutcomeCheck", 0);
-            Scribe_Values.Look(ref hasPromptedForCampaign, "hasPromptedForCampaign", false);
 
             if (Scribe.mode == LoadSaveMode.LoadingVars)
             {
@@ -380,32 +248,6 @@ namespace RimMind.Storyteller
                 if (processedEventIds == null) processedEventIds = new HashSet<string>();
                 if (planner == null) planner = new DMPlanner(state);
             }
-        }
-
-        private bool IsRimMindStorytellerActive()
-        {
-            try
-            {
-                var storyteller = Find.Storyteller;
-                if (storyteller == null || storyteller.def == null) return false;
-                return storyteller.def.defName == "RimMind_AIStoryteller";
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Extract JSON content from markdown code blocks (```json ... ```).
-        /// Falls back to trimming the raw content if no code block is found.
-        /// </summary>
-        private static string ExtractJsonFromMarkdown(string content)
-        {
-            var match = MarkdownCodeBlock.Match(content);
-            if (match.Success)
-                return match.Groups[1].Value.Trim();
-            return content.Trim();
         }
     }
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+
+  <ScenarioDef ParentName="ScenarioBase">
+    <defName>RimMind_AIScenario</defName>
+    <label>RimMind: AI-Authored Story</label>
+    <description>Pitch a story. The AI fills in your starting colonists, their backstories, your starting gear, and a biome recommendation to match. Then it runs the colony like a tabletop DM.\n\nRequires an internet connection and a configured AI provider in mod settings.</description>
+    <scenario>
+      <summary>The AI authors your starting state from a story pitch.</summary>
+      <parts>
+
+        <li Class="ScenPart_ConfigPage_ConfigureStartingPawns">
+          <def>ConfigPage_ConfigureStartingPawns</def>
+          <pawnCount>3</pawnCount>
+          <pawnChoiceCount>8</pawnChoiceCount>
+        </li>
+
+        <li Class="ScenPart_PlayerPawnsArriveMethod">
+          <def>PlayerPawnsArriveMethod</def>
+          <method>DropPods</method>
+          <visible>false</visible>
+        </li>
+
+        <li Class="RimMind.Scenarios.ScenPart_RimMindCampaign">
+          <def>RimMind_CampaignSetup</def>
+        </li>
+
+        <li Class="ScenPart_GameStartDialog">
+          <def>GameStartDialog</def>
+          <textKey>RimMind_GameStartDialog</textKey>
+          <closeSound>GameStartSting</closeSound>
+        </li>
+
+      </parts>
+    </scenario>
+  </ScenarioDef>
+
+</Defs>
