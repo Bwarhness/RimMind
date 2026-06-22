@@ -47,6 +47,9 @@ namespace RimMind.Core
                     Log.Warning("[RimMind] LetterStack patch failed: " + ex.Message);
                 }
 
+                // Patch JobDriver.EndJobWith to fire deferred callbacks (draft/undraft after equip/haul)
+                Core.JobCompletionPatch.Apply(harmony);
+
                 var patched = harmony.GetPatchedMethods();
                 int count = 0;
                 foreach (var m in patched) count++;

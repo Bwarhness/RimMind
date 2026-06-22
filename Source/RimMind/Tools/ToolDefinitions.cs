@@ -18,9 +18,9 @@ namespace RimMind.Tools
                 MakeParam("name", "string", "The colonist's name (first name or nickname)")));
             tools.Add(MakeTool("get_colonist_health", "Get health details for a specific colonist: injuries, diseases, immunity progress, bionics/implants, pain level, and consciousness.",
                 MakeParam("name", "string", "The colonist's name")));
-            tools.Add(MakeTool("draft_colonist", "Draft a colonist for combat. Drafted colonists will follow orders instead of performing normal work tasks.",
+            tools.Add(MakeTool("draft_colonist", "Draft a colonist for combat. Drafted colonists will follow orders instead of performing normal work tasks. If the pawn has active player-ordered jobs (equip, haul, etc.), drafting is automatically deferred until they complete — response will include status:'draft_queued'.",
                 MakeParam("name", "string", "The colonist's name")));
-            tools.Add(MakeTool("undraft_colonist", "Undraft a colonist, returning them to normal work tasks.",
+            tools.Add(MakeTool("undraft_colonist", "Undraft a colonist, returning them to normal work tasks. If the pawn has active player-ordered jobs (equip, haul, etc.), drafting is automatically deferred until they complete — response will include status:'draft_queued'.",
                 MakeParam("name", "string", "The colonist's name")));
             tools.Add(MakeTool("draft_all", "Draft all colonists for combat at once."));
             tools.Add(MakeTool("undraft_all", "Undraft all colonists, returning them to normal work."));

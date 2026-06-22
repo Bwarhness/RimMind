@@ -174,6 +174,19 @@ namespace RimMind.Tools
             if (pawn.drafter == null) return ToolExecutor.JsonError("Colonist cannot be drafted.");
             if (pawn.Downed) return ToolExecutor.JsonError("Colonist is downed and cannot be drafted.");
 
+            bool hasPendingWork = (pawn.CurJob?.playerForced == true) || pawn.jobs.jobQueue.Count > 0;
+
+            if (hasPendingWork)
+            {
+                Core.PendingCallbackQueue.Register(pawn, () => { if (!pawn.Destroyed) pawn.drafter.Drafted = true; });
+                var deferred = new JSONObject();
+                deferred["success"] = true;
+                deferred["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+                deferred["status"] = "draft_queued";
+                deferred["note"] = "pawn has active jobs — will draft automatically when they complete";
+                return deferred.ToString();
+            }
+
             pawn.drafter.Drafted = true;
 
             var result = new JSONObject();
@@ -191,6 +204,19 @@ namespace RimMind.Tools
             if (pawn == null) return ToolExecutor.JsonError("Colonist '" + name + "' not found.");
 
             if (pawn.drafter == null) return ToolExecutor.JsonError("Colonist cannot be drafted.");
+
+            bool hasPendingWork = (pawn.CurJob?.playerForced == true) || pawn.jobs.jobQueue.Count > 0;
+
+            if (hasPendingWork)
+            {
+                Core.PendingCallbackQueue.Register(pawn, () => { if (!pawn.Destroyed) pawn.drafter.Drafted = false; });
+                var deferred = new JSONObject();
+                deferred["success"] = true;
+                deferred["colonist"] = pawn.Name?.ToStringShort ?? "Unknown";
+                deferred["status"] = "undraft_queued";
+                deferred["note"] = "pawn has active jobs — will undraft automatically when they complete";
+                return deferred.ToString();
+            }
 
             pawn.drafter.Drafted = false;
 
